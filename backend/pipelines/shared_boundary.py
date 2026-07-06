@@ -46,6 +46,11 @@ class SharedBoundaryPipeline(Pipeline):
                    "below this (RGB units). Kills boundaries manufactured by quantizing "
                    "smooth shading; 0 = off. Risky on faint-but-real contours — meant "
                    "as a tournament candidate, not a default."),
+        Param("preproc", "Color aggregation", "select", "none",
+              options=["none", "bilateral", "meanshift"],
+              help="Edge-aware flattening before quantize. bilateral: safe, rescues "
+                   "soft-shaded inputs (AI art). meanshift: big point cuts on noisy "
+                   "detail but eats small low-contrast details."),
         Param("parsimony", "Parsimony fit (opttol)", "float", 0.0, min=0.0, max=2.0, step=0.1,
               help="Potrace-style minimal-knot fitting; sub-±0.5px wobble structurally "
                    "cannot survive. 0.2 beats the default fitter on all axes; 0.5-1.0 "
@@ -72,6 +77,9 @@ class SharedBoundaryPipeline(Pipeline):
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         if p["blur"] > 0:
             img = cv2.medianBlur(img, p["blur"] * 2 + 1)
+        if p["preproc"] != "none":
+            from preprocess import aggregate_colors
+            img = aggregate_colors(img, mode=p["preproc"])
 
         labels, centers = _quantize(img, p["num_colors"], p["seed"])
         if p["merge_de"] > 0:

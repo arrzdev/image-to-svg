@@ -70,6 +70,9 @@ def portfolio(info: dict, mode: str) -> list:
             # Potrace-parsimony fitter: wobble-free by construction, beats
             # smooth+Schneider on all axes at opttol 0.2 (eye-verified 8k).
             ("sb-pars02", "shared_boundary", {**sb, "parsimony": 0.2}, 1024, 0.0),
+            # bilateral aggregation rescues soft-shaded (AI-art) inputs:
+            # rabbit's shattered coat seams come back solid (q .669->.757).
+            ("sb-bilat", "shared_boundary", {**sb, "tol": 1.0, "preproc": "bilateral"}, 1024, 0.0),
             ("sb-k12", "shared_boundary", {**sb, "num_colors": 12, "tol": 1.0}, 1024, 0.0),
             # centerline strokes for thin line art: clean tapered tips,
             # constant widths, ~14-30% fewer points (won fox outright).
@@ -109,6 +112,8 @@ def portfolio(info: dict, mode: str) -> list:
             # 1023pts@0.9157 / 937@0.9134 pre-DV).
             ("grail-pars05", "shared_boundary", {**sb, "parsimony": 0.5}, 1024, 0.0),
             ("grail-pars10", "shared_boundary", {**sb, "parsimony": 1.0}, 1024, 0.0),
+            ("grail-bilat", "shared_boundary", {**sb, "tol": 3.0, "smooth_win": 9, "preproc": "bilateral"}, 1024, 0.0),
+            ("grail-ms", "shared_boundary", {**sb, "parsimony": 0.5, "preproc": "meanshift"}, 1024, 0.0),
             ("grail-sb50-w13", "shared_boundary", {**sb, "tol": 5.0, "smooth_win": 13}, 1024, 0.0),
             ("grail-sb40-w13", "shared_boundary", {**sb, "tol": 4.0, "smooth_win": 13}, 1024, 0.0),
             ("grail-sb30-w9", "shared_boundary", {**sb, "tol": 3.0, "smooth_win": 9}, 1024, 0.0),

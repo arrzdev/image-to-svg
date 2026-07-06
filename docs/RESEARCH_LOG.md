@@ -151,3 +151,17 @@ mapped (tol5/w13 = 679 pts). Elephant: 0.9317@727 / 0.9246@679 / 0.9390@1337,
 integrity 1.0. SVG-Bench still leading all splits. Library 16/16 grail,
 17/17 fast. Milestone artifact:
 https://claude.ai/code/artifact/24a07afa-9af5-48a3-8d42-87ad5fd12e52
+
+## 2026-07-07 · Preprocessing sweep landed (user suggestion)
+
+Bilateral (d9,σc50,σs9) = safe win: parity on clean flat, rescues soft-shaded
+AI art (rabbit coat seams solid again, q .669→.757 pre-DV; fast-tier verify:
+sb-bilat 0.8327@2225 = top compact candidate). Mean-shift (sp12,sr30) = noisy
+detail winner (fox −37% pts, most "designed" look) but eats small details —
+candidate only. UNSHARP REJECTED with data: overshoot mints new colors,
++30-60% unique colors, MORE halo clusters (inverted hypothesis). Adaptive-k
+unnecessary — merge_de consolidation already adapts downstream. Wired:
+preproc param in shared_boundary + candidates sb-bilat / grail-bilat /
+grail-ms (meanshift+parsimony). backend/preprocess.py has the recipes.
+Also this loop: git repo initialized (v3 = first commit), models/vN
+snapshot convention, parsimony e2e (pars05+dv q=0.9394@1023 board 2nd).
