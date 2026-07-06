@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>image → svg playground</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header>
+    <h1>image <span class="arrow">→</span> svg <span class="sub">playground</span></h1>
+    <div id="ai-badge" class="badge" title="AI preprocessing status"></div>
+  </header>
+
+  <main>
+    <section class="panel controls">
+      <div class="control-group">
+        <h2>1 · Input</h2>
+        <div class="input-row">
+          <label class="file-btn">
+            <input type="file" id="file" accept="image/*" hidden />
+            Upload image
+          </label>
+          <span class="or">or sample</span>
+          <select id="sample"></select>
+        </div>
+        <div class="input-row proc-row">
+          <span>Trace at</span>
+          <select id="process-dim">
+            <option value="512">512 px</option>
+            <option value="768">768 px</option>
+            <option value="1024">1024 px</option>
+            <option value="1536">1536 px</option>
+            <option value="2048" selected>2048 px</option>
+            <option value="3072">3072 px</option>
+            <option value="4096">4096 px</option>
+            <option value="orig">original</option>
+          </select>
+        </div>
+        <p class="hint">Higher = more detail &amp; smoother curves (slower); lower = smooths noise &amp; simpler paths but loses fine detail. SSIM is scored vs. the original, so it flags the tradeoff.</p>
+        <div class="input-row proc-row">
+          <span>Simplify</span>
+          <select id="simplify-eps">
+            <option value="0">off (raw trace)</option>
+            <option value="0.5">0.5 px — lossless-ish</option>
+            <option value="1" selected>1 px — light</option>
+            <option value="2">2 px — balanced</option>
+            <option value="4">4 px — aggressive</option>
+            <option value="8">8 px — extreme</option>
+          </select>
+        </div>
+        <p class="hint">Post-trace simplification: fewer anchor points &amp; smaller files for editability. Quality is re-scored after, so the cost is always visible.</p>
+        <div id="preview-wrap" class="preview-wrap hidden">
+          <img id="source-preview" alt="source" />
+          <div id="source-dims" class="dims"></div>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <h2>2 · AI preprocess <span class="optional">(optional)</span></h2>
+        <select id="ai-prompt">
+          <option value="">None (raw image)</option>
+        </select>
+        <p class="hint" id="ai-hint"></p>
+      </div>
+
+      <div class="control-group">
+        <h2>3 · Pipelines</h2>
+        <div id="pipelines"></div>
+      </div>
+
+      <button id="run" class="run-btn">Vectorize &amp; compare</button>
+
+      <div class="control-group" style="margin-top:18px">
+        <h2>4 · Auto-optimize <span class="optional">(search best config)</span></h2>
+        <div class="input-row">
+          <select id="opt-mode">
+            <option value="fidelity" selected>fidelity — max quality</option>
+            <option value="balanced">balanced</option>
+            <option value="editable">editable — fewer points</option>
+            <option value="grail">grail — Recraft-class (solid containers + DV)</option>
+          </select>
+        </div>
+        <p class="hint">Coordinate-ascent over params + resolution + simplify for this image (~1–2 min).</p>
+        <button id="optimize" class="run-btn opt-btn">Auto-optimize</button>
+        <button id="tournament" class="run-btn tourney-btn">🏆 Tournament (portfolio, ~15s)</button>
+        <label class="dv-toggle"><input type="checkbox" id="dv-refine" /> DiffVG-refine winner <span class="optional">(+~20s, logos/flat only)</span></label>
+        <p class="hint">Analyzes the image, runs a diverse candidate portfolio in parallel, shows the ranked leaderboard.</p>
+      </div>
+      <div id="status" class="status"></div>
+    </section>
+
+    <section class="panel results">
+      <div id="results" class="results-grid">
+        <div class="empty-state">Pick an image and hit <b>Vectorize</b>. Results appear here side-by-side with metrics.</div>
+      </div>
+    </section>
+  </main>
+
+  <!-- SVG source modal -->
+  <div id="modal" class="modal hidden">
+    <div class="modal-box">
+      <div class="modal-head">
+        <span id="modal-title"></span>
+        <button id="modal-close">✕</button>
+      </div>
+      <pre id="modal-src"></pre>
+    </div>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
