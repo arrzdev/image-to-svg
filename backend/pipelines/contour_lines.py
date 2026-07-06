@@ -39,12 +39,16 @@ class ContourLinesPipeline(Pipeline):
         Param("min_area", "Despeckle (px)", "int", 120, min=0, max=2000, step=10),
         Param("blur", "Pre-blur (px)", "int", 1, min=0, max=9, step=1),
         Param("fill_tol", "Fill fit tolerance", "float", 2.5, min=0.25, max=6.0, step=0.25),
-        Param("fill_smooth", "Fill smoothing", "int", 9, min=0, max=15, step=1),
+        Param("fill_smooth", "Fill smoothing", "int", 0, min=0, max=15, step=1),
+        Param("fill_parsimony", "Fill parsimony (opttol)", "float", 1.0, min=0.0, max=2.0, step=0.1,
+              help="Potrace parsimony fit for the shading-region boundaries — flat "
+                   "idealized shapes like Recraft's, wobble-free by construction. "
+                   "0 falls back to smooth+Schneider fills."),
         Param("dark_lum", "Line luminance cutoff", "float", 96.0, min=10.0, max=160.0, step=1.0,
               help="Labels darker than this are stroke candidates; lower it when a "
                    "dark-but-not-line palette entry (maroon rim, navy ring) gets "
                    "stroke-ified. Wide uniform bands are auto-skipped regardless."),
-        Param("width_scale", "Line weight", "float", 1.0, min=0.5, max=1.5, step=0.05,
+        Param("width_scale", "Line weight", "float", 0.85, min=0.5, max=1.5, step=0.05,
               help="Multiplies the calibrated stroke width. The ink-area calibration "
                    "matches the source line weight; lower this for the more delicate "
                    "line a designer might prefer (~0.85 tracks Recraft's elephant)."),
@@ -69,6 +73,7 @@ class ContourLinesPipeline(Pipeline):
 
         svg, _info = contour_svg(labels, centers, fill_tol=p["fill_tol"],
                                  fill_smooth=p["fill_smooth"],
+                                 fill_parsimony=p["fill_parsimony"],
                                  dark_lum=p["dark_lum"],
                                  width_scale=p["width_scale"])
         return svg

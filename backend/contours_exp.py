@@ -405,9 +405,13 @@ def _stroke_elements(strokes: List[dict]) -> str:
 
 def contour_svg(labels: np.ndarray, centers: np.ndarray,
                 fill_tol: float = 2.5, fill_smooth: int = 9,
-                fill_corner_deg: float = 60.0,
+                fill_corner_deg: float = 60.0, fill_parsimony: float = 0.0,
                 **kw) -> Tuple[str, dict]:
-    """Full width-constant emission: absorbed fills + stroke network on top."""
+    """Full width-constant emission: absorbed fills + stroke network on top.
+
+    fill_parsimony > 0 fits the shading-region boundaries with the Potrace
+    parsimony fitter (wobble-free by construction) instead of smooth+Schneider
+    — the fills then read as idealized flat shapes, like Recraft's."""
     import boundary
 
     strokes, stroke_mask, info = extract_contour_strokes(labels, centers, **kw)
@@ -417,7 +421,8 @@ def contour_svg(labels: np.ndarray, centers: np.ndarray,
     svg = boundary.loops_to_svg_curves(new_labels, centers, edges, loops,
                                        tol=fill_tol,
                                        corner_deg=fill_corner_deg,
-                                       smooth_win=fill_smooth)
+                                       smooth_win=fill_smooth,
+                                       parsimony=fill_parsimony)
     if strokes:
         svg = svg.replace("\n</svg>",
                           "\n" + _stroke_elements(strokes) + "\n</svg>")
