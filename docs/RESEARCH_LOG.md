@@ -194,3 +194,24 @@ just less), badge 0.127→0.832 (residual = near-threshold AA noise), pizza
 0.216→0.526 (residual = THIRD bug: thin regions evert under win-9 smoothing
 — opposite edges cross; 1.000 at smooth_win=0; backlogged). Also noted:
 resnap_refined has the same latent frame exposure if ever reused.
+
+## 2026-07-07 · v4 — vision-first line/fill idealization (goal-directed)
+
+Direct attack on the user's "<70% of Recraft" verdict, judged by eye at zoom:
+- Parsimony-fitted SHADING boundaries (fill_parsimony=1.0, fill_smooth=0 in
+  contour_lines): shading regions now read as flat idealized shapes with
+  wobble-free edges — the fill/shading gap, not just lines. Beat Schneider
+  fills by eye (fill_grid.png) at 918 pts.
+- Line weight width_scale=0.85 default: tracks Recraft's line weight (Recraft's
+  lines are boldish; ws1.0 was a touch heavy, 0.72 too thin).
+- Exposed width_scale + fill_parsimony as contour_lines Params.
+VERDICT (final_full.png full-frame, final_zoom.png deep-zoom, vs recraft):
+lines uniform+confident, fills clean flat shapes — now in Recraft's quality
+tier. Three cited defects (wobble / width-thinning / shadows-over-lines) all
+resolved. Residual gap = subtle palette/shading-color choices (Recraft's
+softer blue-gray tints) + occasional shading-shape simplification, NOT
+structural line/fill quality. models/v4 snapshot committed.
+Remaining backlog for parity: palette idealization (match Recraft's shading
+tints / merge to fewer cleaner shading shapes); line-consistency judge so the
+tournament PICKS these idealized candidates (metric still underrates them,
+so contour_lines must be run directly rather than auto-selected).
