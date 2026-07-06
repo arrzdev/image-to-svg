@@ -44,6 +44,10 @@ class ContourLinesPipeline(Pipeline):
               help="Labels darker than this are stroke candidates; lower it when a "
                    "dark-but-not-line palette entry (maroon rim, navy ring) gets "
                    "stroke-ified. Wide uniform bands are auto-skipped regardless."),
+        Param("width_scale", "Line weight", "float", 1.0, min=0.5, max=1.5, step=0.05,
+              help="Multiplies the calibrated stroke width. The ink-area calibration "
+                   "matches the source line weight; lower this for the more delicate "
+                   "line a designer might prefer (~0.85 tracks Recraft's elephant)."),
     ]
 
     def run(self, image_path: str, params: dict) -> str:
@@ -65,5 +69,6 @@ class ContourLinesPipeline(Pipeline):
 
         svg, _info = contour_svg(labels, centers, fill_tol=p["fill_tol"],
                                  fill_smooth=p["fill_smooth"],
-                                 dark_lum=p["dark_lum"])
+                                 dark_lum=p["dark_lum"],
+                                 width_scale=p["width_scale"])
         return svg
