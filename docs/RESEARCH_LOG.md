@@ -165,3 +165,17 @@ preproc param in shared_boundary + candidates sb-bilat / grail-bilat /
 grail-ms (meanshift+parsimony). backend/preprocess.py has the recipes.
 Also this loop: git repo initialized (v3 = first commit), models/vN
 snapshot convention, parsimony e2e (pars05+dv q=0.9394@1023 board 2nd).
+
+## 2026-07-07 · v3 refiner swapped in (GO) + hairline hunt
+
+v3 (deadband τ=1/255 + MVC λ=15, sliver-gated) validated across 5 images:
+eye equal-or-better everywhere, no new artifact class; the sliver-tip blob
+was killed by a DYNAMIC thin-zone gate (tips extrude during optimization —
+init-time masks miss them). Swapped into engine DV worker. e2e: 76s, winner
+0.9250@727 (metric −0.6pt = designed noise-divorce); MY grid check: v3
+strokes evener than v2, toes rounder, closing on Recraft.
+NEW BUG surfaced by validation: shield/pizza/badge emissions have deep-zoom
+hairlines BEFORE refinement (integrity 0.1-0.8; elephant/rabbit 1.0) —
+contradicts coincidence-by-construction; agent hunting root cause
+(suspects: split_paths grouping, dropped directed edges in region_loops,
+non-square viewBox).

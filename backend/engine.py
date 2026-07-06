@@ -211,7 +211,11 @@ def _dv_shared_worker(args):
         from PIL import Image as _Im
         from pipelines import get_pipeline
         from svgutil import fit_svg_size
-        import refine_shared_v2 as RS
+        # v3 = v2 + deadband fidelity + MVC curvature fairing (sliver-gated):
+        # stops paying for sub-AA raster noise, so lines idealize instead of
+        # wobbling. Validated GO across 5 images (eye equal-or-better, no new
+        # artifact class; the ~0.5pt metric drop is the designed trade).
+        import refine_shared_v3 as RS
         import metrics as M
 
         proc_img = np.asarray(_Im.open(proc_path).convert("RGB"))

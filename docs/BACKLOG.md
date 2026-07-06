@@ -69,3 +69,12 @@ Ranked by expected visual impact (per the vision-first goal).
 - [ ] Junction ink pooling (agent running on strokes.py).
 - [ ] chopchop sample deep-dive (new sample dropped in samples/).
 - [ ] Semantic containers (grouping regions into meaningful objects).
+
+## Bugs to chase
+
+- [ ] **Pre-existing deep-zoom hairlines on shield / pizza box / logo_badge**
+  shared-boundary emissions (structcheck 0.1-0.8 BEFORE any refinement, v2
+  and v3 alike; elephant/rabbit are 1.0). Contradicts coincidence-by-
+  construction — suspects: split_paths grouping on these images, closed-loop
+  border cases, or non-square viewBox handling in emission. Reproduce with
+  testbed + structcheck diagnostics per image.
