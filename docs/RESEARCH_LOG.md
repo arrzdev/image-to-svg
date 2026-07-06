@@ -215,3 +215,15 @@ Remaining backlog for parity: palette idealization (match Recraft's shading
 tints / merge to fewer cleaner shading shapes); line-consistency judge so the
 tournament PICKS these idealized candidates (metric still underrates them,
 so contour_lines must be run directly rather than auto-selected).
+
+## 2026-07-07 · PAUSED — handoff (see docs/RESUME.md)
+
+User paused the work to resume next week. Confirmed the contour_lines output
+(the direct command) is "very good" and fast. Fresh defect report to attack
+next (now top of BACKLOG + detailed in RESUME.md):
+1. Perpendicular stroke crossings leave GAPS (caps stop short of intersection).
+2. Some line curvatures differ from the original (centerline smoothing/fit).
+3. Rectangular nub artifacts where strokes join (butt caps / segment seams).
+All three are stroke-layer issues in contours_exp.py / strokes.py. After them:
+palette idealization (Recraft's softer shading tints) is the last quality gap.
+State snapshot: v4 (git c463914), docs/RESUME.md is the single start-here doc.

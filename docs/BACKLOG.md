@@ -1,6 +1,25 @@
 # Backlog / idea queue
 
 Ranked by expected visual impact (per the vision-first goal).
+**See docs/RESUME.md for the paused-session handoff and top priorities.**
+
+## contour_lines stroke defects (USER report 2026-07-07 — TOP PRIORITY)
+
+Files: backend/contours_exp.py + backend/strokes.py. Judge by 4096 zoom crops
+at the affected spots.
+
+- [ ] **Perpendicular crossings leave gaps** — strokes crossing at ~90° don't
+  touch; caps stop short of the intersection. Detect crossing/T junctions in
+  the skeleton, snap/extend incident endpoints to the shared point (extend the
+  existing junction union-find/patch machinery to perpendicular crossings) or
+  patch the crossing.
+- [ ] **Some curvatures differ from original** — centerline smoothing+fit
+  alters drawn shape. Try curvature-aware smoothing or fit the centerline with
+  svgcore.fit_open_parsimony instead of Schneider.
+- [ ] **Rectangular nub artifacts at joins** — butt caps / segment seams at
+  branch joins render little rectangles. Audit `_stroke_elements`/`_ribbon`
+  cap+join style (want round joins); ensure continuation-merged branches emit
+  as ONE path, not abutting segments.
 
 ## Line quality (the user's three defects — TOP PRIORITY)
 

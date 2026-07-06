@@ -1,6 +1,12 @@
 # Engine state
 
-_Last updated: 2026-07-07, loop after user's visual critique._
+_Last updated: 2026-07-07 (v4). PAUSED — see docs/RESUME.md to restart._
+
+**Current best output = `contour_lines` pipeline** (v4): width-constant
+centerline strokes + parsimony-fitted flat shading. Reached Recraft's quality
+tier by eye (models/v4/vs_recraft_*.png). Known open stroke defects from user:
+perpendicular-crossing gaps, some curvature drift, rectangular join nubs — all
+detailed in docs/RESUME.md + docs/BACKLOG.md.
 
 ## What the engine is
 
