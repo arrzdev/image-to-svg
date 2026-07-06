@@ -31,7 +31,7 @@ from typing import Dict, List, Tuple
 
 import numpy as np
 
-from boundary import _reverse_cubic, smooth_edges
+from boundary import _is_border_edge, _line_cubics, _reverse_cubic, smooth_edges
 
 
 def _loop_polyline(loop, edges) -> np.ndarray:
@@ -182,6 +182,9 @@ def loops_to_svg_split(labels: np.ndarray, centers: np.ndarray, edges,
 
     fitted: Dict[int, List[Tuple[float, ...]]] = {}
     for i, e in enumerate(fit_edges):
+        if _is_border_edge(e):
+            fitted[i] = _line_cubics(edges[i]["pts"])
+            continue
         pts = e["pts"]
         flat = [float(v) for xy in pts for v in xy]
         cubics = svgcore.fit_open(flat, tol, corner_deg)

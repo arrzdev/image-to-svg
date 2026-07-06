@@ -157,7 +157,16 @@ def integrity(svg: str, size: int = _SIZE) -> dict:
     else:
         w, h = max(1, round(size * aspect)), size
 
-    rgba = _render_rgba(svg, w, h)
+    # Root width/height carry the ORIGINAL image's integer dims whose aspect
+    # differs from the viewBox's by rounding; resvg lays out from those
+    # attributes while (w, h) come from the viewBox — the sub-pixel shift
+    # half-covers a full edge row and reads as a fake hairline. Rewriting
+    # width/height to the raster dims makes the layout exact.
+    try:
+        from svgutil import fit_svg_size as _fss
+    except ImportError:
+        from .svgutil import fit_svg_size as _fss
+    rgba = _render_rgba(_fss(svg, w, h), w, h)
     channels = cv2.split(rgba)  # contiguous planes: fast morphology
     alpha = channels[3]
 

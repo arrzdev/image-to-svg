@@ -179,3 +179,18 @@ hairlines BEFORE refinement (integrity 0.1-0.8; elephant/rabbit 1.0) —
 contradicts coincidence-by-construction; agent hunting root cause
 (suspects: split_paths grouping, dropped directed edges in region_loops,
 non-square viewBox).
+
+## 2026-07-07 · Canvas-frame hairline bug FIXED (agent root-cause + patch)
+
+The shared-boundary guarantee only covers INTERIOR edges — canvas-frame
+edges (vs outside label -1) are single-coverage, and smoothing rounds canvas
+corners / fit_open bows ~tol across 90° corners → real hairlines at the
+frame. FIX: border edges bypass smoothing/fitting entirely, emitted as exact
+line-cubics (one per straight run). SECOND bug: structcheck itself had an
+aspect-rounding measurement artifact (root width/height vs viewBox → 0.4px
+global shift = fake hairline row); fixed by rewriting dims to the raster.
+Verified: shield 0.832→1.000, elephant/rabbit 0.727→1.000 (they had it too,
+just less), badge 0.127→0.832 (residual = near-threshold AA noise), pizza
+0.216→0.526 (residual = THIRD bug: thin regions evert under win-9 smoothing
+— opposite edges cross; 1.000 at smooth_win=0; backlogged). Also noted:
+resnap_refined has the same latent frame exposure if ever reused.

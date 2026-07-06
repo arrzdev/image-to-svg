@@ -321,6 +321,31 @@ def _reverse_cubic(c):
     return (c[6], c[7], c[4], c[5], c[2], c[3], c[0], c[1])
 
 
+def _is_border_edge(e) -> bool:
+    """Edge against the virtual outside label (-1): it lies ON the canvas
+    frame and is covered by only ONE region, so the shared-boundary
+    coincidence guarantee does not apply — it must stay exactly on the frame
+    (smoothing rounds canvas corners; fit_open bows up to ~tol across 90°
+    corners; both expose transparent hairlines nothing papers over)."""
+    return e["left"] < 0 or e["right"] < 0
+
+
+def _line_cubics(pts):
+    """Exact line-cubics for an axis-aligned lattice polyline: one segment per
+    straight run (vertices kept only where the direction changes). Used for
+    canvas-frame edges, which the fitter cannot reproduce exactly."""
+    P = [(float(x), float(y)) for x, y in pts]
+    vs = [P[0]]
+    for i in range(1, len(P) - 1):
+        (x0, y0), (x1, y1), (x2, y2) = vs[-1], P[i], P[i + 1]
+        if (x1 - x0) * (y2 - y1) != (y1 - y0) * (x2 - x1):
+            vs.append(P[i])
+    vs.append(P[-1])
+    return [(ax, ay, ax + (bx - ax) / 3.0, ay + (by - ay) / 3.0,
+             ax + 2.0 * (bx - ax) / 3.0, ay + 2.0 * (by - ay) / 3.0, bx, by)
+            for (ax, ay), (bx, by) in zip(vs[:-1], vs[1:])]
+
+
 def _emit_regions(labels, centers, loops_by_region, fitted) -> Tuple[str, list]:
     """Emit region paths from per-edge cubic chains. Returns (svg, plan);
     plan records, in emission order, every (region, loop, edge, rev, n_cubics)
@@ -384,11 +409,15 @@ def loops_to_svg_curves(labels: np.ndarray, centers: np.ndarray, edges,
     cannot create segments. 0.2 beats smooth+Schneider on all axes; 0.5-1.0
     trades quality for the Recraft point corner."""
     import svgcore
+    raw_edges = edges
     if parsimony <= 0 and smooth_win > 1:
         edges = smooth_edges(edges, smooth_win)
 
     fitted: Dict[int, List[Tuple[float, ...]]] = {}
     for i, e in enumerate(edges):
+        if _is_border_edge(e):
+            fitted[i] = _line_cubics(raw_edges[i]["pts"])
+            continue
         pts = e["pts"]
         flat = [float(v) for xy in pts for v in xy]
         if parsimony > 0:

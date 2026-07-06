@@ -78,3 +78,7 @@ Ranked by expected visual impact (per the vision-first goal).
   construction — suspects: split_paths grouping on these images, closed-loop
   border cases, or non-square viewBox handling in emission. Reproduce with
   testbed + structcheck diagnostics per image.
+- [ ] **Thin-region eversion under wide smoothing** (pizza residual 1030px):
+  smooth_edges moves opposite edges of sub-window-width regions past each
+  other → unfilled lens. Fix: thickness-aware smoothing clamp or post-fit
+  crossing check. (Parsimony fitting sidesteps it — no smoothing.)
