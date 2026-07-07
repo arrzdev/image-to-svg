@@ -89,6 +89,17 @@ at the affected spots.
   handling in metric?) — numbers meaningless for this target, eye only.
   Investigate as a deliberate re-baseline step if it starts mattering.
 
+## Chopchop residuals (post-v5)
+
+- [ ] **Brown flecks**: small dark-label fragments along serrations stroked in
+  their own color. Refuted (run 11): full union welds shading bands into the
+  line network; 70%-dominance union is lateral. Design next: ADJACENCY-based
+  recolor — a small dark fragment (< ~200px) touching a ≥10× larger component
+  of another dark label inherits that component's color and mask.
+- [ ] **Trunk texture noodles + junction blobs**: trunk interior dark texture
+  renders as squiggle ribbons; frond junctions pool black. Both visible in
+  run11b grids; untouched by the union experiments.
+
 ## Judge upgrades
 
 - [ ] **Line-consistency metric component**: the tournament objective can't

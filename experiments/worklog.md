@@ -200,6 +200,21 @@ Narrative that survives compaction/clear. On resume: read `autoresearch.md`
 - Sanity: elephant 0.8574 (flat vs 0.8562), points 2601. Chopchop metric
   still meaningless (0.144) — eye only, as established run 6.
 
+### Run 11: dark-label UNION — DISCARD (two designs refuted, lesson kept)
+- Target defect: brown flecks along chopchop serrations = small components of
+  sibling dark labels stroked in their own color; per-label processing also
+  splits the physically-connected network at color seams.
+- Debug 1: naive full union REGRESSED the trunk — welded the dark-brown
+  SHADING band into the black outline (majority color black → lumpy black
+  blobs). Lesson: dark ≠ line; dark shading fills must stay fills.
+- Debug 1 result: dominance rule (≥70% one label → unify; else split back
+  per label) fixed the trunk weld BUT flecks persist in the crown crops and a
+  leg tip got marginally heavier — mixed/lateral by eye → DISCARD, revert.
+- Lesson + next design: flecks need ADJACENCY-BASED SMALL-FRAGMENT RECOLOR
+  (small dark fragment touching a much larger other-dark-label line inherits
+  its color/mask), not any form of union. The union family is exhausted —
+  don't retry it.
+
 ## Key Insights
 - The metric is a sanity check, not the gate. A change can raise `quality` by
   copying noise and still LOOK worse — always render `tb.crops` and decide by eye.
