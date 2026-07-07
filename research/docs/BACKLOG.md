@@ -201,6 +201,8 @@ at the affected spots.
      boundaries).
   Two independent candidate domains (label-side spike guard vs fitter-side
   corner preservation) — natural A/B pair for iteration 18. Top priority.
+  Full dispatch brief pre-staged at `research/it18/brief.md` (gitignored
+  disk state, like all it<N> dirs).
 - [x] **Pin k-means determinism** — CLOSED by run-17 research: the run-12
   attribution was WRONG; k-means is seeded and stable (label chains hash
   byte-identical across processes). The real source is medial_axis tie-order
