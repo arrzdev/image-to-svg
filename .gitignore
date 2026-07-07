@@ -21,3 +21,6 @@ experiments/autoresearch.jsonl.precompact.bak
 # (durable record lives in RESEARCH_LOG / jsonl / worklog / git history)
 autoresearch.iteration.json
 .autoresearch-worktrees/
+
+# scratch experiment renders (regenerable)
+experiments/*.svg
