@@ -37,7 +37,7 @@ actually *measure* which approach + parameters win for a given image:
 
 `shared-boundary vectorization → per-edge curve fitting → DiffVG refinement`
 reaches the professional fidelity/simplicity corner. On `samples/elephant.jpg`
-vs Recraft's own conversion (`recraft-elephant.svg`):
+vs Recraft's own conversion (`data/targets/elephant.svg`):
 
 | | ours (grail winner) | ours (most compact) | ours `--mode fast` (~6s) | Recraft (~3-4s) |
 |---|---|---|---|---|

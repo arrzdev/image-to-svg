@@ -1,0 +1,3 @@
+PLACEHOLDER INPUT — source a real image, then run it through Recraft.
+STYLE WANTED: flat vector illustration with NO dark outlines (color shapes meeting edge-to-edge, "corporate/geometric" style).
+WHY: our line pipeline assumes an outline network; zero data on the no-outline case.

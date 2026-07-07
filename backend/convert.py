@@ -35,6 +35,21 @@ def main():
 
     import engine
 
+    # default destination: data/outputs/{name}-{algoVersion}-{timestamp}.svg
+    # (algoVersion = current git short sha, so every deliverable is traceable
+    # to the exact engine that made it). -o overrides for a single input.
+    from datetime import datetime
+    import subprocess
+    OUT_DIR = Path(__file__).resolve().parent.parent / "data" / "outputs"
+    try:
+        ver = subprocess.check_output(
+            ["git", "rev-parse", "--short", "HEAD"],
+            cwd=str(OUT_DIR.parent.parent), stderr=subprocess.DEVNULL
+        ).decode().strip() or "nogit"
+    except Exception:
+        ver = "nogit"
+    stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+
     failures = 0
     for img in args.images:
         p = Path(img)
@@ -42,7 +57,11 @@ def main():
             print(f"skip (not found): {img}", file=sys.stderr)
             failures += 1
             continue
-        out = Path(args.output) if args.output else p.with_suffix(".svg")
+        if args.output:
+            out = Path(args.output)
+        else:
+            OUT_DIR.mkdir(parents=True, exist_ok=True)
+            out = OUT_DIR / f"{p.stem}-{ver}-{stamp}.svg"
         t0 = time.time()
         try:
             res = engine.tournament(p.read_bytes(), mode=args.mode, top_n=1, dv=args.dv)

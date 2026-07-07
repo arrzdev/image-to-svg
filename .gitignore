@@ -6,3 +6,5 @@ outputs/
 !outputs/.gitkeep
 .DS_Store
 *.egg-info/
+data/outputs/*
+!data/outputs/.gitkeep

@@ -25,6 +25,14 @@ open('out.svg','w').write(fit_svg_size(get_pipeline('contour_lines').run(pp,{}),
 ```
 (env prefix + `.venv` python are mandatory — native renderer + Rust svgcore.)
 
+**Data layout (migrated 2026-07):** inputs live in `data/inputs/<name>.ext`,
+Recraft targets in `data/targets/<name>.svg` (paired by basename;
+`PLACEHOLDER`-marked = still to fetch, see `data/README.md`), engine
+deliverables in `data/outputs/{name}-{gitsha}-{timestamp}.svg`. In the
+testbed, `tb.target()` returns the matching Recraft SVG (or None) — use it in
+`tb.crops({...})` for the eye comparison. Only `elephant` has a real target
+today; more coming.
+
 ## THE NEXT WORK — user's fresh defect report on contour_lines output
 
 The user ran the command above and confirmed the pipeline is "very good" and

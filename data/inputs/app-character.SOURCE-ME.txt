@@ -1,0 +1,2 @@
+PLACEHOLDER INPUT — source one of YOUR real app character assets, ideally a low-quality/noisy one.
+WHY: the actual objective (clean SVG from an imperfect input); tests noise-removal idealization directly.

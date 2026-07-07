@@ -7,12 +7,13 @@ prep rasters, even DV results for identical configs come back instantly.
 
 Usage:
     from testbed import Testbed
-    tb = Testbed("elephant.jpg")                    # samples/ or path
+    tb = Testbed("elephant.jpg")                    # data/inputs/ or a path
     labels, centers = tb.labels(num_colors=16)      # cached partition
     svg = tb.svg(tol=3.0, smooth_win=9)             # cached fit
     ref = tb.dv(tol=3.0, smooth_win=9)              # cached refinement
     print(tb.score(svg))                            # cached metrics
-    tb.crops({"mine": svg, "recraft": open("../recraft-elephant.svg").read()},
+    tb.crops({"mine": svg,
+              "recraft": open("data/targets/elephant.svg").read()},
              out="exp1.png")                        # vision grid: original |
                                                     # variants side by side
 """
@@ -121,6 +122,16 @@ class Testbed:
         return s
 
     # ---------------------------------------------------------- judging
+    def target(self):
+        """The Recraft 'holy grail' SVG for this input, or None if we don't
+        have it yet (placeholder files in data/targets/ are ignored). Matched
+        by basename: data/inputs/<name>.* -> data/targets/<name>.svg."""
+        p = HERE.parent / "data" / "targets" / (self.name + ".svg")
+        if not p.exists():
+            return None
+        s = p.read_text()
+        return s if s.lstrip().startswith("<") else None   # skip placeholders
+
     def score(self, svg: str) -> dict:
         k = CACHE / f"m_{_key(self.raw, self.dim, svg)}.json"
         if k.exists():

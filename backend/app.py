@@ -33,8 +33,8 @@ from svgopt import optimize_svg
 
 ROOT = Path(__file__).resolve().parent.parent
 FRONTEND = ROOT / "frontend"
-SAMPLES = ROOT / "samples"
-SCRATCH = ROOT / "outputs"
+SAMPLES = ROOT / "data" / "inputs"   # migrated from samples/ (2026-07)
+SCRATCH = ROOT / "outputs"           # scratch renders + testbed cache (gitignored)
 SCRATCH.mkdir(exist_ok=True)
 
 app = FastAPI(title="image-to-svg playground")
