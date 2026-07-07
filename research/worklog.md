@@ -373,3 +373,10 @@ See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
 - it18 design: label-side spike guard (boundary-subpart protection — run-14
   guard covers whole components only) + fitter-side corner preservation
   (run-10 cure for dark bands, extended to light regions). Natural A/B pair.
+
+### Run 17 addendum 3: deep-zoom hairline bug triaged — v5 already clean except pizza-box eversion
+- structcheck on v5 HEAD shared-boundary emissions: shield 1.000,
+  logo-badge 1.000, elephant 1.000 — the BACKLOG "0.1-0.8" bug was v2/v3-era,
+  closed for v5. pizza-box 0.875: 166 hairline px in two clusters; worst
+  (285,170)@1024 = hairline crack + everted gray lens (eyed,
+  diag17_pizza_gap.png) = the known thin-region eversion, now with coords.
