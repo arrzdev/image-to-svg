@@ -26,6 +26,14 @@ Recraft itself scores *lower* on it than our worse-looking outputs. Therefore:
 - The config header sets `targetMetric: null` and `maxSeconds: null` so the Stop
   hook never auto-stops on the number — only `maxRuns` or `/autoresearch off`
   ends the loop. `bestDirection` is nominal; do not chase it.
+- **⚠ The ban covers EVERY number, including ones WE derive** — `diffpx`, the
+  k-means noise floor, `flecks_absorbed`, points count. These are **spot-finders
+  and sanity checks, never verdicts.** A low `diffpx` or a zero change-count
+  tells you *where* (or *whether*) code fired — it does NOT tell you a target is
+  fine. **You may not declare any target clean from a number; render the grid
+  and look.** (Run 12: fox `diffpx` sat at the noise floor while 81 flecks
+  fired — only rendering the grid showed the 81 changes were harmless. Calling
+  it a "no-op" from the number was the exact mistake this rule exists to stop.)
 
 ## How "better" is judged — the vision verdict (THE gate)
 For the focus target, render the comparison grid and LOOK:
@@ -53,10 +61,18 @@ Every experiment follows this order; **do not commit before step 4**:
 1. **Focus target first.** Make ONE atomic pipeline change. Render `new` vs
    `prev` vs `recraft` on the focus target (`./autoresearch.focus`). Eye-verdict.
    Iterate here until `new` beats `prev` on this single target.
-2. **Broaden to all 8 targets.** Render each and eye-check that the change
-   generalizes across the style spread (characters, gradients, flat-line, logo)
-   **without regressing any**. A win on the focus target that regresses another
-   target does NOT ship.
+2. **Broaden to all 8 targets — render and LOOK at every target the change can
+   touch.** Eye-check that the change generalizes across the style spread
+   (characters, gradients, flat-line, logo) **without regressing any**. A win on
+   the focus target that regresses another does NOT ship.
+   - **You may NOT declare a target clean from a count or a diff number.**
+     `diffpx`/`flecks_absorbed`/etc. only pick the crop `spots` (and tell you
+     whether the code even fired) — the EYE forms the verdict. Because renders
+     are non-deterministic (~8k-px `diffpx` noise floor, see "What's Been
+     Tried"), a small `diffpx` can hide real changes (run 12: fox, 81 flecks).
+   - **The only no-render skip is a *byte-identical* SVG** (`new == prev` as
+     strings — then it truly cannot differ). "Small diff" or "count is zero" is
+     NOT identity; render it and look.
 3. **Benchmark last (sanity only).** Run `./autoresearch.sh` on the focus target
    (and spot-check others) to catch external regressions in the numbers. A worse
    number after a passed eye verdict is a flag to investigate, not an auto-reject.
@@ -257,3 +273,13 @@ and a meta-review of which *classes* of change win vs lose.
   ridge test + ~120° cumulative turn cap are mandatory for any ink tracer.
 - Metric lesson: composite `quality` swings ±1% on tiny geometry changes with
   flat ssim/ms-ssim — never steer by it; sub-metrics + eye only.
+- Run 12 (4c616ce): adjacency fleck absorption (first worktree-parallel
+  iteration; candidate A shipped, B refuted by orchestrator). **Process lesson —
+  the mistake to never repeat:** during broaden I first called fox + elephant
+  "no-op within noise" from `flecks_absorbed`/`diffpx` *without rendering them*.
+  Fox had 81 flecks fire *under* the ~8k `diffpx` noise floor — not a no-op at
+  all. Rule now enforced above: never infer a target is fine from a number
+  (even our own noise-floor number); render new-vs-prev and eye-check every
+  touched target; the only no-render skip is a byte-identical SVG.
+- Render nondeterminism: same code → ~8k-px `diffpx` self-diff (cv2 k-means not
+  seed-stable across processes). `diffpx` is a spot-finder, never a verdict.
