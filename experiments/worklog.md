@@ -178,6 +178,23 @@ Narrative that survives compaction/clear. On resume: read `autoresearch.md`
   toward Recraft — the metric penalizes idealization, spec §4). quality 0.8562.
 - Remaining big item: serration corner-nodes + miter joins (design in BACKLOG).
 
+### Run 10 (in progress): serration corner-nodes + miter joins (run-7 design)
+- Change: outline-BAND exemption in the shape gate + corner-preserving
+  smoothing (_corner_indices on RAW chain + _smooth_open_corners) + constant
+  width + stroke-linejoin:miter (miterlimit 8) for band strokes.
+- Debug 1: hole-enclosure band test never fired (serration outlines are OPEN
+  arc fragments in the label map) → signature test (cov<1.4, elong>6).
+- Debug 2: swell_frac<0.25 rejected ALL serrations (pools at every notch,
+  frac 0.3–0.45) → replaced with p25r>0.8 (solid baseline between pools;
+  tapered glyphs 0.4–0.6 — verified on rabbit/fox data).
+- Debug 3: at med_w=2px the EDT can't express taper → fox fur flicks
+  masqueraded as bands and lost their drawn character → med_w>=3 gate.
+- Chopchop eye verdict (before debug 3, unaffected by it): serration Vs
+  visibly SHARPER + uniform weight, clear step toward Recraft. Excess-ink
+  metric flat all along — it cannot see sharpness; eye rules.
+- Pending: fox re-verify after med_w gate (flicks should revert to fills =
+  prev behavior), then rabbit/crystals/mountain sweeps, sanity, ship/discard.
+
 ## Key Insights
 - The metric is a sanity check, not the gate. A change can raise `quality` by
   copying noise and still LOOK worse — always render `tb.crops` and decide by eye.

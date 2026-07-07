@@ -76,6 +76,52 @@ def _fit_branch(pts: np.ndarray, tol: float, corner_deg: float,
     return _cubics_to_d(svgcore.fit_open(flat, tol, corner_deg), closed)
 
 
+def _corner_indices(pts: np.ndarray, w: float,
+                    min_turn_deg: float = 45.0) -> List[int]:
+    """Sharp-corner indices on a raw centerline chain (serration V-notches).
+
+    Turning angle between the incoming and outgoing chords of length ~1.5w;
+    local maxima above min_turn_deg, non-max suppressed within a chord. Run
+    BEFORE smoothing — the moving average erases exactly these corners, which
+    is why serration notches used to render soft."""
+    k = max(3, int(round(1.5 * w)))
+    n = len(pts)
+    if n < 2 * k + 3:
+        return []
+    p = np.asarray(pts, float)
+    v1 = p[k:n - k] - p[:n - 2 * k]
+    v2 = p[2 * k:] - p[k:n - k]
+    dot = (v1 * v2).sum(1) / (np.linalg.norm(v1, axis=1)
+                              * np.linalg.norm(v2, axis=1) + 1e-9)
+    ang = np.degrees(np.arccos(np.clip(dot, -1, 1)))
+    idx = []
+    order = np.argsort(ang)[::-1]
+    taken = np.zeros(len(ang), bool)
+    for i in order:
+        if ang[i] < min_turn_deg:
+            break
+        if taken[max(0, i - k):i + k].any():
+            continue
+        taken[i] = True
+        idx.append(int(i) + k)          # offset back into pts index space
+    return sorted(idx)
+
+
+def _smooth_open_corners(pts: np.ndarray, win: int,
+                         corners: List[int]) -> np.ndarray:
+    """Moving-average smooth with CORNERS PINNED: each inter-corner segment
+    smooths independently (endpoints pinned), so sharp V-notches survive for
+    the fitter to anchor as hard corners."""
+    if not corners:
+        return _smooth_open(pts, win)
+    out = []
+    bounds = [0] + corners + [len(pts) - 1]
+    for a, b in zip(bounds[:-1], bounds[1:]):
+        seg = _smooth_open(pts[a:b + 1], win)
+        out.append(seg if a == 0 else seg[1:])
+    return np.vstack(out)
+
+
 # --------------------------------------------------- junction continuation
 
 def _end_dir(pix: List, at_head: bool, k: int = 9) -> Optional[np.ndarray]:
@@ -231,9 +277,31 @@ def extract_contour_strokes(labels: np.ndarray, centers: np.ndarray,
             # drawn SHAPE — the fill pipeline renders it faithfully; any
             # centerline decomposition (or blob-patch + stroke mix) is lumpy.
             wp0 = dist[skel] * 2.0
+            is_band = False
             if float(np.percentile(wp0, 90)) > shape_p90 * med_w:
-                info["shape_fills"] = info.get("shape_fills", 0) + 1
-                continue
+                # outline-BAND exemption (run-7 design): serrated outline
+                # fragments are drawn LINES whose p90 is inflated by notch
+                # pooling — signature: line-like coverage (area ≈ skeleton
+                # length × width), elongated, and swells LOCALIZED (pools at
+                # notches), unlike a glyph's smooth intentional taper (wink
+                # swoosh: large swollen fraction) or a solid blob (coverage
+                # ratio >> 1). Bands get corner-aware constant-width
+                # stroking; glyphs stay fills.
+                skel_px = int(skel.sum())
+                cov = area / max(skel_px * med_w, 1.0)
+                elong = skel_px / max(med_w, 1.0)
+                # band vs glyph: a serrated band keeps a SOLID BASELINE width
+                # between notch pools (p25 ≈ median), a tapered glyph's width
+                # spans a ramp (p25 well below median — rabbit eyelids 0.4-0.6,
+                # solid-baseline lines 0.8-1.0 across all targets).
+                p25r = float(np.percentile(wp0, 25)) / max(med_w, 1e-6)
+                # med_w >= 3: below EDT resolution the p25 test saturates and
+                # tapered 2px glyphs (fox fur flicks) masquerade as bands.
+                if med_w >= 3.0 and cov < 1.4 and elong > 6 and p25r > 0.8:
+                    is_band = True
+                else:
+                    info["shape_fills"] = info.get("shape_fills", 0) + 1
+                    continue
 
             # ---- wide-band gate: a UNIFORM thick band (shield rim ~36px,
             # badge ring ~40px) passes the shape gate (constant width!) but
@@ -322,7 +390,8 @@ def extract_contour_strokes(labels: np.ndarray, centers: np.ndarray,
                              and (br["b"] == 0 or deg.get(br["b"], 0) <= 1))
                 pend.append({"pts": pts, "widths": widths, "w_med": w_med,
                              "closed": br["closed"], "color": color,
-                             "head_free": head_free, "tail_free": tail_free})
+                             "head_free": head_free, "tail_free": tail_free,
+                             "band": is_band})
                 info["widths"].append(w_med)
                 info["wlens"].append(len(br["pix"]))
                 info["branches"] += 1
@@ -505,6 +574,28 @@ def extract_contour_strokes(labels: np.ndarray, centers: np.ndarray,
         if (pb["head_free"] and pb["tail_free"]
                 and len(seg) < stub_factor * w_body):
             continue
+        # ---- serration BANDS: corner-aware CONSTANT-width stroke (run-7
+        # design). Detect V-notch corners on the RAW chain (smoothing erases
+        # them), smooth segments with corners pinned, fit with a corner
+        # threshold the fitter will honor, and emit with MITER joins so the
+        # renderer re-sharpens every notch geometrically. No swell profile —
+        # the drawn serration line is uniform weight; notch pools are ink
+        # artifacts, not intent.
+        if pb.get("band"):
+            corners = [] if pb["closed"] else _corner_indices(seg, w_body)
+            import svgcore
+            if pb["closed"]:
+                d = _fit_branch(seg, stroke_tol, 60.0, stroke_smooth, True)
+            else:
+                sm = _smooth_open_corners(seg, stroke_smooth, corners)
+                flat = [float(v) for p in sm for v in p]
+                d = _cubics_to_d(svgcore.fit_open(flat, stroke_tol, 60.0),
+                                 False)
+            if d:
+                strokes.append({"d": d, "width": w_body, "color": pb["color"],
+                                "kind": "stroke", "join": "miter"})
+                info["band_strokes"] = info.get("band_strokes", 0) + 1
+            continue
         # ---- constant-baseline width profile.  The drawn line is w_body
         # everywhere EXCEPT where the ink genuinely departs: local swells
         # (calligraphic joints, junction pooling — sm_w >> w_body) rise with
@@ -573,10 +664,12 @@ def _stroke_elements(strokes: List[dict]) -> str:
         if st.get("kind") in ("wedge", "ribbon"):
             parts.append(f'<path d="{st["d"]}" fill="{hexc}"/>')
         else:
+            join = st.get("join", "round")
+            miter = ' stroke-miterlimit="8"' if join == "miter" else ""
             parts.append(
                 f'<path d="{st["d"]}" fill="none" stroke="{hexc}" '
                 f'stroke-width="{st["width"]:.2f}" stroke-linecap="round" '
-                f'stroke-linejoin="round"/>')
+                f'stroke-linejoin="{join}"{miter}/>')
     return "\n".join(parts)
 
 
