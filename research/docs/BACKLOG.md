@@ -188,14 +188,19 @@ at the affected spots.
   lowest-presence spots, `diag17_scratch.png`). Remaining light-line defects
   are the mouth family (items below).
 - [ ] **Monster mouth teeth scalloped, should be sharp zigzag** (run-17
-  research, ~x430-560/y230-280 @1024, eye-loud on the FOCUS target): the
-  white mouth region's serrated edge is smoothed by the fill fitter; original
-  AND Recraft keep sharp triangular teeth. Same disease run 10 cured on
-  chopchop's dark serration bands (corner-as-hard-node + miter) — extend
-  corner-preserving fitting to LIGHT-region boundaries inside dark shapes
-  (corner detection on the region polygon before smoothing/parsimony, or
-  route serrated light regions through the band-stroke mechanism). Top
-  iteration-18 candidate.
+  research, ~x430-560/y230-280 @1024, eye-loud on the FOCUS target): original
+  AND Recraft keep sharp triangular teeth; ours degrade in TWO stages
+  (stage strip `models/v5/outputs/diag17_teeth_stages2.png`, quantize itself
+  innocent):
+  1. `_despeckle_labels`/`_smooth_labels` erode the thin tooth spikes to
+     ~half height (spike tips are sub-thin features of a LARGE region's
+     boundary — the run-14 light-accent guard only protects whole
+     components, not boundary subparts);
+  2. the fill fitter rounds the surviving nubs into scallops (the run-10
+     corner-as-hard-node + miter cure never reached light-region
+     boundaries).
+  Two independent candidate domains (label-side spike guard vs fitter-side
+  corner preservation) — natural A/B pair for iteration 18. Top priority.
 - [x] **Pin k-means determinism** — CLOSED by run-17 research: the run-12
   attribution was WRONG; k-means is seeded and stable (label chains hash
   byte-identical across processes). The real source is medial_axis tie-order

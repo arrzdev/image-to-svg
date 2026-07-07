@@ -364,3 +364,12 @@ See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
   smoothing eats the serration — the run-10 corner+miter cure never reached
   light-region boundaries. Promoted to top it18 candidate.
 - Mouth-corner hook now has a picture: wobbly thin curl (presence 0.51).
+
+### Run 17 addendum 2: teeth degradation staged — despeckle erodes, fitter rounds
+- Stage strip (ORIGINAL/rawquant/despeckle/smooth/dissolve/RENDER,
+  diag17_teeth_stages2.png): quantize preserves tall sharp teeth;
+  _despeckle_labels+_smooth_labels erode spikes to ~half height; the fill
+  fitter rounds the remaining nubs into scallops.
+- it18 design: label-side spike guard (boundary-subpart protection — run-14
+  guard covers whole components only) + fitter-side corner preservation
+  (run-10 cure for dark bands, extended to light regions). Natural A/B pair.
