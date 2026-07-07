@@ -22,6 +22,7 @@ from .base import Param, Pipeline
 from .quantize_contours import (
     _consolidate_palette,
     _despeckle_labels,
+    _merge_shadow_tones,
     _quantize,
     _smooth_labels,
 )
@@ -68,6 +69,7 @@ class ContourLinesPipeline(Pipeline):
         labels, centers = _quantize(img, p["num_colors"], p["seed"])
         if p["merge_de"] > 0:
             labels, centers = _consolidate_palette(labels, centers, p["merge_de"])
+            labels, centers = _merge_shadow_tones(labels, centers)
             labels = _despeckle_labels(labels, max(p["min_area"], 16), centers)
             labels = _smooth_labels(labels, len(centers), centers=centers)
 

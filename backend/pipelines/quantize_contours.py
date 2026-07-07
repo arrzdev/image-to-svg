@@ -30,6 +30,69 @@ def _quantize(img_rgb: np.ndarray, k: int, seed: int = 1234567) -> Tuple[np.ndar
     return labels, centers
 
 
+def _merge_shadow_tones(labels: np.ndarray, centers: np.ndarray
+                        ) -> Tuple[np.ndarray, np.ndarray]:
+    """Merge near-duplicate LOW-CHROMA shadow tones (measured Recraft gap).
+
+    8-pair OKLCH measurement (experiments/measure_ramp.py, run 8): Recraft's
+    palettes match ours to ~0.005 EXCEPT it keeps ONE mid shadow tone where
+    our k-means keeps two near-duplicates (elephant: aeb4c4 + 98bee3 → their
+    a6b8d0). Merge criterion tuned against that data so distinct grays
+    survive: BOTH tones low-chroma (OKLab C < 0.08), nearly equal lightness
+    (|dL| < 0.03 — mountain's d0dfe4/b6d2df pair at dL 0.04 must NOT merge),
+    and OKLab dE < 0.06. Merged color = area-weighted mean. Chromatic ramps
+    (crystals) are untouched by the C gate."""
+    n = len(centers)
+    if n <= 2:
+        return labels, centers
+    c = (centers.astype(np.float64) / 255.0)
+    c = np.where(c <= 0.04045, c / 12.92, ((c + 0.055) / 1.055) ** 2.4)
+    l = c @ np.array([0.4122214708, 0.5363325363, 0.0514459929])
+    m = c @ np.array([0.2119034982, 0.6806995451, 0.1073969566])
+    s = c @ np.array([0.0883024619, 0.2817188376, 0.6299787005])
+    l_, m_, s_ = np.cbrt(l), np.cbrt(m), np.cbrt(s)
+    L = 0.2104542553 * l_ + 0.7936177850 * m_ - 0.0040720468 * s_
+    A = 1.9779984951 * l_ - 2.4285922050 * m_ + 0.4505937099 * s_
+    B = 0.0259040371 * l_ + 0.7827717662 * m_ - 0.8086757660 * s_
+    C = np.hypot(A, B)
+    areas = np.bincount(labels.ravel(), minlength=n).astype(np.float64)
+    remap = np.arange(n)
+    for i in range(n):
+        for j in range(i + 1, n):
+            if remap[i] != i or remap[j] != j:
+                continue
+            if C[i] >= 0.08 or C[j] >= 0.08:
+                continue
+            if abs(L[i] - L[j]) >= 0.03:
+                continue
+            de = np.sqrt((L[i] - L[j]) ** 2 + (A[i] - A[j]) ** 2
+                         + (B[i] - B[j]) ** 2)
+            if de >= 0.06:
+                continue
+            # hue-opposition guard: even at low chroma, warm-vs-cool reads
+            # across large areas (mountain: cream snowband vs blue-gray sky
+            # must NOT merge). Require the chroma vectors to point the same
+            # general direction when both carry any hue at all.
+            if C[i] > 0.005 and C[j] > 0.005 and \
+                    (A[i] * A[j] + B[i] * B[j]) / (C[i] * C[j]) <= 0.3:
+                continue
+            keep, drop = (i, j) if areas[i] >= areas[j] else (j, i)
+            w = areas[keep] + areas[drop]
+            if w > 0:
+                centers[keep] = ((centers[keep].astype(np.float64) * areas[keep]
+                                  + centers[drop].astype(np.float64) * areas[drop])
+                                 / w).astype(centers.dtype)
+            areas[keep] = w
+            remap[drop] = keep
+    if (remap == np.arange(n)).all():
+        return labels, centers
+    labels = remap[labels]
+    used = np.unique(labels)
+    lut = np.zeros(n, dtype=labels.dtype)
+    lut[used] = np.arange(len(used))
+    return lut[labels], centers[used]
+
+
 def _consolidate_palette(labels: np.ndarray, centers: np.ndarray,
                          min_de: float) -> Tuple[np.ndarray, np.ndarray]:
     """Absorb anti-aliasing HALO clusters into the region they wrap.
