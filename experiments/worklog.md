@@ -238,3 +238,27 @@ See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
   + fox (81 flecks, all harmless) explicitly; initial 'no-op' label on fox was
   a number-inference mistake, corrected by looking.
 - Both worktrees removed; /clear mid-cycle resume verified (single + merge).
+
+### Run 13: worktree-parallel iteration (A+B BOTH ship combined) — commit b409934
+- Timestamp: 2026-07-08
+- 2 candidates off best, orchestrator-verified, combined one-at-a-time in an
+  _integrate worktree with an eye re-verify after EACH apply.
+- A-noodles (contours_exp.py): _wiggle_rate alternating-turn-density gate >2.2
+  per branch + small-component gate + free-end trim; dropped ink carved to the
+  fill layer. Chopchop trunk squiggle-noodles -> soft fill daubs. SHIPPED.
+- B-speckle2 (quantize_contours.py): _dissolve_speckle floor 300 (the run-12
+  lead). TWO regressions caught at integration/broadening, both fixed by
+  orchestrator guards: ring-dominance >=0.6 (crystals orange-gem facets were
+  being eaten) and darker-only luminance (mountain's drawn cloud wisp was
+  deleted — light accents are intent, noise daubs are dark). SHIPPED.
+- Broadening: all 8 targets eye-checked under FINAL guards; logo/monster
+  re-rendered fresh (diffpx 0 AND eyed); crystals' pink shoulder-fleck on the
+  orange gem (a prev artifact, absent in the original) is gone in new — bonus.
+- Sanity: elephant q 0.8574 / ssim 0.9624 / 2645 pts (series-consistent);
+  chopchop q 0.144 (known-meaningless for this target).
+- Leads filed to BACKLOG: S-wavy strokes at wiggle 1.5-2.2 need a second
+  signal; ink_extended~102 regrows hooks; tiny ISOLATED dark daubs untreated;
+  black-blob lattice flood (unverified B-agent claim); monster's thin white
+  scratch line lost by prev AND new (Recraft keeps it).
+- All 3 worktrees (A-noodles, B-speckle2, _integrate) removed; iteration.json
+  -> idle.

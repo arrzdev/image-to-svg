@@ -9,10 +9,10 @@ Mission (canonical): **docs/PROJECT_SPEC.md** · Handoff: **docs/RESUME.md** · 
 - GOAL: an *idealized* vector reconstruction (clean confident lines, solid flat
   regions, source noise removed) that **beats OUR LAST VERSION by EYE**, Recraft
   (`data/targets/`) in frame as the north-star. NOT pixel fidelity.
-- CURRENT VERSION: **v5 `contour_lines`** (git `50c0a03`); focus **chopchop** (`./autoresearch.focus`).
-- BEST-SO-FAR: v4 defect list cleared (runs 2–10) — line network integral, serrations corner-sharp, shadow tones merged. 6 keeps / 3 discards.
+- CURRENT VERSION: **v5 `contour_lines`** (git `b409934`); focus **chopchop** (`./autoresearch.focus`).
+- BEST-SO-FAR: run 13 A+B — trunk noodles→fill daubs (wiggle gate) + guarded plank-speckle dissolve; fleck absorption (r12); v4 defects cleared (r2–10). 9 keeps / 4 discards.
 - ⚠ ITERATIONS ARE WORKTREE-PARALLEL — if `autoresearch.iteration.json` phase≠idle, RESUME that in-flight iteration (see "Worktree-parallel iterations"); the SessionStart hook surfaces it.
-- OPEN: chopchop flecks/noodles/junction-blobs, rabbit long-gap breaks → docs/BACKLOG.md.
+- OPEN: chopchop junction-blobs/S-wavy strokes/lattice flood, rabbit long-gap breaks, monster scratch-line → docs/BACKLOG.md.
 
 ## The metric is NOT the arbiter here (the key adaptation)
 The stock autoresearch loop treats a bare number as the keep/discard gate. **This

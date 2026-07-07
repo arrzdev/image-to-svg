@@ -23,6 +23,67 @@ idea queue. Machine-readable results → `autoresearch.jsonl`; running narrative
 
 ---
 
+## 2026-07-08 · Run 13 (iteration 13) — 2 candidates, BOTH ship combined (A+B, commit b409934)
+
+Two independent candidates in worktrees off best `4c616ce`… (`e0a1c45` local
+best snapshot); both orchestrator-verified, combined one-at-a-time in an
+`_integrate` worktree with re-verification after each apply. Integration
+surfaced two regressions in B; both fixed by orchestrator-authored guards
+inside the integration worktree, re-verified, shipped.
+
+**Candidate A-noodles — VERIFIED, SHIPPED in combination.** Change
+(`backend/contours_exp.py`): three-part texture gate on the stroke network —
+`_wiggle_rate` = alternating-turn density (total |turning| − |net turning|) /
+arclength per branch; real drawn lines measure ≤1.9, texture daubs 2.4–7.8
+(measured, not guessed); gate at >2.2 before `_merge_continuations`, plus a
+small-component gate and free-end trimming; ink dropped from the stroke layer
+is carved into the FILL layer so texture reads as soft daubs, not vanishing.
+Grid (orchestrator's own render): chopchop trunk's squiggly stroke "noodles"
+become soft fill daubs matching Recraft's treatment; knot daub soft; real
+lines (serrations, outline, eye) untouched. Residual lead: a few S-wavy
+strokes sit just UNDER the gate (wiggle 1.5–2.2) — a lower threshold welds
+real lines, so any further cleanup needs a second signal (width variance?
+fill-contrast?), not a lower cutoff. Second lead: `ink_extended≈102` on
+chopchop — run-4 ridge extension regrows small hooks off texture remnants;
+worth an ablation pass.
+
+**Candidate B-speckle2 — VERIFIED after 2 debug guards, SHIPPED in
+combination.** Change (`quantize_contours.py` + `contour_lines.py` call):
+`_dissolve_speckle(labels, centers, 300)` after `_smooth_labels` — exactly the
+run-12 lead (floor ABOVE despeckle's 120). Guard saga, all caught by
+eye-verification, all fixed in `_integrate` by the orchestrator:
+1. **Ink-locked** (from dispatch): counts zero'd for dark labels — dissolve
+   never feeds the line network.
+2. **Ring-dominance ≥0.6** (debug 1): unguarded B1 ate the orange gem's facet
+   mosaic on crystals (a facet's neighbors are many labels; a noise daub sits
+   in a single-label ring). Guard restored facets; chopchop win held.
+3. **Darker-only luminance** (debug 2, found in broadening): combined AB
+   deleted a drawn cloud wisp beside the mountain peak — isolated to B (A
+   never touches fills). Noise daubs are DARK stains; LIGHT accents are drawn
+   intent (cloud wisp, plank-top highlight — Recraft keeps both). Dissolve
+   only when source is darker than target. Cloud eye-confirmed restored at
+   the actual wisp coordinates (located via label-map analysis, not assumed).
+Effect: chopchop plank speckle flattens to clean planks.
+
+**Combined verdict (orchestrator eye, all 8 targets under final guards):**
+chopchop planks flat + noodles gone + serrations sharp; crystals facets intact
+AND the pink shoulder-fleck that prev painted on the orange gem is GONE in new
+(original has no pink there — prev artifact removed, a small bonus); mountain
+cloud restored; elephant/rabbit/fox clean (checked pre-darker-guard; guard
+only makes B dissolve LESS, and their B-fire sites were re-eyed);
+logo-geometric + monster-flat-line re-rendered fresh under final AB2 —
+diffpx 0 AND eye-identical. Non-regression lead spotted on monster: BOTH new
+and prev drop a thin white scratch line inside the dark shape that Recraft
+keeps — pre-existing hairline-detail loss, → BACKLOG. Sanity: chopchop
+quality 0.144 (known-meaningless for this target), elephant 0.8574 /
+ssim 0.9624 / 2645 pts — series-consistent.
+
+**Interaction note:** A+B combined cleanly (A = stroke layer, B = fill labels;
+disjoint domains). The two B regressions were B-alone effects exposed at
+integration time, not A×B interactions. No bisect needed.
+
+---
+
 ## 2026-07-08 · Run 12 (iteration 12) — FIRST worktree-parallel iteration: 2 candidates, A ships, B discarded
 
 Architecture test + real iteration. Two independent candidates dispatched to

@@ -95,14 +95,40 @@ at the affected spots.
   (<250px dark fragment 8-adjacent to ≥10× larger dark component → reassigned;
   stroke-layer only). chopchop 234 flecks→line, −50KB. The run-11 union family
   was the wrong tool; adjacency is the right one.
-- [ ] **Trunk texture noodles + junction blobs**: trunk interior dark texture
-  renders as squiggle ribbons; frond junctions pool black. Both visible in
-  run11b grids; untouched by the union/fleck experiments.
-- [ ] **Shading despeckle above the despeckle floor** (run-12 B-speckle lead,
-  DISCARDED as lateral): `_dissolve_speckle` at floor ≤120px is redundant with
-  `_despeckle_labels`. Retry ONLY at a floor of 200–400px targeting chopchop
-  trunk/plank speckle, and/or the components `_smooth_labels` re-creates after
-  despeckle. Watch the thin-white-seam fill side effect if retried.
+- [x] **Trunk texture noodles** — SHIPPED run 13 (b409934, candidate A):
+  `_wiggle_rate` alternating-turn-density gate >2.2 per branch + small-component
+  gate + free-end trim; dropped ink carved to fill layer (soft daubs, Recraft's
+  treatment). Measured separation: real lines ≤1.9, texture daubs 2.4–7.8.
+- [ ] **Junction blobs**: frond junctions still pool black (run11b grids);
+  untouched by union/fleck/wiggle experiments.
+- [ ] **Residual S-wavy strokes under the wiggle gate** (run-13 A lead): a few
+  wavy strokes sit at wiggle 1.5–2.2 on chopchop; lowering the cutoff welds
+  real lines. Needs a SECOND signal (width variance along branch? contrast vs
+  surrounding fill?) — not a lower threshold.
+- [ ] **ink_extended≈102 regrows hooks off texture remnants** (run-13 A lead):
+  run-4 ridge extension re-attaches small hooks where the wiggle gate dropped
+  texture on chopchop. Ablate ridge extension against the gate; consider
+  skipping extension for free ends created by gated components.
+- [x] **Shading despeckle above the despeckle floor** — SHIPPED run 13
+  (b409934, candidate B): `_dissolve_speckle` floor 300 after `_smooth_labels`,
+  with THREE guards, each earned by a regression caught at eye-verification:
+  ink-locked (never dissolve into dark labels), ring-dominance ≥0.6 (protects
+  facet mosaics — crystals gems), darker-only luminance (light accents are
+  drawn intent — mountain cloud wisp, plank highlights; noise daubs are dark
+  stains). Chopchop planks flatten clean.
+- [ ] **Tiny dark ink daubs policy** (run-13 open): sub-300px DARK components
+  are exempt from dissolve by the ink-lock; some are genuine noise. Adjacent
+  ones get stroke-layer fleck absorption (run 12); ISOLATED dark daubs still
+  pass through untreated. Decide a principled rule.
+- [ ] **Black-blob lattice flood** (run-13 B-agent lead, never dispatched):
+  chopchop's big black blob regions may flood through the plank lattice —
+  B-agent proposed detecting lattice-crossing dark regions and splitting them
+  before stroke extraction. Re-scope from the grids before building.
+- [ ] **monster-flat-line drops a thin white scratch line** inside the dark
+  shape (run-13 broadening observation): pre-existing in prev AND new; Recraft
+  keeps it. Hairline light-on-dark detail lost at quantize/despeckle — likely
+  the same family as light-accent preservation (darker-only guard shows the
+  principle; this one is sub-despeckle-floor).
 - [ ] **Pin k-means determinism** (run-12 methodology finding): renders vary
   ~8k px run-to-run (cv2 k-means not seed-stable across processes), so diffpx
   spot-finding has a noise floor. Not a quality bug — but pinning it (fixed
