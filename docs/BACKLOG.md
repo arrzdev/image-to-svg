@@ -74,15 +74,19 @@ at the affected spots.
   serration bands only — corner breakpoints (drop corner_deg to detect V's)
   + miter joins in `_stroke_elements` for those paths + constant width.
   Negative result kept: swell cap + relaxed gate WITHOUT corner/miter = lateral.
-- [ ] **Palette re-grading — MEASURE Recraft's ramp from our own 8 gold pairs**
-  (run-7 research; makes it data, not taste): extract palettes ours vs
-  data/targets/*.svg, match entries by nearest hue, compute (ΔL, ΔC, Δh) in
-  OKLCH for each base→shadow pair. If deltas cluster across the 8 images →
-  those are Recraft's ramp constants; apply as `shadow' = f(base, constants)`
-  per hue family. Zero-risk measurement first; recolor experiment second.
-  Prior art: palette-level harmonization (Tan 2018 arxiv 1804.01225,
-  Cohen-Or 2006), convex-hull palettes (Tan 2016) if kmeans too noisy,
-  hue-shifted ramps (OKLCH ΔL/ΔC/Δh steps — pixel-art practice).
+- [x] **Palette re-grading — REFUTED by measurement** (run 8,
+  `experiments/measure_ramp.py`): across all 8 gold pairs, chromatic-midtone
+  deltas ours→Recraft center on ZERO (dL +0.001±0.044, dC +0.002±0.032; fox/
+  chopchop/mountain/logo/monster match to ~0.005). Recraft does NOT re-grade
+  tints — do not build a re-grader. The elephant's apparent tint gap is
+  structural: our TWO mid shadow tones (aeb4c8 3.1% + 98bee3 2.5%) map onto
+  Recraft's ONE (a6b8d0) — they MERGE shading tones.
+- [ ] **Merge near-duplicate shadow tones** (from run-8 measurement): on the
+  elephant, Recraft uses one mid shadow tone where we keep two. Candidate
+  atomic change: post-consolidation, merge LOW-CHROMA (OKLCH C<0.08) label
+  pairs in the same hue family whose separation survives merge_de only due to
+  hue noise; re-quantize their union's color. Must NOT touch chromatic ramps
+  (crystals!). Eye-verify elephant shading reads cleaner, broaden 8.
 - [ ] Harness quirk: chopchop sanity quality ≈ 0.14 (alpha/background
   handling in metric?) — numbers meaningless for this target, eye only.
   Investigate as a deliberate re-baseline step if it starts mattering.

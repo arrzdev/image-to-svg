@@ -148,6 +148,20 @@ Narrative that survives compaction/clear. On resume: read `autoresearch.md`
   with the palette RAMP MEASUREMENT (zero-risk, half-day, pure measurement)
   or the serration miter experiment (bigger, higher payoff).
 
+### Run 8: palette ramp MEASUREMENT — hypothesis refuted, real gap identified
+- Timestamp: 2026-07-08 · measurement only (`experiments/measure_ramp.py`,
+  kept as a reusable tool) · no pipeline change
+- Result: across all 8 gold pairs, ours→Recraft chromatic-midtone deltas in
+  OKLCH center on ZERO (dL +0.001±0.044, dC +0.002±0.032, dh −0.3±40 — the
+  scatter is crystals matching noise). Recraft palettes ≈ OURS on 6/8 targets
+  to ~0.005. **Recraft does NOT re-grade tints. Never build a re-grader.**
+- The elephant's "softer tints" (run-6 observation) decoded: we keep TWO mid
+  shadow tones (aeb4c4 + 98bee3), Recraft merges to ONE (a6b8d0 ≈ between
+  them). Structural, not colorimetric. New BACKLOG item: low-chroma
+  same-hue-family tone merging (must not touch crystals' chromatic ramps).
+- Crystals caveat: palette matching fails on gradient-banded images (many-to-
+  one matches) — measure_ramp numbers for crystals are unreliable.
+
 ## Key Insights
 - The metric is a sanity check, not the gate. A change can raise `quality` by
   copying noise and still LOOK worse — always render `tb.crops` and decide by eye.

@@ -10,10 +10,11 @@ git `5eb37ad`). **Current focus target:** rabbit (`./autoresearch.focus`).
 **Best-so-far:** line network near-continuous — same-component joins flush,
 cross-component gaps bridged, lost ink re-traced from the source raster;
 8/8 by eye. Sanity: rabbit 0.7272, elephant 0.8599 (composite noisy; eye rules).
-**Next step (designs ready in BACKLOG):** palette ramp MEASUREMENT from the 8
-gold pairs (zero-risk, do first), then serration corner-nodes + miter-join
-experiment. Curvature drift measured resolved (run 5); serration knobs refuted
-(run 6); research sources logged (run 7). **In-flight:** loop LIVE (run 8 next).
+**Next step:** (a) serration corner-nodes + miter-join experiment (design in
+BACKLOG, run-7 research) — the big one; (b) low-chroma shadow-tone merging on
+the elephant (run-8 measurement: Recraft merges our two mid tones into one;
+re-grading REFUTED — never build a tint re-grader). **In-flight:** loop LIVE
+(run 9 next).
 
 ## Loop operating model (autoresearch plugin)
 
