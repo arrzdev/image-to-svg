@@ -1069,6 +1069,7 @@ def _light_line_capsules(labels: np.ndarray, centers: np.ndarray,
                          whole_min_skel: int = 20,
                          whole_cv: float = 0.2,
                          whole_wm: float = 1.45,
+                         sliver_reach: float = 6.0,
                          ) -> Tuple[np.ndarray, List[dict]]:
     """Rescue thin light lines that the label map renders as beads or lumps.
 
@@ -1175,6 +1176,36 @@ def _light_line_capsules(labels: np.ndarray, centers: np.ndarray,
                     ca = int(cm.sum())
                     if ca < 400 and float((cm & dil).sum()) / ca >= 0.6:
                         src[cm] = bg
+                        continue
+                    # KEPT big region (background / adjoining light shape):
+                    # absorb only its corridor-CARRIED sliver — overlap
+                    # pixels living deeper than sliver_reach inside the line
+                    # corridor, measured as euclidean distance to the
+                    # component's out-of-corridor body. The capsule redraws
+                    # the line, so a carried sliver is redundant fill; left
+                    # in, the fill fitter curls its free tip past the capsule
+                    # at a ridge apex (monster nub at (560,690)@1024).
+                    # Measured on monster: edge grazes / junction roots sit
+                    # at dist <= 5.0; carried slivers mass at 8-53. Roots
+                    # (<= sliver_reach) stay, so fill junctions at the line
+                    # ends keep their anchor and heal cleanly.
+                    ov = cm & dil
+                    if not ov.any():
+                        continue
+                    body = cm & ~dil
+                    if not body.any():
+                        continue
+                    oy, ox = np.nonzero(ov)
+                    pad = int(sliver_reach) + 4
+                    wy0 = max(oy.min() - pad, 0)
+                    wy1 = min(oy.max() + pad + 1, cm.shape[0])
+                    wx0 = max(ox.min() - pad, 0)
+                    wx1 = min(ox.max() + pad + 1, cm.shape[1])
+                    win = np.s_[wy0:wy1, wx0:wx1]
+                    d_body = ndimage.distance_transform_edt(~body[win])
+                    deep = ov[win] & (d_body > sliver_reach)
+                    if deep.any():
+                        src[win][deep] = bg
         else:
             # Whole-carried tentacles hang off big regions (the background),
             # so cut just the bead PIXELS near the line — the capsule redraws
