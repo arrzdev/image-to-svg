@@ -75,5 +75,6 @@ class ContourLinesPipeline(Pipeline):
                                  fill_smooth=p["fill_smooth"],
                                  fill_parsimony=p["fill_parsimony"],
                                  dark_lum=p["dark_lum"],
-                                 width_scale=p["width_scale"])
+                                 width_scale=p["width_scale"],
+                                 src_img=img)
         return svg

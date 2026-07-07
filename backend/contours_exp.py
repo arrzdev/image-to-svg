@@ -185,6 +185,7 @@ def extract_contour_strokes(labels: np.ndarray, centers: np.ndarray,
                             taper_ends: bool = True,
                             stub_factor: float = 1.5,
                             shape_p90: float = 1.5,
+                            src_img: Optional[np.ndarray] = None,
                             ) -> Tuple[List[dict], np.ndarray, dict]:
     """Model every dark-label component as constant-width strokes.
 
@@ -397,6 +398,103 @@ def extract_contour_strokes(labels: np.ndarray, centers: np.ndarray,
             pb["pts"][-1] = target
             pb["tail_free"] = False
         info["bridged_ends"] = info.get("bridged_ends", 0) + 1
+
+    # ---- source-ink-continuity extension.  Bridging only spans gaps
+    # <= 1.2w; LONGER runs of drawn line lost by despeckle/smoothing (rabbit's
+    # heart outline) leave a still-free end whose ink demonstrably continues
+    # in the SOURCE raster.  Walk the dark ridge greedily from such ends (a
+    # ±23° probe fan per 1px step, always the darkest sub-threshold pixel),
+    # up to 4 widths; if the walk comes within 0.75w of another stroke, snap
+    # to it and close the end (bridge); otherwise keep the traced tail and
+    # leave the end free so it tapers at the TRUE ink end.  The dark_lum
+    # cutoff (same as label selection) keeps the walker off midtone fills.
+    if src_img is not None and len(src_img.shape) == 3:
+        gray = src_img.astype(np.float32) @ np.array([0.299, 0.587, 0.114],
+                                                     np.float32)
+        Hs, Ws = gray.shape
+        max_steps = int(round(4.0 * gw))
+        snap_r2 = (0.75 * gw) ** 2
+        for pi, pb in enumerate(pend):
+            if pb["closed"] or len(pb["pts"]) < 4:
+                continue
+            for side in ("head", "tail"):
+                if not pb[side + "_free"]:
+                    continue
+                pts = pb["pts"]
+                k = min(6, len(pts) - 1)
+                end = pts[0] if side == "head" else pts[-1]
+                t = (pts[0] - pts[k]) if side == "head" else (pts[-1] - pts[-1 - k])
+                n = np.linalg.norm(t)
+                if n < 1e-6:
+                    continue
+                d = t / n
+                p = end.copy()
+                trail, snapped = [], None
+                turn_budget = 2.1      # ~120° cumulative: lines curve, walks
+                                       # that curl (blob boundaries) don't ship
+                for _ in range(max_steps):
+                    best = None
+                    for ang in (-0.4, -0.2, 0.0, 0.2, 0.4):
+                        ca, sa = np.cos(ang), np.sin(ang)
+                        nd = np.array([d[0] * ca - d[1] * sa,
+                                       d[0] * sa + d[1] * ca])
+                        q = p + nd
+                        xi, yi = int(q[0]), int(q[1])   # pts carry +0.5 already
+                        if not (0 <= xi < Ws and 0 <= yi < Hs):
+                            continue
+                        v = float(gray[yi, xi])
+                        if v >= dark_lum:
+                            continue
+                        # ridge test: a LINE has light ground within ~1 width
+                        # on both sides; inside a dark blob it does not — the
+                        # walker must never roam filled regions.
+                        perp = np.array([-nd[1], nd[0]])
+                        off = max(1.5, 1.1 * gw)
+                        clear = 0
+                        for s in (off, -off):
+                            sx, sy = int(q[0] + perp[0] * s), int(q[1] + perp[1] * s)
+                            if not (0 <= sx < Ws and 0 <= sy < Hs) or \
+                                    gray[sy, sx] >= dark_lum:
+                                clear += 1
+                        if clear < 2:
+                            continue
+                        if best is None or v < best[0]:
+                            best = (v, q, nd, abs(ang))
+                    if best is None:
+                        break
+                    turn_budget -= best[3]
+                    if turn_budget < 0:
+                        break
+                    _, p, d = best[:3]
+                    trail.append(p.copy())
+                    for pj, ob in enumerate(pend):
+                        if pj == pi:
+                            continue
+                        d2 = ((ob["pts"] - p) ** 2).sum(axis=1)
+                        j = int(np.argmin(d2))
+                        if d2[j] < snap_r2:
+                            snapped = ob["pts"][j].copy()
+                            break
+                    if snapped is not None:
+                        break
+                if not trail:
+                    continue
+                if snapped is not None:
+                    trail.append(snapped)
+                ext = np.asarray(trail)
+                wext = np.full(len(ext), pb["widths"][0 if side == "head"
+                                                      else -1], float)
+                if side == "head":
+                    pb["pts"] = np.vstack([ext[::-1], pts])
+                    pb["widths"] = np.r_[wext, pb["widths"]]
+                    if snapped is not None:
+                        pb["head_free"] = False
+                else:
+                    pb["pts"] = np.vstack([pts, ext])
+                    pb["widths"] = np.r_[pb["widths"], wext]
+                    if snapped is not None:
+                        pb["tail_free"] = False
+                info["ink_extended"] = info.get("ink_extended", 0) + 1
 
     for pb in pend:
         base = gw if width_mode == "global" else pb["w_med"]
