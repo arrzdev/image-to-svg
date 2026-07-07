@@ -292,3 +292,23 @@ See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
   version, clean README, minimal frontend). `.autoresearch-off` set.
 - Queued leads when the loop resumes: A thin-light beading (fill emitter),
   B rabbit long-gap breaks (stroke domain). Focus file now says `rabbit`.
+
+### Run 15: FIRST native-isolation iteration (A+B BOTH ship) — commit 44351d0
+- Timestamp: 2026-07-08
+- Dispatched via Agent isolation:"worktree" (model inherit, effort recorded);
+  both agents killed mid-run by a transient API server error and RESUMED via
+  SendMessage with worktrees intact; iteration.json next_action carried state.
+- A-lightbead (fill path): the label chain itself dashes ~1.5px light lines;
+  >=3-fragment gate + source-traced light capsule + flux width (1-3px).
+  Monster scratches continuous; chopchop 0 capsules (gate held).
+- B-longgap (stroke path): walker post-mortem (dies at 0-2.3w, jitter burns
+  turn budget) -> chord bridge <=7w with whole-chord dark support + bright-run
+  gate. Rabbit heart/paw/scallops close; elephant seams close; 35 chopchop
+  bridges, zero welds.
+- Broaden: 19 targets eyed (15 grids + 4 rendered-identical); mountain
+  crevasse shuffle attributed to k-means nondeterminism (0 capsules there).
+- Sanity in _integrate: rabbit 0.7555 (up), elephant 0.8548 flat. Slip: first
+  sanity ran on MAIN tree via stale cwd - caught, re-ran. Absolute paths.
+- Leads -> BACKLOG: capsule apex nub; fragments=1 lumpy slivers; heart
+  top-left lobe (arc-aware support); walker net-turn budget; chopchop lattice
+  tangles + scribble nondeterminism.

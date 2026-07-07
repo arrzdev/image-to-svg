@@ -10,15 +10,26 @@ draws its next experiment from here.
 Files: backend/contours_exp.py + backend/strokes.py. Judge by 4096 zoom crops
 at the affected spots.
 
-- [~] **Junction joins:** run 2 (c0adad6) fixed same-component T/Y nubs via
-  nearest-centerline anchoring (0.8w); run 3 (2570c63) bridged cross-component
-  dash-gaps (1.2w, fwd<60°, midpoint end-to-end). REMAINING: **long label-map
-  losses (>1.2w)** — rabbit's heart-left outline still breaks where the label
-  map lost a long ink run. Candidate: source-ink-continuity extension — walk
-  the darkness ridge in the ORIGINAL raster beyond the label map and extend
-  the stroke along it. Negative results: contour_lines drops zero
-  junction-junction connectors at defaults; missing-ink clusters ≈ deliberate
-  width_scale undershoot, not gaps.
+- [x] **Junction joins / long label-map losses** — SHIPPED run 15 (44351d0,
+  candidate B): source-supported chord bridges (mutually-facing ends cos>=0.3,
+  <=7.0*gw, whole-chord dark support with bright-run gate). Rabbit heart/paw/
+  scallops + elephant ear/toe/belly seams close; 0 welds on chopchop.
+  Measured negative result: the run-4 ridge walker NEVER reached its 4w cap
+  (dies 0-2.3w: absolute dark_lum on antialiased ink, ridge test beside
+  shading, |dTheta| turn budget burnt by staircase jitter in 5-9 steps).
+- [ ] **Rabbit heart top-left lobe still open** (run-15 B lead): the two ends
+  diverge >72 deg off-chord — chord support can't see the curved ink path;
+  needs an arc-aware support test.
+- [ ] **Ridge walker: charge NET signed turn** (run-15 B lead): swapping the
+  per-step |dTheta| for net curl would restore the walker's intended 4w range
+  if it's ever needed again.
+- [ ] **Chopchop chair-lattice junction tangles** (run-15 observation):
+  squiggly stroke tangles where lattice bars cross, equal weight in new/prev;
+  pre-existing, not pooling (run-14 clamp) nor bridging.
+- [ ] **Chopchop interior-scribble nondeterminism** (run-15 observation):
+  same-code reruns redraw interior texture strokes differently (clusters up
+  to 1100px at 1024) — related to k-means pinning item; makes chopchop eye
+  comparisons noisy.
 - [x] **Some curvatures differ from original** — RESOLVED as measured (run 5,
   2026-07-08): mean source-skeleton→render drift 0.04px, p95=0 at current HEAD;
   the v4-era report predates runs 2–4. Negative result: parsimony centerline
@@ -111,12 +122,19 @@ at the affected spots.
   Rescued: chopchop straw stripes, crystals gem vein, monster scratch
   T-branches, fox eye glint, game-assets potion highlight. Also mostly
   explains the chopchop metric quirk (0.144→0.673 after the fix).
-- [ ] **Thin light regions bead at vectorization** (run-14 A lead): monster's
-  vertical scratch survives the LABEL map end-to-end (~928px) but
-  `contour_svg` fragments the ~1–2px light region into a dotted bead-trail.
-  The light-hairline fix's second half lives in the fill emitter — probably
-  needs a minimum-width treatment (light counterpart of the stroke layer) or
-  merging beads into a capsule. Check chopchop straw stripes' edges too.
+- [x] **Thin light regions bead at vectorization** — SHIPPED run 15 (44351d0,
+  candidate A): diagnosis correction — the LABEL CHAIN dashes the line (6
+  fragments), not the fitter alone; fix = source-traced light capsules
+  (>=3-fragment gate, flux-based width 1-3px). Monster scratches continuous.
+  Leads still open below (apex nub; fragments=1 slivers).
+- [ ] **Capsule-end nub at scratch apex** (run-15 A lead, monster ~1024
+  (560,690)): capsule end overshoots where it meets the surviving light
+  sliver at a ridge apex — snap capsule ends to adjacent light-region
+  boundaries.
+- [ ] **Whole-carried thin light slivers render lumpy** (run-15 A lead): ~10
+  monster thin lights with fragments=1, coverage 0.6–0.87 stay with the fill
+  fitter and read as lumpy slivers; extend capsules with min_fragments>=1 +
+  a lumpiness (fit-residual) test.
 - [ ] **Strap-end curl loopier than reference** (run-14 B lead): the chair
   crossing's strap end traces a loop where original/Recraft draw a tight
   hook — free-end shaping, not pooling. Look at run-4 ridge-extension tails.

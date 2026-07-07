@@ -26,6 +26,83 @@ results → `research/autoresearch.jsonl`; running narrative →
 
 ---
 
+## 2026-07-08 · Run 15 (iteration 15) — 2 candidates, BOTH ship combined (A+B, commit 44351d0); first NATIVE-isolation iteration
+
+First iteration under the hardened protocol: candidates dispatched via the
+Agent tool's native `isolation:"worktree"` (no manual git plumbing), model
+inherited (never set), effort recorded as a deliberate inherit per candidate,
+delegation prompts carrying the full checklist (read spec+protocol first,
+objective, scope boundary, focus/data paths, render recipe, report format).
+Both agents died mid-run on a transient API server error and were RESUMED via
+SendMessage with worktrees intact — state writes to iteration.json (with the
+new mandatory `next_action`) carried the interruption losslessly; the
+post-/clear rehydration hook chain was fired at the A-verified sub-boundary
+and stated the next action verbatim from disk (persistence proof, part 1).
+
+**Candidate A-lightbead — VERIFIED, SHIPPED in combination.** Change
+(`models/v5/src/contours_exp.py`, fill-emission path only): run-14's premise
+("label map carries the scratch continuously") was PARTLY WRONG — the label
+chain (medianBlur + smooth/despeckle) itself dashes a ~1.5px light line into
+bead fragments (monster vertical scratch = 6 fragments, coverage 0.52); the
+fill fitter faithfully rounds each dash into a teardrop. Fix: white-tophat the
+SOURCE (>60), keep thin (med w <=3.5px) long (skel >=30px) elongated (>=8)
+light-on-dark (contrast >=60) components **carried as >=3 fragments** (the
+chopchop-safety gate — a line carried whole stays with the fill fitter);
+absorb the bead fragments into the surrounding dark label and emit ONE light
+capsule along the source-traced centerline; width = ink excess/(contrast*len)
+clamped 1-3px (mask width over-reads by ~2.5px of antialias skirt — first
+render was visibly fat). Orchestrator verdict from its OWN renders: monster's
+three scratch sites continuous at Recraft-like weight (prev: dotted teardrop
+trails); chopchop 0 capsules fired, straw clean. Leads: capsule-end nub at the
+scratch apex (~1024 (560,690)) — needs end-snap to the adjacent light region;
+~10 more monster thin lights carried whole (fragments=1, coverage 0.6-0.87)
+render as lumpy slivers — extending to min_fragments>=1 + a lumpiness test is
+ready follow-up; `contour_svg_from_testbed`/`tb.svg()` don't pass `src_img`,
+so capsules no-op there — verify through `get_pipeline(...).run`.
+
+**Candidate B-longgap — VERIFIED, SHIPPED in combination.** Change
+(`models/v5/src/contours_exp.py`, stroke network only): measured diagnosis
+first — rabbit's breaks are free-end pairs at 2.2-6.7w, beyond bridge (1.2w)
+and ridge-walk (4w) caps; traced the run-4 walker at each break: it DIES at
+0-2.3w (absolute dark_lum test on thin antialiased ink; ridge-test failures
+beside shading; turn budget burnt by per-step staircase jitter in 5-9 steps) —
+"raise the cap" was the wrong lever. Fix: long-gap chord bridge after
+bridging+extension — mutually-facing ends (cos >=0.3 both sides) within 7.0*gw
+join iff the source shows ONE continuous dark line along the whole chord
+(+-1.5px perpendicular-fan min: mean<140, frac(<160)>=0.6, **no bright(>176)
+run over 2px**). Constants measured with margin: true breaks bright-run 0 /
+mean <=118; must-stay-open gaps bright-run >=7px / mean >=143. Orchestrator
+verdict from its OWN renders (bridge sites located via the new
+`long_bridge_at` info, after a y/x-order misread put crops on flat fill — the
+coordinates are (x,y)): heart outline closes at bottom tip + right lobe, paw
+finger lines connect, scallop chain reconnects; chopchop weld landmines
+(parallel struts, serration Vs) clean — bright-ground chords blocked exactly
+as designed. Broaden co-win: elephant ear-V/toe-seam/belly gaps close. Leads:
+heart TOP-LEFT lobe still open (ends diverge >72 deg off-chord — needs an
+arc-aware support test, not a chord); run-4 walker should charge NET signed
+turn, not |dTheta| per step (staircase jitter halves its range); watch
+midtone-texture ridges between facing ends as the failure mode if a future
+target regresses; chopchop chair-lattice junction tangles equal-weight in
+new/prev (pre-existing, own backlog item); chopchop interior-scribble strokes
+redraw differently run-to-run (nondeterminism lead — makes chopchop
+eye-comparisons noisy).
+
+**Combined + broaden (existing rules; full-coverage gate lands next
+iteration):** A then B applied by git-diff into `_integrate`, eye-verified
+after EACH apply (A: monster identical to A-alone; A+B: no interaction — A is
+light-capsule emission, B dark-stroke bridging). Broaden: 15 diff-spotted
+grids + 4 rendered-identical (coins, logo-badge/geometric/wordmark) all
+eye-checked; mountain crevasse texture shuffle attributed (0 capsules, bridges
+can't create light patches -> k-means nondeterminism, same family as run-14's
+ticks); files-pile/game-assets-2 lateral in rough texture regions with
+slightly more-connected edges. Sanity (in _integrate): rabbit 0.7468->0.7555
+(+points 4073 — bridged outlines are real ink), elephant 0.8548 flat. One
+process slip logged: the first sanity run executed against the MAIN tree via
+stale cwd — caught because the numbers were suspiciously close; re-ran inside
+_integrate. Absolute paths / explicit cd for harness runs, always.
+
+---
+
 ## 2026-07-08 · Run 14 (iteration 14) — 2 candidates, BOTH ship combined (A+B, commit 3d251ad)
 
 Scout pass found the two dominant chopchop residuals and pinned domains before

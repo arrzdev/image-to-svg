@@ -12,10 +12,10 @@ Mission: **research/docs/PROJECT_SPEC.md** · Work: **research/docs/BACKLOG.md**
 - GOAL: an *idealized* vector reconstruction (clean confident lines, solid flat
   regions, source noise removed) that **beats OUR LAST VERSION by EYE**, Recraft
   (`data/targets/`) in frame as the north-star. NOT pixel fidelity.
-- CURRENT VERSION: **v5 `contour_lines`** (git `3d251ad`); focus **rabbit** (`./research/autoresearch.focus`).
-- BEST-SO-FAR: run 14 A+B — straw/light-accents un-flooded (despeckle guard) + junction pools clamped; r13 wiggle gate + speckle dissolve; v4 defects cleared. 10 keeps / 4 discards.
+- CURRENT VERSION: **v5 `contour_lines`** (git `44351d0`); focus **rabbit** (`./research/autoresearch.focus`).
+- BEST-SO-FAR: run 15 A+B — light-line capsules (beading fixed) + chord bridges (rabbit heart/elephant seams close); r14 despeckle guard + pool clamp. 11 keeps / 4 discards.
 - ⚠ ITERATIONS ARE WORKTREE-PARALLEL — if `research/autoresearch.iteration.json` phase≠idle, RESUME that in-flight iteration (see "Worktree-parallel iterations"); the SessionStart hook surfaces it.
-- OPEN: thin-light-region beading (fill emitter), chopchop S-wavy strokes/strap curl, rabbit long-gap breaks → research/docs/BACKLOG.md.
+- OPEN: heart top-left lobe (arc support), capsule apex nub, fragments=1 slivers, chopchop S-wavy/strap-curl/lattice tangles → research/docs/BACKLOG.md.
 
 ## The metric is NOT the arbiter here (the key adaptation)
 The stock autoresearch loop treats a bare number as the keep/discard gate. **This
