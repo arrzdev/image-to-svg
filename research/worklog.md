@@ -428,3 +428,16 @@ See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
   new and prev (original + Recraft show two circles), ~(358,676)@1024 —
   pre-existing, filed to BACKLOG.
 - Next: A-apexsnap integration onto pinned main once B-arcsupport reports.
+
+### Run 19: A-apexsnap integrated — quality_monster=0.9591 (KEEP) — commit 1e0adb6
+- Timestamp: 2026-07-08 03:20
+- What changed: A's corridor-carried sliver absorption applied to pinned
+  main (clean 3-way patch). Deterministic renders made the re-verify crisp:
+  new vs pinned-prev differences are exactly A's fix, nothing else.
+- Result: apex nub gone (560,690), mid-segment double-render gone (600,712),
+  left-end kink cleaner (524,732); 4 full-coverage pages zero regressions;
+  monster sanity 0.9591 flat, points 815->773 (simpler output).
+- Insight: with determinism in, integration re-verification no longer fights
+  the tie-jitter noise floor — first iteration where "only the fix changed"
+  is literally provable from the diff of two renders.
+- Next: B-arcsupport verdict when it reports; then it17 ship + docs.
