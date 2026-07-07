@@ -879,6 +879,170 @@ def extract_contour_strokes(labels: np.ndarray, centers: np.ndarray,
             info.setdefault("long_bridge_at", []).append(
                 (float(mid[0]), float(mid[1]), float(dch)))
 
+        # ---- arc-aware endpoint bridging (run-17 B).  The free-free chord
+        # bridge above cannot close the rabbit heart's top gap: the notch
+        # counterpart ends consume each other in the midpoint bridge, so the
+        # lobe's still-free end has NO free partner (measured 18/18 runs) —
+        # and short curved nicks (head-tuft apex) need a path that TURNS,
+        # which a chord can't.  This pass lets a STILL-free end join any
+        # other stroke's ENDPOINT (free or not) along a tangent-constrained
+        # path: a quadratic arc through the tangent-ray intersection for
+        # short strongly-curved gaps, else the straight chord.  Same
+        # perpendicular-fan darkness gates as the chord bridge, plus a ridge
+        # test (light ground both sides at ±1.1w for ≥50% of samples) so the
+        # path must trace a drawn LINE, never a fill edge.  Measured
+        # (rabbit + chopchop candidate sweeps, margins in parens):
+        #   arcs   — true gaps ≤1.8w, false (frond-V/scribble hooks) ≥4.4w
+        #            → reach 2.5w; turn ≤135° (true 105-107°);
+        #   chords — true tangent mismatch ≤35° vs false ≥46° → turn ≤40°;
+        #            true fan-mean ≤43 vs false ≥51 → mean <50;
+        #   ridge2 — true ≥0.58 vs fill-edge runs ≤0.27 → ≥0.5.
+        # Chopchop weld landmines under these gates: 0 false fires (all
+        # 100+ scribble/fill candidates blocked), 6 solid-ink true joins.
+        ends3 = []           # every open-stroke endpoint, free or not
+        for pi, pb in enumerate(pend):
+            if pb["closed"] or len(pb["pts"]) < 2:
+                continue
+            pts = pb["pts"]
+            k = min(6, len(pts) - 1)
+            for side, e_i, k_i in (("head", 0, k), ("tail", -1, -1 - k)):
+                t = pts[e_i] - pts[k_i]
+                n = np.linalg.norm(t)
+                if n > 1e-9:
+                    ends3.append((pi, side, pts[e_i].copy(), t / n,
+                                  bool(pb[side + "_free"])))
+
+        def _fan_ridge(P, Dn):
+            ns = len(P)
+            perp = np.stack([-Dn[:, 1], Dn[:, 0]], axis=1)
+            vmin = np.full(ns, 255.0)
+            for s_ in (-1.5, -0.75, 0.0, 0.75, 1.5):
+                xs = np.clip((P[:, 0] + perp[:, 0] * s_).astype(int),
+                             0, Ws - 1)
+                ys = np.clip((P[:, 1] + perp[:, 1] * s_).astype(int),
+                             0, Hs - 1)
+                vmin = np.minimum(vmin, gray[ys, xs])
+            run_ = mx_ = 0
+            for is_br in (vmin > 176.0):
+                run_ = run_ + 1 if is_br else 0
+                mx_ = max(mx_, run_)
+            off = max(1.5, 1.1 * gw)
+            clear = np.zeros(ns)
+            for sgn in (off, -off):
+                xs = np.clip((P[:, 0] + perp[:, 0] * sgn).astype(int),
+                             0, Ws - 1)
+                ys = np.clip((P[:, 1] + perp[:, 1] * sgn).astype(int),
+                             0, Hs - 1)
+                clear += (gray[ys, xs] >= dark_lum)
+            return (float(vmin.mean()), float((vmin < 160.0).mean()),
+                    mx_, float((clear == 2).mean()))
+
+        cand3 = []
+        for i, (pi_, si, A, ta, fa) in enumerate(ends3):
+            if not fa:
+                continue
+            for j, (pj_, sj, B, tbv, fb) in enumerate(ends3):
+                if pj_ == pi_ or (fb and j <= i):
+                    continue        # free-free pairs once; nonfree all
+                v = B - A
+                dch = float(np.linalg.norm(v))
+                if not (1e-6 < dch <= 7.0 * gw):
+                    continue
+                u = v / dch
+                # tangent-ray intersection  A + s·ta = B + r·tb
+                det = ta[0] * (-tbv[1]) - (-tbv[0]) * ta[1]
+                s_ = r_ = -1.0
+                if abs(det) > 1e-9:
+                    s_ = (v[0] * (-tbv[1]) - (-tbv[0]) * v[1]) / det
+                    r_ = (ta[0] * v[1] - ta[1] * v[0]) / det
+                turn_dot = float(np.dot(ta, -tbv))
+                P = None
+                if (dch <= 2.5 * gw and 1e-6 < s_ <= 2.0 * dch
+                        and 1e-6 < r_ <= 2.0 * dch
+                        and turn_dot >= -0.7071):        # arc, turn ≤135°
+                    X = A + s_ * ta
+                    ts_ = np.linspace(0.0, 1.0, 24)[:, None]
+                    Pc = (1-ts_)**2 * A + 2*ts_*(1-ts_) * X + ts_**2 * B
+                    L = float(np.linalg.norm(np.diff(Pc, axis=0),
+                                             axis=1).sum())
+                    ns = max(int(L * 2), 8)
+                    ts_ = np.linspace(0.0, 1.0, ns)[:, None]
+                    P = (1-ts_)**2 * A + 2*ts_*(1-ts_) * X + ts_**2 * B
+                    D = 2*(1-ts_) * (X - A) + 2*ts_ * (B - X)
+                    Dn = D / (np.linalg.norm(D, axis=1, keepdims=True)
+                              + 1e-9)
+                    kind, need_mean = "arc", 140.0
+                elif (float(np.dot(u, ta)) >= 0.3
+                      and float(np.dot(-u, tbv)) >= 0.3
+                      and turn_dot >= 0.766):            # chord, turn ≤40°
+                    L = dch
+                    ns = max(int(dch * 2), 8)
+                    P = A[None] + v[None] * np.linspace(0, 1, ns)[:, None]
+                    Dn = np.tile(u, (ns, 1))
+                    kind, need_mean = "chord", 50.0
+                if P is None:
+                    continue
+                mean_, f160, mx_, ridge2 = _fan_ridge(P, Dn)
+                if (mean_ >= need_mean or f160 < 0.6 or mx_ > 4
+                        or ridge2 < 0.5):
+                    continue
+                cand3.append((L, i, j, kind, P))
+        cand3.sort(key=lambda c: c[0])
+        used_ends: set = set()
+        used_tgts: set = set()
+        for L, i, j, kind, P in cand3:
+            pi_, si, A, ta, fa = ends3[i]
+            pj_, sj, B, tbv, fb = ends3[j]
+            if i in used_ends or j in used_ends:
+                continue
+            tkey = (round(float(B[0]) * 2), round(float(B[1]) * 2))
+            if tkey in used_tgts:
+                continue
+            if not pend[pi_][si + "_free"]:
+                continue
+            if fb and not pend[pj_][sj + "_free"]:
+                continue
+
+            def _append(pk, sk, ext):
+                pbk = pend[pk]
+                if len(ext) == 0:
+                    return
+                wext = np.full(len(ext), pbk["widths"][
+                    0 if sk == "head" else -1], float)
+                jext = np.full(len(ext), 1e9)
+                if sk == "head":
+                    pbk["pts"] = np.vstack([ext[::-1], pbk["pts"]])
+                    pbk["widths"] = np.r_[wext, pbk["widths"]]
+                    pbk["junc_d"] = np.r_[jext, pbk["junc_d"]]
+                    pbk["head_free"] = False
+                else:
+                    pbk["pts"] = np.vstack([pbk["pts"], ext])
+                    pbk["widths"] = np.r_[pbk["widths"], wext]
+                    pbk["junc_d"] = np.r_[pbk["junc_d"], jext]
+                    pbk["tail_free"] = False
+            step = max(len(P) // max(int(L), 1), 1)      # ~1px spacing
+
+            def _sub(Q):                 # subsample, always keep the last
+                if len(Q) <= 1 or step == 1:
+                    return Q
+                R = Q[::step]
+                if not np.array_equal(R[-1], Q[-1]):
+                    R = np.vstack([R, Q[-1:]])
+                return R
+            if fb:                       # free-free: meet at path midpoint
+                h = len(P) // 2
+                _append(pi_, si, _sub(P[1:h + 1]))       # A outward to mid
+                _append(pj_, sj, _sub(P[h:-1][::-1]))    # B outward to mid
+                used_ends.update((i, j))
+            else:                        # join onto the existing endpoint
+                _append(pi_, si, _sub(P[1:]))
+                used_ends.add(i)
+            used_tgts.add(tkey)
+            info["arc_bridges"] = info.get("arc_bridges", 0) + 1
+            info.setdefault("arc_bridge_at", []).append(
+                (float((A[0] + B[0]) / 2), float((A[1] + B[1]) / 2),
+                 float(L), kind))
+
     _DEBUG.clear()
     _DEBUG.update({"pend": pend, "gw": gw})
 
