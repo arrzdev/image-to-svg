@@ -249,13 +249,16 @@ at the affected spots.
 
 ## Bugs to chase
 
-- [ ] **Pre-existing deep-zoom hairlines on shield / pizza box / logo_badge**
-  shared-boundary emissions (structcheck 0.1-0.8 BEFORE any refinement, v2
-  and v3 alike; elephant/rabbit are 1.0). Contradicts coincidence-by-
-  construction — suspects: split_paths grouping on these images, closed-loop
-  border cases, or non-square viewBox handling in emission. Reproduce with
-  testbed + structcheck diagnostics per image.
-- [ ] **Thin-region eversion under wide smoothing** (pizza residual 1030px):
-  smooth_edges moves opposite edges of sub-window-width regions past each
-  other → unfilled lens. Fix: thickness-aware smoothing clamp or post-fit
+- [x] **Pre-existing deep-zoom hairlines on shield / pizza box / logo_badge**
+  — DOES NOT REPRODUCE at v5 HEAD (run-17 research): shield 1.000,
+  logo-badge 1.000, elephant 1.000 on structcheck defaults; the recorded
+  0.1–0.8 was measured on engine v2/v3 and intervening work fixed it. Only
+  pizza-box retains a residual (0.875) — folded into the eversion item below.
+- [ ] **Thin-region eversion under wide smoothing** (pizza residual; run-17:
+  166 hairline px, down from 1030): localizes to TWO spots — worst at
+  (285,170)@1024 (eyed, `diag17_pizza_gap.png`): hairline crack along the
+  box-lid underside PLUS a gray everted lens floating in the blue fill at
+  the same site; second cluster at (932,276). smooth_edges moves opposite
+  edges of sub-window-width regions past each other → self-intersecting
+  lens + cracked seam. Fix: thickness-aware smoothing clamp or post-fit
   crossing check. (Parsimony fitting sidesteps it — no smoothing.)
