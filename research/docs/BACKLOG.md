@@ -182,11 +182,20 @@ at the affected spots.
   region, candidate A) plus junction pooling (candidate B). No separate
   lattice-splitting mechanism needed; don't build one without a NEW grid
   showing a residual case.
-- [ ] **monster-flat-line drops a thin white scratch line** inside the dark
-  shape (run-13 broadening observation): pre-existing in prev AND new; Recraft
-  keeps it. Hairline light-on-dark detail lost at quantize/despeckle — likely
-  the same family as light-accent preservation (darker-only guard shows the
-  principle; this one is sub-despeckle-floor).
+- [x] **monster-flat-line drops a thin white scratch line** — RESOLVED by the
+  run-15/16 capsule work; run-17 research swept ALL thin light-on-dark
+  components on monster: none fully missing (closed by eye at the 3
+  lowest-presence spots, `diag17_scratch.png`). Remaining light-line defects
+  are the mouth family (items below).
+- [ ] **Monster mouth teeth scalloped, should be sharp zigzag** (run-17
+  research, ~x430-560/y230-280 @1024, eye-loud on the FOCUS target): the
+  white mouth region's serrated edge is smoothed by the fill fitter; original
+  AND Recraft keep sharp triangular teeth. Same disease run 10 cured on
+  chopchop's dark serration bands (corner-as-hard-node + miter) — extend
+  corner-preserving fitting to LIGHT-region boundaries inside dark shapes
+  (corner detection on the region polygon before smoothing/parsimony, or
+  route serrated light regions through the band-stroke mechanism). Top
+  iteration-18 candidate.
 - [x] **Pin k-means determinism** — CLOSED by run-17 research: the run-12
   attribution was WRONG; k-means is seeded and stable (label chains hash
   byte-identical across processes). The real source is medial_axis tie-order

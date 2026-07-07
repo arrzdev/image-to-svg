@@ -54,6 +54,25 @@ every touched target gets a fresh eye pass per the verify-by-looking rule —
 never assume "same code, cosmetic seed" is a no-op. Probe scripts in the
 session scratchpad; findings reproducible from this entry alone.
 
+**Addendum — monster light-line loss map (same research pass).** Swept every
+thin light-on-dark tophat component on the focus target against the current
+render (presence = fraction of skeleton pixels light in the render): 12
+qualifying components, NONE fully missing — the run-13 BACKLOG item "monster
+drops a thin white scratch line" is RESOLVED by the run-15/16 capsule work
+(closed by eye, not by the number: grid `models/v5/outputs/diag17_scratch.png`
+at the 3 lowest-presence spots). What the grid DID show, vs original AND
+Recraft (both sharp):
+- **Monster mouth teeth render as soft scallops** (~x430-560/y230-280 @1024)
+  — the white mouth region's zigzag edge is smoothed away by the fill fitter;
+  original and Recraft keep sharp triangular teeth. Same disease run 10 cured
+  on chopchop's DARK serration bands (corners-as-hard-nodes + miter), never
+  applied to light-region boundaries inside dark shapes. Eye-loud on the
+  FOCUS target → promoted to a top iteration-18 candidate.
+- **Mouth-corner crease** renders as a wobbly thin curl (the known
+  mouth-corner-hook lead; presence 0.51 at (499,250), tophat stats cv_w 0.49
+  ratio 1.29) — folds into the existing BACKLOG item, now with a picture.
+- Eye-triangle (504,189): acceptable; faint gray edge sliver only.
+
 ## 2026-07-08 · Run 16 (iteration 16) — 1 candidate, SHIPS (A-sliver, commit 9242186); first full §8/§9 protocol iteration
 
 First iteration run end-to-end under the 9-section protocol: candidate wrote

@@ -354,3 +354,13 @@ See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
 - Next: one atomic rng-pin commit at it17 integration (6 call sites:
   contours_exp 353/441/1122/1153, strokes 99/123) + fresh eye pass on all
   touched targets (tie-picks shift once, then freeze).
+
+### Run 17 addendum: monster light-loss map — teeth lead found (RESEARCH cont.)
+- Swept all thin light-on-dark tophat components vs current render: 12
+  qualify, none fully missing -> run-13 "dropped white scratch" CLOSED
+  (eye-verified at the 3 lowest-presence spots, diag17_scratch.png).
+- NEW eye-loud lead on the focus target: mouth TEETH render as soft scallops;
+  original + Recraft = sharp zigzag (~x430-560/y230-280). Fill-fitter
+  smoothing eats the serration — the run-10 corner+miter cure never reached
+  light-region boundaries. Promoted to top it18 candidate.
+- Mouth-corner hook now has a picture: wobbly thin curl (presence 0.51).
