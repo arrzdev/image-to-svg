@@ -247,13 +247,61 @@ def extract_contour_strokes(labels: np.ndarray, centers: np.ndarray,
 
     dark = [li for li in range(len(centers))
             if _luminance(centers[li]) < dark_lum]
+
+    # ---- adjacency-based fleck recolor (stroke-layer only).  A dark-brown
+    # label leaves tiny fragments hugging the black serrated line network;
+    # each fleck gets stroked in its own brown, littering the outline.  Absorb
+    # them: a SMALL component (< 250 px) of one dark label that is 8-adjacent
+    # to a MUCH larger component (>= 10x its area) of a DIFFERENT dark label is
+    # reassigned to that larger neighbour's label — the fleck folds into the
+    # black line it clings to.  Large SHADING bands are safe (neither side
+    # hits the 10x ratio).  Mutate a COPY so the fill layer never sees this.
+    flecks_absorbed = 0
+    if len(dark) > 1:
+        labels = labels.copy()
+        comp_id = np.zeros(labels.shape, np.int32)
+        comp_label = {0: -1}
+        comp_area = {0: 0}
+        small: List[Tuple[int, np.ndarray]] = []
+        nid = 1
+        for li in dark:
+            lm = labels == li
+            if not lm.any():
+                continue
+            comp, n = ndimage.label(lm, structure=_STRUCT8)
+            for ci in range(1, n + 1):
+                m = comp == ci
+                a = int(m.sum())
+                comp_id[m] = nid
+                comp_label[nid] = li
+                comp_area[nid] = a
+                if a < 250:
+                    small.append((nid, m))
+                nid += 1
+        for cid, m in small:
+            a = comp_area[cid]
+            border = ndimage.binary_dilation(m, structure=_STRUCT8) & ~m
+            best = None
+            for ncid in np.unique(comp_id[border]):
+                ncid = int(ncid)
+                if ncid == 0 or ncid == cid:
+                    continue
+                if comp_label[ncid] == comp_label[cid]:
+                    continue
+                if comp_area[ncid] >= 10 * a:
+                    if best is None or comp_area[ncid] > comp_area[best]:
+                        best = ncid
+            if best is not None:
+                labels[m] = comp_label[best]
+                flecks_absorbed += 1
+
     stroke_mask = np.zeros(labels.shape, bool)
     strokes: List[dict] = []
     pend: List[dict] = []          # branch records awaiting global width
     tot_area = tot_skel = 0
     info = {"dark_labels": dark, "components": 0, "branches": 0,
             "widths": [], "wlens": [], "blob_px": 0, "global_width": 0.0,
-            "spread": 0.0}
+            "spread": 0.0, "flecks_absorbed": flecks_absorbed}
 
     for li in dark:
         lab_mask = labels == li
