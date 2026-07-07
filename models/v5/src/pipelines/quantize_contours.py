@@ -187,6 +187,22 @@ _ACCENT_INK_RING_FRAC = 0.6   # non-small ring must be this dominated by ink
 _ACCENT_INK_LUM_GAP = 80.0    # component must be this much lighter than the ink
 _ACCENT_MIN_PX = 10           # below this it's a stray fleck -- dissolve as usual
 
+# Spike-tip guard constants (monster teeth fix, see _despeckle_labels):
+# a sharp spike's tip tapers below pixel width, so the raster anti-aliases it
+# into midtones and quantization SEVERS the tip from its parent region
+# (measured monster mouth: 8px white tip, parent 4px away across an AA bridge).
+_SPIKE_MAX_PX = 60            # tip fragments are tiny (measured teeth: 8-22 px)
+_SPIKE_BRIDGE_PX = 5          # max AA-gap tip->parent (measured 4 + 1 margin)
+_SPIKE_SURROUND_LUM_GAP = 210.0  # tip must be EXTREMAL vs its surround, not an
+                                 # intermediate AA tone. Measured populations:
+                                 # every true spike tip (monster teeth + back
+                                 # spikes) sits at gap 218 (white 255 on ink
+                                 # 37); every chopchop/mountain/crystals AA
+                                 # fringe fleck sits at gap <= 204 (midtones
+                                 # 104-211 beside ink). Shape tests do NOT
+                                 # separate (a severed tip can be a 3x3 blob).
+_SPIKE_WELD_W = 2             # reattachment corridor width (measured tip width)
+
 
 def _despeckle_labels(labels: np.ndarray, min_component_px: int,
                       centers: np.ndarray = None) -> np.ndarray:
@@ -209,6 +225,24 @@ def _despeckle_labels(labels: np.ndarray, min_component_px: int,
     the outline). A genuine light fleck sits ON a big fill: its non-small
     ring IS that fill, not ink, so it still dissolves — as do speck-scale
     bits below _ACCENT_MIN_PX.
+
+    Spike-tip guard (monster-teeth fix): a sharp spike on a light region's
+    boundary tapers below pixel width at its tip, so the source raster
+    anti-aliases the tip into midtones and quantization SEVERS it — the tip
+    becomes a tiny same-label island a few px from its parent, bridged by
+    sub-floor AA fragments. Junking it cuts the spike to half height (the
+    scalloped-teeth defect). Rescue a tiny LIGHT fragment when (a) ANCHORED:
+    a *surviving* component of the SAME label lies within _SPIKE_BRIDGE_PX,
+    and (b) CONTRAST-CONSISTENT: the fragment out-shines every non-parent
+    surviving label around it by _SPIKE_SURROUND_LUM_GAP (a spike tip floats
+    over the contrasting background its parent cuts into; a noise daub /
+    dither fleck sits beside near-equal tones and fails). A rescued tip is
+    WELDED back: a tip-width corridor along the shortest tip->parent path is
+    relabeled to the parent (measured: that path follows the spike's true
+    flank), refused if it would overwrite any surviving foreign pixel (a
+    drawn line is not an AA gap). Exemption without the weld was refuted by
+    eye: the bridge reassigns to the dark surround and the tip renders as a
+    floating fleck. Unweldable candidates dissolve as usual.
     """
     lum = dark = None
     if centers is not None:
@@ -257,6 +291,62 @@ def _despeckle_labels(labels: np.ndarray, min_component_px: int,
                     if (ink.mean() >= _ACCENT_INK_RING_FRAC
                             and lum[ci] >= lum[neigh[ink]].min() + _ACCENT_INK_LUM_GAP):
                         continue
+            if (dark is not None and not dark[ci]
+                    and stats[k, cv2.CC_STAT_AREA] <= _SPIKE_MAX_PX):
+                # spike-tip rescue: anchored + contrast-consistent (docstring)
+                b = _SPIKE_BRIDGE_PX
+                x0 = max(0, stats[k, cv2.CC_STAT_LEFT] - b)
+                y0 = max(0, stats[k, cv2.CC_STAT_TOP] - b)
+                x1 = min(w, stats[k, cv2.CC_STAT_LEFT] + stats[k, cv2.CC_STAT_WIDTH] + b)
+                y1 = min(h, stats[k, cv2.CC_STAT_TOP] + stats[k, cv2.CC_STAT_HEIGHT] + b)
+                sub = (comp[y0:y1, x0:x1] == k).astype(np.uint8)
+                zone = cv2.dilate(sub, kernel, iterations=b).astype(bool) & (sub == 0)
+                wsmall = small[y0:y1, x0:x1]
+                wlab = labels[y0:y1, x0:x1]
+                surv = zone & ~wsmall             # judge against survivors only
+                neigh = wlab[surv]
+                same = neigh == ci
+                if same.any():
+                    others = neigh[~same]
+                    if (others.size == 0
+                            or lum[ci] >= lum[others].max() + _SPIKE_SURROUND_LUM_GAP):
+                        # WELD the tip back onto its parent: exemption alone
+                        # leaves an island (the junked AA bridge reassigns to
+                        # the dark surround, and the fitter then paints a
+                        # floating fleck). Draw a tip-width corridor along the
+                        # shortest tip->parent path — measured, this follows
+                        # the spike's true flank direction.
+                        pmask = surv & (wlab == ci)
+                        sy, sx = np.nonzero(sub)
+                        py, px = np.nonzero(pmask)
+                        d2 = ((sy[:, None] - py[None, :]) ** 2
+                              + (sx[:, None] - px[None, :]) ** 2)
+                        # never overwrite a SURVIVING foreign pixel: a drawn
+                        # dark line between two light areas is a line, not an
+                        # AA gap. Take the SHORTEST CLEAN path: the 1px core
+                        # must be all junk-candidate (or same-label) px — the
+                        # euclidean-nearest pair can graze a surviving dark
+                        # px while the true AA gap sits a fraction farther
+                        # (measured on the monster tooth). The tip-width band
+                        # then paints only such px: survivors never touched.
+                        welded = False
+                        for oi in np.argsort(d2, axis=None)[:64]:
+                            i, j = np.unravel_index(int(oi), d2.shape)
+                            q = (int(sx[i]), int(sy[i]))
+                            pt = (int(px[j]), int(py[j]))
+                            core = np.zeros_like(sub)
+                            cv2.line(core, q, pt, 1, 1)
+                            if (core.astype(bool) & (wlab != ci) & ~wsmall).any():
+                                continue
+                            band = np.zeros_like(sub)
+                            cv2.line(band, q, pt, 1, _SPIKE_WELD_W)
+                            wmask = band.astype(bool) & ((wlab == ci) | wsmall)
+                            wlab[wmask] = ci
+                            junk[y0:y1, x0:x1][wmask] = False
+                            welded = True
+                            break
+                        if welded:
+                            continue
             junk |= comp == k
     return _reassign_pixels(labels, junk)
 
