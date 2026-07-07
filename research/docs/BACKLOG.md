@@ -196,9 +196,10 @@ at the affected spots.
   353/441/1122/1153, strokes.py 99/123), ONE atomic commit at it17
   integration + fresh eye pass on all touched targets (tie-picks shift once,
   then freeze).
-- [ ] **Strap-end curl loopier than reference** (run-14 B lead): the chair
-  crossing's strap end traces a loop where original/Recraft draw a tight
-  hook — free-end shaping, not pooling. Look at run-4 ridge-extension tails.
+- [ ] **Strap-end curl loopier than reference** (run-14 B lead; run-21-wait
+  layer-strip `diag18_curl.png`: curl reproduces in the STROKE-ONLY render —
+  confirmed free-end/ribbon shaping in the stroke layer, NOT the run-19
+  fill-fitter tip-curl family). Look at run-4 ridge-extension tails.
 - [ ] **Residual S-wavy strokes under the wiggle gate** (run-13 A lead): a few
   wavy strokes sit at wiggle 1.5–2.2 on chopchop; lowering the cutoff welds
   real lines. Needs a SECOND signal (width variance along branch? contrast vs

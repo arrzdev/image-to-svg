@@ -470,3 +470,8 @@ See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
   fitter rounds the remainder. Third label-chain thin-boundary casualty
   (teeth = light spikes, buttons/ring = dark annuli, lobe = outline arc).
   One generalized guard could close the family — hinges on it18 A's design.
+
+### it18 wait diagnosis 3: strap-end curl attributed to stroke layer
+- Layer-strip render (diag18_curl.png): the curl reproduces in STROKE-ONLY —
+  free-end/ribbon shaping, distinct from the run-19 fill-fitter tip-curl
+  family. BACKLOG items stay separate.
