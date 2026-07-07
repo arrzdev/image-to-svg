@@ -9,12 +9,10 @@ Mission (canonical): **docs/PROJECT_SPEC.md** · Handoff: **docs/RESUME.md** · 
 - GOAL: an *idealized* vector reconstruction (clean confident lines, solid flat
   regions, source noise removed) that **beats OUR LAST VERSION by EYE**, Recraft
   (`data/targets/`) in frame as the north-star. NOT pixel fidelity.
-- CURRENT VERSION: **v4 + runs 2–4** (git `5eb37ad`).
-- CURRENT FOCUS TARGET: **rabbit** (source of truth: `./autoresearch.focus`).
-- BEST-SO-FAR (run 4): line network near-continuous (junction anchoring +
-  cross-component bridging + source-ink extension), 8/8 by eye.
-- OPEN DEFECTS (ranked): true source gaps (light-pixel jump) → curvature
-  drift → junction ink pooling → palette idealization. See docs/BACKLOG.md.
+- CURRENT VERSION: **v5 `contour_lines`** (git `50c0a03`); focus **chopchop** (`./autoresearch.focus`).
+- BEST-SO-FAR: v4 defect list cleared (runs 2–10) — line network integral, serrations corner-sharp, shadow tones merged. 6 keeps / 3 discards.
+- ⚠ ITERATIONS ARE WORKTREE-PARALLEL — if `autoresearch.iteration.json` phase≠idle, RESUME that in-flight iteration (see "Worktree-parallel iterations"); the SessionStart hook surfaces it.
+- OPEN: chopchop flecks/noodles/junction-blobs, rabbit long-gap breaks → docs/BACKLOG.md.
 
 ## The metric is NOT the arbiter here (the key adaptation)
 The stock autoresearch loop treats a bare number as the keep/discard gate. **This
@@ -93,21 +91,95 @@ and `autoresearch.sh` both read `autoresearch.focus`.
 - If one genuinely needs a fix, do it as a deliberate, separately-noted
   re-baseline step (worklog + RESEARCH_LOG), never as a routine experiment.
 
-## Sub-agent parallelism (spec §8.3-4; file-ownership map — task G)
-Prototype experiments may run in parallel sub-agents, but with **strict file
-ownership so they never collide**:
-- Give each sub-agent **exactly one** in-scope file (or one disjoint set) to
-  edit — e.g. agent A owns `strokes.py`, agent B owns `contours_exp.py`. No two
-  agents write the same file in the same round.
-- **Shared, read-only for all agents:** `backend/testbed.py`, `metrics.py`,
-  `data/`, `docs/`. Each agent renders into its **own** `outputs/<agent>-*.png`
-  crop file (unique name) so grids don't overwrite each other.
-- Each sub-agent judges its own result by eye and reports the verdict + the crop
-  path. **The orchestrator MUST independently re-render the claimed result and
-  look at the grid itself before trusting it (spec §8.4).** Self-report is not
-  sufficient to ship — a sub-agent claiming "beats prev" is a hypothesis until
-  the orchestrator sees it.
-- Only the orchestrator integrates a winner into the real pipeline and commits.
+## Worktree-parallel iterations (spec §8.3-4 — the iteration architecture)
+
+An iteration tests several genuinely independent candidate changes **in parallel,
+in isolated git worktrees**, then the **orchestrator (never a sub-agent) decides
+what ships** — including whether to combine multiple winners into one version.
+(The Stop-hook nudge says "one atomic change per experiment" — that is the
+*per-candidate* rule; the iteration dispatches N such candidates at once.)
+
+### §1 — Worktree lifecycle (per iteration)
+1. **Select N candidates** from docs/BACKLOG.md that touch **genuinely
+   independent parts of the pipeline** — different modules/domains (stroke
+   extractor vs. quantize/palette vs. fill emitter), not different lines of the
+   same function. **N scales to how many independent candidates are actually
+   queued — do NOT manufacture parallelism.** N=1 is correct when only one
+   independent lead is ready; then this reduces to the classic single-experiment
+   flow. Skim recent RESEARCH_LOG discard entries for unfollowed threads worth
+   promoting into candidates (§3).
+2. **One worktree per candidate, off the current best:**
+   `git worktree add .autoresearch-worktrees/<slug> <best-sha>` (best-sha = HEAD
+   of the current best commit). Record it in `autoresearch.iteration.json` (§4).
+3. **Dispatch one sub-agent per worktree** (Agent tool). Its task, ENTIRELY
+   inside its own worktree (no shared mutable state, no editing outside it):
+   implement the one change → render `tb.crops` on the focus target from within
+   the worktree → form its own eye verdict → report back the crop path, verdict,
+   and observations. **Its self-report is a CLAIM, not a verified result.**
+4. **Orchestrator independently re-verifies — uniformly, no exceptions.** When a
+   sub-agent reports, the orchestrator itself re-renders `tb.crops` for that
+   worktree's output (run the pipeline with that worktree's `backend/` on the
+   path — e.g. `cd .autoresearch-worktrees/<slug>` and render) and forms its own
+   eye verdict before the candidate counts as a winner. A confident-sounding
+   sub-agent report changes nothing about this.
+5. **Clean up:** `git worktree remove .autoresearch-worktrees/<slug>` (add
+   `--force` if it holds uncommitted probe files) once the result is logged —
+   whether kept, discarded, or merged. No worktree survives its iteration.
+
+### §2 — Orchestrator-owned integration (the orchestrator decides what ships)
+- **Exactly one candidate independently verifies** (beats best, no regression on
+  the focus target) → it is the new candidate version → go to the existing
+  **broaden-to-all-8-targets** step (Testing progression §2) before shipping.
+- **Multiple candidates each independently verify** → the orchestrator **combines
+  them itself**: a fresh integration worktree off the current best
+  (`.autoresearch-worktrees/_integrate`), apply each verified change **one at a
+  time**, re-render + re-verify by eye **after each apply — not only after the
+  final combination.** Two independently-good changes can interact badly in the
+  *rendered output* even when the *code* merges cleanly, so the combination is
+  its own experiment, never assumed safe from the parts.
+- **A merge step regresses** → isolate which change caused it (bisect by
+  re-testing combinations), **ship the subset that holds up**, and log the
+  interaction as its own discard entry naming the combination (§3). Do NOT
+  discard everything just because the full combination failed.
+- Only after the (possibly combined) result **broadens cleanly across all 8
+  targets** does it get committed and shipped (Versioning, spec §5). Update
+  `autoresearch.iteration.json` phase at every transition (§4).
+
+### §3 — Rich discard logging (every worktree, every outcome)
+For **every** candidate — ships alone, ships in a combination, or discarded —
+append a docs/RESEARCH_LOG.md entry (format is specified in that file's header).
+It must contain: what was actually tried; what the `tb.crops` grid showed
+**including anything unrelated or disproportionate to the change** (unexpectedly
+clean regions, odd side effects); the verdict and its real reason; and **if
+discarded, a lead-grade note** (which target, which spot, which parameter, what
+it looked like) — pickable-up later, never just "interesting, investigate."
+**If discarded because it broke when combined**, name the combination so that
+interaction is not retried blind. This is not optional book-keeping — the discard
+log is where the next iteration's candidates come from.
+
+### §4 — In-flight state: `autoresearch.iteration.json` (rehydration-safe)
+Mutable per-iteration state the append-only `autoresearch.jsonl` cannot hold.
+**Rewrite it at every lifecycle transition** (dispatch → verify → integrate →
+broaden → idle) so a `/clear`, resume, or compaction picks up mid-iteration.
+Schema:
+```json
+{"iteration": 12, "phase": "dispatched|verifying|integrating|broadening|idle",
+ "focus": "chopchop", "best_sha": "50c0a03", "updated": "<YYYY-MM-DD HH:MM>",
+ "candidates": [
+   {"id": "fleck-recolor", "domain": "stroke-extractor (contours_exp.py)",
+    "worktree": ".autoresearch-worktrees/fleck-recolor", "backlog": "brown flecks",
+    "subagent_verdict": "beats prev|worse|mixed",
+    "orchestrator_verdict": "VERIFIED|REFUTED|PENDING", "crop": "outputs/..png"}],
+ "integration": {"order": ["a","b"], "applied": ["a"], "step": 1,
+                 "last_verified_ok": true, "worktree": ".autoresearch-worktrees/_integrate"}}
+```
+Set `phase:"idle"` (or delete the file) when the iteration fully ships/aborts.
+The project hook `.claude/hooks/autoresearch-iteration-state.sh` (registered in
+`.claude/settings.json` for SessionStart + PreCompact) surfaces this on resume
+and snapshots it before compaction — so a rehydrated session is told "you were
+mid-merge across worktrees, phase X, re-verify PENDING candidates yourself,"
+not just "you were mid single-experiment." On resume, reconcile the recorded
+worktrees against `git worktree list` before continuing.
 
 ## Versioning & deliverables (spec §5 — task F)
 - One git commit per accepted improvement (concise message).
@@ -146,12 +218,17 @@ The plugin's Stop hook keeps the loop going **in one long context**; it CANNOT
 trigger `/clear` (Claude Code hooks cannot invoke slash commands — verified).
 So per-iteration context is managed by:
 - **Nothing durable lives in-conversation** — all state is on disk
-  (`autoresearch.jsonl`, `experiments/worklog.md`, `docs/RESEARCH_LOG.md`,
-  `docs/RESUME.md`, `autoresearch.focus`, git). A clear/compaction loses nothing.
-- **PreCompact hook** snapshots state before auto-compaction.
-- **SessionStart hook** (matcher now includes `clear`) rehydrates objective +
-  focus target + best-so-far from the top of THIS file + the worklog on
-  startup/resume/compact/clear.
+  (`autoresearch.jsonl`, `autoresearch.iteration.json` for in-flight worktree
+  state, `experiments/worklog.md`, `docs/RESEARCH_LOG.md`, `docs/RESUME.md`,
+  `autoresearch.focus`, git worktrees). A clear/compaction loses nothing.
+- **PreCompact hooks** snapshot state before auto-compaction — the plugin's
+  snapshots `autoresearch.jsonl`; the project hook snapshots
+  `autoresearch.iteration.json`.
+- **SessionStart hooks** (matcher includes `clear`) rehydrate on
+  startup/resume/compact/clear: the plugin's injects objective + focus +
+  best-so-far (top of THIS file + worklog); the **project hook**
+  (`.claude/hooks/autoresearch-iteration-state.sh`) injects any MID-ITERATION
+  worktree/merge state so an interrupted parallel iteration resumes correctly.
 - To get a genuinely clean context per iteration you (or the user) run `/clear`
   manually, or run each iteration headless (`claude -p`) from an external loop —
   see docs/RESUME.md "Loop operating model". This must be a deliberate choice;

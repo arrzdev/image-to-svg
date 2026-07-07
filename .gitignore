@@ -17,3 +17,7 @@ autoresearch-dashboard.md
 autoresearch-report.md
 experiments/*.bak
 experiments/autoresearch.jsonl.precompact.bak
+# worktree-parallel iterations: transient in-flight state + the worktrees dir
+# (durable record lives in RESEARCH_LOG / jsonl / worklog / git history)
+autoresearch.iteration.json
+.autoresearch-worktrees/

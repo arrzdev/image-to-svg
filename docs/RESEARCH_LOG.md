@@ -1,11 +1,25 @@
 # Research log
 
-Append-only, **one entry per shipped iteration**, newest first. Each entry:
-**what changed / why / eye-verdict summary (new vs prev vs Recraft) / benchmark
-delta if run / commit sha**. Mission: `docs/PROJECT_SPEC.md`. `docs/STATE.md`
-holds the current consolidated state; `docs/BACKLOG.md` holds the idea queue.
-The autoresearch loop also logs machine-readable results to `autoresearch.jsonl`
-and a running narrative to `experiments/worklog.md`.
+Append-only, newest first. **Iterations are worktree-parallel** (autoresearch.md
+"Worktree-parallel iterations"): log an entry for **every candidate worktree** —
+whether it ships alone, ships in a combination, or is discarded — not just the
+shipped result. Each entry:
+- **What was tried** — the specific change + which module/domain/worktree.
+- **What the `tb.crops` grid showed** — including anything unrelated or
+  disproportionate to the change (unexpectedly clean regions, odd side effects).
+- **Verdict + the real reason** (orchestrator's own re-verified eye verdict, not
+  the sub-agent's self-report). Benchmark delta if the sanity harness was run.
+- **If discarded — a lead-grade note:** which target, which spot, which
+  parameter, what it looked like — pickable-up later, never just "investigate."
+- **If discarded when combined:** name the combination, so that interaction is
+  not retried blind.
+- **commit sha** for anything that shipped.
+
+When picking the next iteration's candidates, skim recent discard entries here
+for unfollowed threads worth promoting into docs/BACKLOG.md items. Mission:
+`docs/PROJECT_SPEC.md`; `docs/STATE.md` = consolidated state; `docs/BACKLOG.md` =
+idea queue. Machine-readable results → `autoresearch.jsonl`; running narrative →
+`experiments/worklog.md`; in-flight worktree state → `autoresearch.iteration.json`.
 
 ---
 
