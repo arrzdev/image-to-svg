@@ -98,6 +98,21 @@ Narrative that survives compaction/clear. On resume: read `autoresearch.md`
   sides' tangents agree, riskier); (b) curvature drift (BACKLOG #2);
   (c) chopchop toe-blob / junction ink pooling cleanup.
 
+### Run 5: parsimony centerline fit — DISCARD (negative result, kept on record)
+- Timestamp: 2026-07-08 · vs HEAD b801c6b (parent run 4) · focus elephant
+- Tried: `_fit_branch` open branches → `svgcore.fit_open_parsimony` on the RAW
+  skeleton chain (no pre-smoothing), targeting the user's "curvature drift".
+- Finding 1 (the real result): **curvature drift is ALREADY RESOLVED at
+  current HEAD** — mechanical check: mean distance from source-skeleton points
+  to rendered ink = 0.04–0.05px, p95 = 0, for BOTH variants. The user's v4-era
+  defect report predates the runs 2–4 junction/continuity work.
+- Finding 2: parsimony ≈ smooth+Schneider by eye at 8k (no corners, no win),
+  and points went UP (2612 → 2639) — no economy benefit either.
+- Verdict: discard per "simpler is better" — don't swap a proven code path for
+  a lateral move. Do NOT retry parsimony centerlines without a new reason.
+- Next: chopchop junction ink pooling / toe blobs (last visible join defect),
+  or palette idealization (the declared last gap to Recraft on the elephant).
+
 ## Key Insights
 - The metric is a sanity check, not the gate. A change can raise `quality` by
   copying noise and still LOOK worse — always render `tb.crops` and decide by eye.

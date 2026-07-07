@@ -19,9 +19,11 @@ at the affected spots.
   the stroke along it. Negative results: contour_lines drops zero
   junction-junction connectors at defaults; missing-ink clusters ≈ deliberate
   width_scale undershoot, not gaps.
-- [ ] **Some curvatures differ from original** — centerline smoothing+fit
-  alters drawn shape. Try curvature-aware smoothing or fit the centerline with
-  svgcore.fit_open_parsimony instead of Schneider.
+- [x] **Some curvatures differ from original** — RESOLVED as measured (run 5,
+  2026-07-08): mean source-skeleton→render drift 0.04px, p95=0 at current HEAD;
+  the v4-era report predates runs 2–4. Negative result: parsimony centerline
+  fit ≈ smooth+Schneider by eye and costs more points — don't retry without a
+  new reason.
 - [ ] **Rectangular nub artifacts at joins** — butt caps / segment seams at
   branch joins render little rectangles. Audit `_stroke_elements`/`_ribbon`
   cap+join style (want round joins); ensure continuation-merged branches emit
