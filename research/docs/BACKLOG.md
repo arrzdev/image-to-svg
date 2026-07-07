@@ -260,6 +260,11 @@ at the affected spots.
   medial axis + curvature-variation of centerlines; reward constancy/
   smoothness relative to the SOURCE's own line stats. Would let contour/v3
   candidates win on merit. (Design carefully: must not reward deleting lines.)
+  Run-21-wait methodology check: whole-component cv_w is USELESS — elephant
+  scores ours 0.295 vs Recraft 0.363 (we "win") because component-level stats
+  can't see per-branch wobble, and monster's dark mask is a FILL (its lines
+  are light-on-dark). A real metric must decompose junction-to-junction
+  branches (strokes.py) and treat light-line layers separately.
 
 ## Infrastructure
 

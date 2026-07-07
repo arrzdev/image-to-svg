@@ -475,3 +475,11 @@ See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
 - Layer-strip render (diag18_curl.png): the curl reproduces in STROKE-ONLY —
   free-end/ribbon shaping, distinct from the run-19 fill-fitter tip-curl
   family. BACKLOG items stay separate.
+
+### it18 wait diagnosis 4: width-constancy metric — component-level is useless
+- Whole-component cv_w on elephant: ours 0.295, recraft 0.363, source 0.355
+  (n=5 components) — "we beat Recraft", i.e. the granularity is too coarse to
+  see perceived wobble. Monster's dark mask is fill, not lines (crashes the
+  approach). A viable line-consistency metric needs junction-to-junction
+  branch decomposition + separate light-line handling. Filed under Judge
+  upgrades; no metric work shipped (harness stays locked).
