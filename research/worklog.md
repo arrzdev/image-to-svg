@@ -487,3 +487,17 @@ See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
 ### it18 wait: chopchop scribble-nondeterminism item closed (verified)
 - Double render post-pin: byte-identical (b4510fe016 x2). Run-15 observation
   was the medial_axis tie-order; BACKLOG item closed against run 18.
+
+### Run 21: B-cornerfit integrated — corner-pinned fills (KEEP) — commit c51d025
+- Timestamp: 2026-07-08 03:35
+- What changed: corner detection on raw fill edges (turn>=80 @k=6, two-scale
+  localization) + per-piece parsimony fits pin V-notches as hard vertices.
+- Result: teeth scallops -> sharp Vs (half-height; A owns the label side),
+  eye wedges; broad sharpness win verified by orch renders (mountain pines,
+  fox fur, crystals facets, logo-badge blades); controls smooth; monster
+  sanity 0.9584 flat, points 773->701. Artifact chain integrity: candidate
+  prev AND integrated render byte-identical to canonical/artifact.
+- Leads: mouth-corner swoosh square-step = capsule/fill SEAM (not fill fit);
+  pinning-before-fit beats alphamax tuning.
+- Next: A-spikeguard verdict; combination should compound to full-height
+  sharp teeth.
