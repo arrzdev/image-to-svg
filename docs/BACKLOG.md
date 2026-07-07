@@ -60,16 +60,29 @@ at the affected spots.
 
 ## Shape & palette idealization (run-6 diagnosis, 2026-07-08)
 
-- [ ] **Serration/notch shape idealization** (chopchop): heavy leaf outlines
-  are the FILL layer (96/144 dark components shape-gated; strokes = 271 of
-  17.7k excess px). Recraft REDRAWS serrated outlines as uniform-weight
-  strokes with sharpened V-notches. Fix = idealize notch geometry (corner
-  sharpening / uniform outline re-stroke of serrated fills), not knobs —
-  negative result: swell cap 1.6w + shape_p90 2.0 is visually lateral.
-- [ ] **Palette re-grading policy** (elephant): our tints are source-faithful
-  (per-label median == kmeans mean ≤3/255); Recraft deliberately re-grades
-  shadows (98bee3 → A6B8D0: −13% sat, cooler, darker). Needs a taste policy
-  (e.g. chroma-normalized shadow ramp) — propose to user before building.
+- [ ] **Serration/notch shape idealization** (chopchop) — DESIGN READY (run-7
+  research): heavy outlines are the FILL layer; Recraft-style fix = centerline
+  network with CORNERS AS HARD NODES + constant width + `stroke-linejoin:
+  miter` (miterlimit 6-10) so every V-notch re-sharpens geometrically (the
+  renderer extends edge tangents to intersection). Notch-pool detection: local
+  width max (>1.3·w_med) COINCIDENT with high turning angle (θ>~40° over a
+  ~2w chord) → split centerline there, fit branches ignoring pooled pixels,
+  miter joins them. Prior art: Puhachov 2021 keypoint-driven PolyVector
+  (github.com/ivanpuhachov/line-drawing-vectorization-polyvector-flow),
+  PolyFit Dominici 2020 (corner-plausible polygon first), Favreau 2016
+  fidelity-vs-simplicity energy, Potrace alphamax. First experiment: on the
+  serration bands only — corner breakpoints (drop corner_deg to detect V's)
+  + miter joins in `_stroke_elements` for those paths + constant width.
+  Negative result kept: swell cap + relaxed gate WITHOUT corner/miter = lateral.
+- [ ] **Palette re-grading — MEASURE Recraft's ramp from our own 8 gold pairs**
+  (run-7 research; makes it data, not taste): extract palettes ours vs
+  data/targets/*.svg, match entries by nearest hue, compute (ΔL, ΔC, Δh) in
+  OKLCH for each base→shadow pair. If deltas cluster across the 8 images →
+  those are Recraft's ramp constants; apply as `shadow' = f(base, constants)`
+  per hue family. Zero-risk measurement first; recolor experiment second.
+  Prior art: palette-level harmonization (Tan 2018 arxiv 1804.01225,
+  Cohen-Or 2006), convex-hull palettes (Tan 2016) if kmeans too noisy,
+  hue-shifted ramps (OKLCH ΔL/ΔC/Δh steps — pixel-art practice).
 - [ ] Harness quirk: chopchop sanity quality ≈ 0.14 (alpha/background
   handling in metric?) — numbers meaningless for this target, eye only.
   Investigate as a deliberate re-baseline step if it starts mattering.

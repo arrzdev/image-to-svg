@@ -134,6 +134,20 @@ Narrative that survives compaction/clear. On resume: read `autoresearch.md`
   likely background/alpha handling in the metric for this PNG; treat chopchop
   numbers as meaningless, eye only. (Harness is locked; not investigating now.)
 
+### Run 7: RESEARCH pass (spec §8.2) — designs unblocked for both stalled items
+- Timestamp: 2026-07-08 · no code change (research iteration; sub-agent web pass)
+- Serrations: the missing ingredient is CORNERS AS HARD NODES + miter joins —
+  `stroke-linejoin:miter` re-sharpens V-notches geometrically; detect notch
+  pools as width-max ∧ high turning angle, split centerline there, fit
+  branches ignoring pooled pixels. (Puhachov 2021, PolyFit 2020, Favreau 2016;
+  no public Recraft tech docs exist — verified.)
+- Palette: Recraft's re-grade is MEASURABLE from our own 8 input↔target pairs:
+  fit (ΔL, ΔC, Δh) per matched shadow pair in OKLCH; clustering ⇒ ramp
+  constants ⇒ autonomous, data-driven re-grader (no taste call needed).
+- Both designs written into docs/BACKLOG.md with sources. Run 8 should start
+  with the palette RAMP MEASUREMENT (zero-risk, half-day, pure measurement)
+  or the serration miter experiment (bigger, higher payoff).
+
 ## Key Insights
 - The metric is a sanity check, not the gate. A change can raise `quality` by
   copying noise and still LOOK worse — always render `tb.crops` and decide by eye.

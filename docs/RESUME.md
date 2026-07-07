@@ -10,8 +10,10 @@ git `5eb37ad`). **Current focus target:** rabbit (`./autoresearch.focus`).
 **Best-so-far:** line network near-continuous — same-component joins flush,
 cross-component gaps bridged, lost ink re-traced from the source raster;
 8/8 by eye. Sanity: rabbit 0.7272, elephant 0.8599 (composite noisy; eye rules).
-**Next step:** pick from — true source gaps (light-pixel jump), curvature
-drift, chopchop junction pooling. **In-flight:** loop LIVE (run 5 next).
+**Next step (designs ready in BACKLOG):** palette ramp MEASUREMENT from the 8
+gold pairs (zero-risk, do first), then serration corner-nodes + miter-join
+experiment. Curvature drift measured resolved (run 5); serration knobs refuted
+(run 6); research sources logged (run 7). **In-flight:** loop LIVE (run 8 next).
 
 ## Loop operating model (autoresearch plugin)
 
