@@ -11,7 +11,7 @@
 # Registered in .claude/settings.json for BOTH SessionStart (startup|resume|
 # compact|clear) and PreCompact. Dispatches on hook_event_name.
 #
-# State file: autoresearch.iteration.json (see autoresearch.md "Worktree-
+# State file: research/autoresearch.iteration.json (see autoresearch.md "Worktree-
 # parallel iterations"). phase == "idle" (or file absent) => nothing in flight,
 # stay silent.
 set -uo pipefail
@@ -22,10 +22,10 @@ event=$(printf '%s' "$input" | python3 -c 'import json,sys;print(json.load(sys.s
 [ -n "$cwd" ] && cd "$cwd" 2>/dev/null || true
 
 # Only speak for a real, non-paused autoresearch session.
-[ -f "autoresearch.md" ] || exit 0
+[ -f "research/autoresearch.md" ] || exit 0
 [ -f ".autoresearch-off" ] && exit 0
 
-STATE="autoresearch.iteration.json"
+STATE="research/autoresearch.iteration.json"
 
 # Is there an active (non-idle) iteration to resume?
 active=$(python3 - "$STATE" <<'PY' 2>/dev/null
@@ -41,8 +41,8 @@ PY
 if [ "$event" = "PreCompact" ]; then
   # Durable snapshot before context is lost (mirrors the plugin's jsonl backup).
   if [ -f "$STATE" ] && [ -n "$active" ]; then
-    mkdir -p experiments
-    cp "$STATE" "experiments/autoresearch.iteration.json.precompact.bak"
+    mkdir -p research
+    cp "$STATE" "research/autoresearch.iteration.json.precompact.bak"
     echo "[autoresearch] mid-iteration worktree state snapshotted before compaction."
   fi
   exit 0
@@ -70,7 +70,7 @@ if ig.get("order"):          # a real multi-winner merge is in progress
 elif ig.get("single_winner"):
     print(f"- integration: single winner {ig.get('single_winner')} — "
           f"no combination; broaden it to all 8 targets, then ship.")
-print("- Protocol: autoresearch.md → 'Worktree-parallel iterations'. Any "
+print("- Protocol: research/autoresearch.md → 'Worktree-parallel iterations'. Any "
       "candidate whose ORCHESTRATOR verdict is PENDING must be re-rendered and "
       "eye-judged by YOU (sub-agent self-report is a claim, not a result). If "
       "phase=integrating, continue the merge sequence from the recorded step, "

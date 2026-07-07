@@ -13,14 +13,13 @@ data/outputs/*
 # autoresearch.md, autoresearch.jsonl, autoresearch.focus, experiments/worklog.md)
 .autoresearch-off
 .autoresearch-inspect
-autoresearch-dashboard.md
-autoresearch-report.md
-experiments/*.bak
-experiments/autoresearch.jsonl.precompact.bak
+research/autoresearch-dashboard.md
+research/autoresearch-report.md
+research/*.bak
+research/autoresearch.jsonl.precompact.bak
 # worktree-parallel iterations: transient in-flight state + the worktrees dir
 # (durable record lives in RESEARCH_LOG / jsonl / worklog / git history)
-autoresearch.iteration.json
+research/autoresearch.iteration.json
+research/autoresearch.iteration.json.precompact.bak
 .autoresearch-worktrees/
 
-# scratch experiment renders (regenerable)
-experiments/*.svg

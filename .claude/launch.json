@@ -2,10 +2,11 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "playground",
+      "name": "svg-tester",
       "runtimeExecutable": "/Users/arrz/Documents/Github/image-to-svg/.venv/bin/python",
-      "runtimeArgs": ["-m", "uvicorn", "app:app", "--app-dir", "/Users/arrz/Documents/Github/image-to-svg/backend", "--host", "127.0.0.1", "--port", "8000"],
-      "port": 8000
+      "runtimeArgs": ["-m", "uvicorn", "server:app", "--host", "127.0.0.1", "--port", "8000"],
+      "port": 8000,
+      "env": {"DYLD_FALLBACK_LIBRARY_PATH": "/opt/homebrew/lib"}
     }
   ]
 }
