@@ -399,3 +399,16 @@ See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
 - Chair-lattice tangles finally LOCATED at (425,790)@1024 (the ribbon
   first-node listing walked straight into the lattice the junction-density
   heuristic missed): tangled knot glyph + doubled bars.
+
+### it17 A-apexsnap: orchestrator VERIFIED (beats prev) — awaiting B
+- Agent's corrected diagnosis: apex nub = fill fitter curling the tip of a
+  corridor-carried sliver of the 719k-px background component (NOT capsule
+  overshoot). Fix: absorb only corridor-carried sliver pixels >6px reach
+  from the out-of-corridor body (measured margin: grazes max 5.0 vs carried
+  mass 8-53). Capsules 5/5 unchanged; only monster fires.
+- Orch verification (own renders, artifact new vs orch-own prev vs recraft):
+  apex nub GONE (560,690); mid-segment (600,712) cleaner (no double render);
+  other spots + 4 full-coverage pages identical/lateral. Zero regressions.
+- Agent leads: fill-fitter tip-curl family (swoosh hooks?); confirms
+  in-process wobble beyond k-means (= our medial_axis finding); Recraft's
+  sharp-Lambda apex needs corner-aware capsule fit (run-10 style).
