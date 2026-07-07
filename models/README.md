@@ -28,6 +28,14 @@ file on every bump, narrating each version vs the previous **and vs Recraft**.
   eye (`v4/vs_recraft_fullframe.png`, `v4/vs_recraft_zoom.png`); residual gap is
   subtle palette/shading-color, not structural. Elephant `contour_lines`
   ≈ 918 pts / 39 paths / 13KB. Open defects → docs/BACKLOG.md.
-  _(Current best. The vision-first autoresearch loop climbs from here — each
-  accepted iteration beats v4 by eye with Recraft in frame; see
-  docs/RESEARCH_LOG.md + autoresearch.md.)_
+- **v5** (git `50c0a03`; snapshot in `v5/`): the autoresearch arc, runs 2–10 —
+  line-network integrity + measured idealization. **vs v4:** the v4 defect
+  report is cleared — junction nubs/pinches fixed, cross-component dash-gaps
+  bridged, despeckle-lost ink re-traced from the source raster, curvature
+  drift measured resolved (0.04px), shadow tones merged, serrated outlines
+  redrawn as corner-sharp constant-width strokes (miter joins). **vs Recraft:**
+  junction/join cleanliness and shadow palette now match on the elephant by
+  eye; chopchop serrations moved decisively toward Recraft's crisp zigzag;
+  rabbit's dashed outlines are near-continuous (long label-map losses remain
+  the visible gap). Each keep eye-verified on all 8 targets; negative results
+  in v5/MANIFEST.md. _(Current best — the loop continues from here.)_
