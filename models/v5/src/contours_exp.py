@@ -1020,6 +1020,43 @@ def _trace_skeleton_path(skel: np.ndarray) -> Optional[np.ndarray]:
     return np.array([(x + 0.5, y + 0.5) for y, x in path], float)
 
 
+def _extend_into_light(path: np.ndarray, src: np.ndarray, lum: np.ndarray,
+                       bg: int, max_ext: float = 8.0,
+                       cone: float = 0.5) -> np.ndarray:
+    """Prolong each path end to the nearest remaining light-LABEL pixel in a
+    forward cone, so a capsule's round cap tucks INTO the light shape the
+    line emerges from (mouth-corner swoosh, background) instead of stopping
+    with a visible gap where the tophat/label cut amputated the junction."""
+    h, w = src.shape
+    out = path
+    for end in (0, -1):
+        p = out[end]
+        q = out[3 if end == 0 else -4] if len(out) >= 4 else \
+            out[1 if end == 0 else -2]
+        t = p - q
+        n = float(np.hypot(*t))
+        if n < 1e-6:
+            continue
+        t = t / n
+        r = int(max_ext) + 1
+        x0, x1 = max(int(p[0]) - r, 0), min(int(p[0]) + r + 1, w)
+        y0, y1 = max(int(p[1]) - r, 0), min(int(p[1]) + r + 1, h)
+        win = lum[src[y0:y1, x0:x1]] > lum[bg] + 50.0
+        yy, xx = np.nonzero(win)
+        if len(yy) == 0:
+            continue
+        d = np.stack([xx + x0 + 0.5 - p[0], yy + y0 + 0.5 - p[1]], 1)
+        dist = np.hypot(d[:, 0], d[:, 1])
+        fwd = (d @ t) >= np.maximum(dist * cone, 1e-6)
+        good = (dist <= max_ext) & (dist >= 1.0) & fwd
+        if not good.any():
+            continue
+        i = int(np.argmin(np.where(good, dist, np.inf)))
+        tgt = p + d[i] * (1.0 + 1.5 / max(dist[i], 1e-6))   # ~1.5px inside
+        out = np.vstack([[tgt], out]) if end == 0 else np.vstack([out, [tgt]])
+    return out
+
+
 def _light_line_capsules(labels: np.ndarray, centers: np.ndarray,
                          src_img: np.ndarray,
                          tophat_thresh: float = 60.0,
@@ -1029,18 +1066,36 @@ def _light_line_capsules(labels: np.ndarray, centers: np.ndarray,
                          min_elong: float = 8.0,
                          min_contrast: float = 60.0,
                          min_fragments: int = 3,
+                         whole_min_skel: int = 20,
+                         whole_cv: float = 0.2,
+                         whole_wm: float = 1.45,
                          ) -> Tuple[np.ndarray, List[dict]]:
-    """Rescue thin light lines that the label map fragments into bead trails.
+    """Rescue thin light lines that the label map renders as beads or lumps.
 
     A ~1-2px light line inside a dark region (monster's white scratch)
-    survives quantization only as a DASHED run of small light components; the
-    fill fitter then rounds each dash into a teardrop bead. The source image
-    still carries the line continuously, so: white-tophat the source, keep
-    components that are thin + elongated + light-on-dark, and — ONLY when the
-    label map carries them fragmented (>= min_fragments bead components; a
-    line carried whole is left to the fill fitter, which handles it fine) —
-    reassign the bead pixels to the surrounding dark label and emit ONE
-    continuous stroke capsule along the source centerline instead.
+    survives quantization either as a DASHED run of small light components
+    (the fill fitter rounds each dash into a teardrop bead) or as one
+    WHOLE-carried thin sliver — often a tentacle appendage of a big light
+    region (the white background) — which the fitter renders lumpy/wobbly.
+    The source image still carries the line cleanly, so: white-tophat the
+    source, keep components that are thin + elongated + light-on-dark, and
+    take them from the fill fitter in two cases:
+
+    - FRAGMENTED (>= min_fragments bead components): always — the dash trail
+      can never render as a line.
+    - CARRIED WHOLE (< min_fragments): ONLY when the label-map ink under the
+      line is itself line-like but width-wavy, i.e. the fitter will lump it:
+      width variation along the bead skeleton cv >= whole_cv AND mean bead
+      width <= whole_wm * the tophat line width. The width-ratio cap keeps
+      thin TIPS of larger light shapes (eye-wedge tails, background wedges
+      between limbs, wide highlights) with the fill fitter — stealing those
+      would redraw a shape tip as a fat-capped stroke. A clean-carried line
+      (low cv, e.g. a long straight scratch the fitter fits well) is left
+      alone too. This branch admits slightly shorter lines
+      (skel >= whole_min_skel) than the dashed one.
+
+    Reassigned pixels go to the surrounding dark label and ONE continuous
+    stroke capsule is emitted along the source centerline instead.
 
     Returns (patched_labels, capsule_strokes); labels is copied before any
     patch, capsule strokes are {"d","width","color","kind":"stroke"}.
@@ -1067,7 +1122,7 @@ def _light_line_capsules(labels: np.ndarray, centers: np.ndarray,
         skel, dist = medial_axis(m, return_distance=True)
         skel_px = int(skel.sum())
         med_w = float(np.median(dist[m]) * 2.0)
-        if med_w > max_med_w or skel_px < min_skel_px:
+        if med_w > max_med_w or skel_px < min(min_skel_px, whole_min_skel):
             continue
         if skel_px / max(med_w, 1.0) < min_elong:
             continue
@@ -1086,27 +1141,53 @@ def _light_line_capsules(labels: np.ndarray, centers: np.ndarray,
         beads = np.isin(src, light_ids) & dil if light_ids else \
             np.zeros_like(m)
         _, nfrag = ndimage.label(beads, structure=_STRUCT8)
-        if nfrag < min_fragments:
-            continue                       # carried whole (or absent): leave
-        # -- absorb the bead components into the surrounding dark label.
-        # Whole-component test keeps the big light region the line runs
-        # into safe: only small components mostly inside the line get eaten.
+        if nfrag >= min_fragments:
+            if skel_px < min_skel_px:
+                continue                   # dashed path keeps the 30px floor
+        else:
+            # -- carried whole (or absent): steal ONLY lumpy-rendering slivers
+            if skel_px < whole_min_skel:
+                continue
+            if float(beads[m].sum()) / area < 0.5:
+                continue                   # label barely carries it: leave
+            bskel, bdist = medial_axis(beads, return_distance=True)
+            if bskel.sum() < 5:
+                continue
+            rr = bdist[bskel]
+            if float(rr.std() / max(rr.mean(), 1e-6)) < whole_cv:
+                continue                   # constant width: fitter is fine
+            if float(rr.mean() * 2.0) / max(med_w, 2.0) > whole_wm:
+                continue                   # fat tip of a bigger light shape
+        # -- absorb the bead pixels into the surrounding dark label.
         if patched is None:
             patched = labels.copy()
             src = patched
-        for li in light_ids:
-            lcomp, ln = ndimage.label(src == li, structure=_STRUCT8)
-            for lci in np.unique(lcomp[beads]):
-                if lci == 0:
-                    continue
-                cm = lcomp == lci
-                ca = int(cm.sum())
-                if ca < 400 and float((cm & dil).sum()) / ca >= 0.6:
-                    src[cm] = bg
+        if nfrag >= min_fragments:
+            # Whole-component test keeps the big light region the line runs
+            # into safe: only small components mostly inside the line get
+            # eaten.
+            for li in light_ids:
+                lcomp, ln = ndimage.label(src == li, structure=_STRUCT8)
+                for lci in np.unique(lcomp[beads]):
+                    if lci == 0:
+                        continue
+                    cm = lcomp == lci
+                    ca = int(cm.sum())
+                    if ca < 400 and float((cm & dil).sum()) / ca >= 0.6:
+                        src[cm] = bg
+        else:
+            # Whole-carried tentacles hang off big regions (the background),
+            # so cut just the bead PIXELS near the line — the capsule redraws
+            # the line; the donor region's boundary heals straight.
+            src[beads] = bg
         # -- one continuous capsule along the source centerline
         path = _trace_skeleton_path(skel)
         if path is None:
             continue
+        if nfrag < min_fragments:
+            # whole-carried slivers are amputated from the light shape they
+            # emerge from by the tophat/label cut — tuck the cap back into it
+            path = _extend_into_light(path, src, lum, bg)
         d = _fit_branch(path, 2.5, 75.0, 11, False)
         if not d:
             continue
