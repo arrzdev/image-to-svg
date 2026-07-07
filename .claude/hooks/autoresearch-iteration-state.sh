@@ -56,10 +56,15 @@ echo "## ⚠ Autoresearch MID-ITERATION — resume the worktree-parallel cycle, 
 python3 - "$STATE" <<'PY' 2>/dev/null
 import json, sys
 d = json.load(open(sys.argv[1]))
+na = d.get("next_action")
+print(f"- **NEXT ACTION: {na}**" if na else
+      "- WARNING next_action MISSING from iteration.json - schema violation; "
+      "derive the step from the fields below, then fix the writer.")
 print(f"- phase: **{d.get('phase')}** | iteration {d.get('iteration')} | "
       f"focus {d.get('focus')} | best {d.get('best_sha')}")
 for c in d.get("candidates", []):
     print(f"- candidate `{c.get('id')}` [{c.get('domain')}] wt={c.get('worktree')} "
+          f"effort={c.get('effort','?')} "
           f"| sub-agent said: {c.get('subagent_verdict','?')} "
           f"| ORCHESTRATOR verdict: {c.get('orchestrator_verdict','PENDING — re-verify yourself')}")
 ig = d.get("integration") or {}

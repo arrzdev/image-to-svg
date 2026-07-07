@@ -1,11 +1,9 @@
 # Autoresearch — image→SVG engine (VISION-FIRST loop)
-<!-- ⚠ RESTRUCTURED 2026-07-07: repo reorganized. Engine code: models/v5/src (was backend/).
-     All autoresearch state/docs: research/ (was repo root + docs/ + experiments/).
-     The loop is PAUSED (.autoresearch-off at repo root). The plugin's own hooks still
-     expect these files at the repo ROOT — before resuming the loop, either update the
-     plugin hook paths or move autoresearch.{md,jsonl,focus,sh} back to root. -->
+<!-- RESTRUCTURED 2026-07-07: engine = models/v5/src (was backend/); state/docs = research/.
+     Root SYMLINKS (autoresearch.{md,jsonl,focus,sh}, experiments->research) keep the
+     plugin hooks working — do not remove them. -->
 <!-- Lines 1–15 = SessionStart rehydration window (sed 1,15p): keep objective+focus+best+EYE-gate here. -->
-Mission (canonical): **research/docs/PROJECT_SPEC.md** · Handoff: **research/docs/RESUME.md** · Work: **research/docs/BACKLOG.md**
+Mission: **research/docs/PROJECT_SPEC.md** · Work: **research/docs/BACKLOG.md** · Trigger: `/autoresearch <objective>` — $ARGUMENTS states the current objective (this file + spec carry detail; empty args = objective below). If `research/autoresearch.iteration.json` phase≠idle: execute its **next_action** field.
 
 ## Objective — rehydrate from here
 - ⚠ **KEEP/DISCARD IS BY EYE, NOT THE METRIC** (spec §4): render `tb.crops` and
@@ -129,42 +127,84 @@ what ships** — including whether to combine multiple winners into one version.
    independent lead is ready; then this reduces to the classic single-experiment
    flow. Skim recent RESEARCH_LOG discard entries for unfollowed threads worth
    promoting into candidates (§3).
-2. **One worktree per candidate, off the current best:**
-   `git worktree add .autoresearch-worktrees/<slug> <best-sha>` (best-sha = HEAD
-   of the current best commit). Record it in `research/autoresearch.iteration.json` (§4).
-3. **Dispatch one sub-agent per worktree** (Agent tool). Its task, ENTIRELY
-   inside its own worktree (no shared mutable state, no editing outside it):
-   implement the one change → render `tb.crops` on the focus target from within
-   the worktree → form its own eye verdict → report back the crop path, verdict,
-   and observations. **Its self-report is a CLAIM, not a verified result.**
-4. **Orchestrator independently re-verifies — uniformly, no exceptions.** When a
-   sub-agent reports, the orchestrator itself re-renders `tb.crops` for that
-   worktree's output (run the pipeline with that worktree's `backend/` on the
-   path — e.g. `cd .autoresearch-worktrees/<slug>` and render) and forms its own
-   eye verdict before the candidate counts as a winner. A confident-sounding
-   sub-agent report changes nothing about this.
-5. **Clean up:** `git worktree remove .autoresearch-worktrees/<slug>` (add
-   `--force` if it holds uncommitted probe files) once the result is logged —
-   whether kept, discarded, or merged. No worktree survives its iteration.
+2. **Dispatch one sub-agent per candidate with NATIVE worktree isolation** —
+   `Agent(isolation: "worktree", run_in_background: true, ...)`. The framework
+   creates the worktree copy of the repo and auto-cleans it if unchanged; do
+   NOT run manual `git worktree add`/`remove` for candidates. HEAD must be the
+   current best commit when dispatching (it always is under the
+   commit-per-keep convention). Record the candidate in
+   `research/autoresearch.iteration.json` (§4) at dispatch; fill in its
+   worktree path from the sub-agent's report.
+3. **The delegation prompt is the sub-agent's ONLY channel — nothing else
+   crosses automatically.** Every dispatch prompt must explicitly contain:
+   - instruction to FIRST read `research/docs/PROJECT_SPEC.md` and
+     `research/autoresearch.md` (in its own worktree copy);
+   - the specific objective for THIS candidate (defect, diagnosis so far,
+     acceptance criterion in eye terms);
+   - the scope boundary — exactly which files/module under `models/v5/src/`
+     it may touch, and the locked-harness list it may NOT;
+   - the focus target and the `data/inputs/` / `data/targets/` paths;
+   - exactly how to render and judge: env prefix
+     `DYLD_FALLBACK_LIBRARY_PATH=/opt/homebrew/lib`, the repo venv python,
+     `sys.path.insert(0,'models/v5/src')`, render baseline-then-new,
+     `tb.crops({'new','prev','recraft'})`, LOOK at the png;
+   - the report format: files changed + mechanism, crop paths, eye verdict
+     (labelled as a claim), side observations, lead-grade notes, **and its
+     worktree path (`pwd`)** so the orchestrator can re-verify in place.
+4. **Model & effort policy (every dispatch, no exceptions):**
+   - **Model: never set explicitly.** Leave it to inherit so sub-agents always
+     run whatever model the orchestrator session is on.
+   - **Effort: a deliberate choice every time, recorded in the candidate's
+     iteration.json entry** (`"effort"` field). A candidate MAY run at lower
+     effort than the orchestrator when the task doesn't need full depth
+     (mechanical renders, parameter sweeps); it must NEVER run at an effort
+     level above the orchestrator's own. Where the dispatch mechanism has no
+     effort knob, inherit (= orchestrator level, satisfying the cap) and
+     record `"effort": "inherit"` — the point is that the choice is written
+     down, not silent.
+5. **Wait natively.** After dispatching background sub-agents, do NOT poll
+   their worktrees/output files in wait loops — the framework delivers a
+   completion notification per agent. Use the wait to do orchestrator-side
+   prep (baseline renders on the main tree) or simply end the turn.
+6. **Orchestrator independently re-verifies — uniformly, no exceptions.** When
+   a sub-agent reports, the orchestrator itself re-renders `tb.crops` from
+   that candidate's worktree (`sys.path` to `<worktree>/models/v5/src`) and
+   forms its own eye verdict before the candidate counts as a winner. A
+   confident-sounding sub-agent report changes nothing about this.
+7. **Clean up:** the framework auto-removes an unchanged worktree; a worktree
+   the candidate modified persists for orchestrator verification — after the
+   result is logged (kept, discarded, or merged), remove it
+   (`git worktree remove --force <path>`). No worktree survives its
+   iteration. Always use ABSOLUTE paths for worktree operations (a stale cwd
+   once created a nested worktree — run 14).
 
 ### §2 — Orchestrator-owned integration (the orchestrator decides what ships)
 - **Exactly one candidate independently verifies** (beats best, no regression on
   the focus target) → it is the new candidate version → go to the existing
   **broaden-to-all-8-targets** step (Testing progression §2) before shipping.
 - **Multiple candidates each independently verify** → the orchestrator **combines
-  them itself**: a fresh integration worktree off the current best
-  (`.autoresearch-worktrees/_integrate`), apply each verified change **one at a
+  them itself** in a fresh integration worktree off the current best (this is
+  the orchestrator's own workspace — create it with the native EnterWorktree
+  tool when available, else `git worktree add --detach <ABSOLUTE path> HEAD`),
+  apply each verified change **one at a
   time**, re-render + re-verify by eye **after each apply — not only after the
   final combination.** Two independently-good changes can interact badly in the
   *rendered output* even when the *code* merges cleanly, so the combination is
-  its own experiment, never assumed safe from the parts.
+  its own experiment, never assumed safe from the parts. When candidates touch
+  the same file (different functions), integrate via `git diff`/`apply` of each
+  candidate's changes, not whole-file copies.
 - **A merge step regresses** → isolate which change caused it (bisect by
   re-testing combinations), **ship the subset that holds up**, and log the
   interaction as its own discard entry naming the combination (§3). Do NOT
   discard everything just because the full combination failed.
-- Only after the (possibly combined) result **broadens cleanly across all 8
-  targets** does it get committed and shipped (Versioning, spec §5). Update
-  `research/autoresearch.iteration.json` phase at every transition (§4).
+- Only after the (possibly combined) result **broadens cleanly across ALL
+  targets in data/inputs/** does it get committed and shipped (Versioning,
+  spec §5). Broadening may render live per target through the stable entry —
+  `python3 run_model.py -m v5 -i data/inputs/<t>` (or the testbed inside the
+  integration worktree for cached zoom grids); either way the verdict is the
+  EYE on the grid, per Testing progression §2. Update
+  `research/autoresearch.iteration.json` phase **and `next_action`** at every
+  transition (§4).
 
 ### §3 — Rich discard logging (every worktree, every outcome)
 For **every** candidate — ships alone, ships in a combination, or discarded —
@@ -180,27 +220,39 @@ log is where the next iteration's candidates come from.
 
 ### §4 — In-flight state: `research/autoresearch.iteration.json` (rehydration-safe)
 Mutable per-iteration state the append-only `research/autoresearch.jsonl` cannot hold.
-**Rewrite it at every lifecycle transition** (dispatch → verify → integrate →
-broaden → idle) so a `/clear`, resume, or compaction picks up mid-iteration.
+**Rewrite it at every SUB-BOUNDARY, not just phase changes**: at dispatch, after
+EACH candidate's independent verification completes, after EACH merge step in a
+multi-winner integration, after each broaden batch, and at ship/abort. Each
+sub-boundary is a valid `/clear` point — the loop must never depend on
+in-context memory to know its next step. (Hooks cannot invoke `/clear`
+themselves — verified limitation — so the contract is: the state on disk is
+always `/clear`-ready; the user or an external runner may clear at any
+sub-boundary and the next session continues losslessly.)
 Schema:
 ```json
 {"iteration": 12, "phase": "dispatched|verifying|integrating|broadening|idle",
  "focus": "chopchop", "best_sha": "50c0a03", "updated": "<YYYY-MM-DD HH:MM>",
+ "next_action": "LITERAL next step, e.g. 'verify candidate B-longgap in its worktree at <abs path>: re-render tb.crops spots [(y,x),...] and eye-judge' or 'broaden shipped AB to remaining targets: mountain, rabbit, fox (live: python3 run_model.py -m v5 -i data/inputs/<t>)'",
  "candidates": [
-   {"id": "fleck-recolor", "domain": "stroke-extractor (contours_exp.py)",
-    "worktree": ".autoresearch-worktrees/fleck-recolor", "backlog": "brown flecks",
+   {"id": "fleck-recolor", "domain": "stroke-extractor (models/v5/src/contours_exp.py)",
+    "worktree": "<abs path reported by the sub-agent (native isolation)>",
+    "backlog": "brown flecks", "effort": "inherit|low (deliberate, ≤ orchestrator)",
     "subagent_verdict": "beats prev|worse|mixed",
     "orchestrator_verdict": "VERIFIED|REFUTED|PENDING", "crop": "outputs/..png"}],
  "integration": {"order": ["a","b"], "applied": ["a"], "step": 1,
-                 "last_verified_ok": true, "worktree": ".autoresearch-worktrees/_integrate"}}
+                 "last_verified_ok": true, "worktree": "<abs path>"}}
 ```
+**`next_action` is MANDATORY at every write** — the literal next step, specific
+enough that a fresh session executes it without re-deriving anything. If a
+rehydrated session cannot state its next action from this file alone, that is
+a schema gap: fix the writer, not the reader.
 Set `phase:"idle"` (or delete the file) when the iteration fully ships/aborts.
 The project hook `.claude/hooks/autoresearch-iteration-state.sh` (registered in
-`.claude/settings.json` for SessionStart + PreCompact) surfaces this on resume
-and snapshots it before compaction — so a rehydrated session is told "you were
-mid-merge across worktrees, phase X, re-verify PENDING candidates yourself,"
-not just "you were mid single-experiment." On resume, reconcile the recorded
-worktrees against `git worktree list` before continuing.
+`.claude/settings.json` for SessionStart + PreCompact) surfaces this on resume —
+`next_action` FIRST — and snapshots it before compaction, so a rehydrated
+session is told exactly where it was, not just "you were mid-experiment." On
+resume, reconcile the recorded worktrees against `git worktree list` before
+continuing.
 
 ## Versioning & deliverables (spec §5 — task F)
 - One git commit per accepted improvement (concise message).
