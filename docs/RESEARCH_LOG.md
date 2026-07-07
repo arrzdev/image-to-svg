@@ -9,6 +9,33 @@ and a running narrative to `experiments/worklog.md`.
 
 ---
 
+## 2026-07-07 · Run 3 — bridge free ends across label components (commit 2570c63)
+
+**What changed:** the label map breaks a drawn line wherever a lighter region
+crosses it (straps, highlights, AA fuzz); the pieces land in different
+components, share no skeleton node, and every break rendered as a dash-gap —
+rabbit's outlines were dashes. In `extract_contour_strokes`, a free end now
+snaps onto another stroke within 1.2 widths when the target lies <60° off its
+outward tangent (never sideways onto a parallel neighbor); mutually-facing free
+ends meet at the midpoint; snapped ends lose free status (no taper, no
+stub-drop — which also rescues tiny bridge dashes).
+
+**Eye verdict:** rabbit heart/cheek/paw dash-gaps closed; elephant ear
+junctions now fully joined (they were cross-component too); chopchop safe (60°
+gate rejected all parallel-line snaps); crystals/fox/mountain equal-or-better;
+logo-geometric/monster-flat-line bit-identical. 8/8 no regression.
+
+**Benchmark delta (sanity):** elephant 0.8669 → 0.8708 (above the 0.8682
+baseline — bridging restores real ink, so even the noise-loving metric agrees).
+Rabbit first reference: 0.713 @ 4339 pts. Focus target moved elephant → rabbit
+this run (defect showed there; `./autoresearch.focus`).
+
+**Remaining (logged in BACKLOG):** long label-map losses (>1.2w) still break
+rabbit's heart-left outline — needs source-ink-continuity extension (walk the
+darkness ridge in the ORIGINAL raster beyond the label map).
+
+---
+
 ## 2026-07-07 · Run 2 — junction anchor: flush joins, no more nubs (commit c0adad6)
 
 **What changed:** `extract_contour_strokes` (contours_exp.py) anchored branch

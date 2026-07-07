@@ -51,6 +51,29 @@ Narrative that survives compaction/clear. On resume: read `autoresearch.md`
   "crossing gap" class. Candidate: snap free stroke ends to NEARBY strokes of
   other components/labels when source ink is continuous across.
 
+### Run 3: bridge free ends across components — quality=0.8708 elephant / 0.713 rabbit (KEEP, by EYE)
+- Timestamp: 2026-07-07 late · commit 2570c63 (parent run 2) · focus → rabbit
+- Diagnosis: rabbit outlines render as DASHES — the label map breaks drawn
+  lines wherever a lighter region (strap, highlight, AA fuzz) crosses; pieces
+  land in different components ⇒ no shared skeleton node ⇒ run-2 anchoring
+  can't reach. 12 genuine free-end gaps found, ALL cross-component, forward
+  angles 5–52°; one 104° parallel case correctly identified as a non-junction.
+- Change (one atomic): free ends snap onto another stroke ≤1.2·gw away when
+  the target lies <60° off the outward tangent (never sideways onto parallel
+  neighbors); mutually-facing free ends meet at the midpoint; snapped ends
+  lose free status (no taper, no stub-drop — rescues bridge dashes).
+- Eye verdict: rabbit heart/cheek/paw gaps closed (9 bridges); elephant ear
+  junctions now fully joined (bonus — those were cross-component too);
+  chopchop rim joins slightly better, 60° gate held (no parallel snaps);
+  crystals/fox equal-plus; mountain equal (tree shape better);
+  logo-geometric/monster-flat-line bit-identical. 8/8 no regression → SHIP.
+- Sanity metric: elephant 0.8669 → 0.8708 (above the 0.8682 baseline —
+  bridged gaps restore real ink, so even the noise-loving metric agrees).
+  Rabbit first reference: 0.713 @ 4339 pts.
+- Remaining on rabbit: LONG label-map losses (> 1.2w) still break the heart's
+  left outline — needs source-ink-continuity extension (walk the darkness
+  ridge in the ORIGINAL image beyond the label map), a separate experiment.
+
 ## Key Insights
 - The metric is a sanity check, not the gate. A change can raise `quality` by
   copying noise and still LOOK worse — always render `tb.crops` and decide by eye.

@@ -10,13 +10,13 @@ draws its next experiment from here.
 Files: backend/contours_exp.py + backend/strokes.py. Judge by 4096 zoom crops
 at the affected spots.
 
-- [~] **Junction joins (run 2, c0adad6):** same-component T/Y nubs + pinches
-  FIXED — ends now anchor to the nearest other-branch centerline (0.8w radius).
-  REMAINING: **cross-component gaps** — e.g. rabbit's ear line stops short of
-  the outline because line and outline sit in different label components (no
-  shared skeleton node, anchoring can't reach). Candidate: snap free stroke
-  ends onto strokes of OTHER components/labels when the source ink is
-  continuous across the junction. Negative results: contour_lines drops zero
+- [~] **Junction joins:** run 2 (c0adad6) fixed same-component T/Y nubs via
+  nearest-centerline anchoring (0.8w); run 3 (2570c63) bridged cross-component
+  dash-gaps (1.2w, fwd<60°, midpoint end-to-end). REMAINING: **long label-map
+  losses (>1.2w)** — rabbit's heart-left outline still breaks where the label
+  map lost a long ink run. Candidate: source-ink-continuity extension — walk
+  the darkness ridge in the ORIGINAL raster beyond the label map and extend
+  the stroke along it. Negative results: contour_lines drops zero
   junction-junction connectors at defaults; missing-ink clusters ≈ deliberate
   width_scale undershoot, not gaps.
 - [ ] **Some curvatures differ from original** — centerline smoothing+fit

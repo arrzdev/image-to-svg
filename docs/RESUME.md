@@ -5,13 +5,13 @@ vision-verdict procedure: **autoresearch.md**. Then `docs/STATE.md`
 (architecture) and `docs/BACKLOG.md` (ranked work). `docs/RESEARCH_LOG.md` is
 the full journal if you need history.
 
-**Current version:** v4 + run-2 junction fix (`contour_lines`, git `c0adad6`).
-**Current focus target:** elephant (`./autoresearch.focus`). **Best-so-far:**
-flush junction joins on 8/8 targets by eye (sanity metric 0.8669 — the −0.15%
-vs baseline is the metric rewarding the removed noise-copying nub; eye rules).
-**Next step:** cross-component junction gaps — rabbit ear line stops short of
-the outline because line and outline live in different label components (no
-shared skeleton node). **In-flight:** autoresearch loop LIVE (run 3 next).
+**Current version:** v4 + junction fixes runs 2–3 (`contour_lines`, git
+`2570c63`). **Current focus target:** rabbit (`./autoresearch.focus`).
+**Best-so-far:** same-component joins flush AND cross-component dash-gaps
+bridged, 8/8 by eye; elephant sanity 0.8708 (above baseline), rabbit 0.713.
+**Next step:** long label-map ink losses (>1.2w) on rabbit's heart outline —
+source-ink-continuity extension (walk the darkness ridge in the original
+raster beyond the label map). **In-flight:** autoresearch loop LIVE (run 4 next).
 
 ## Loop operating model (autoresearch plugin)
 
