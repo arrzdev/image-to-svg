@@ -10,11 +10,10 @@ git `5eb37ad`). **Current focus target:** rabbit (`./autoresearch.focus`).
 **Best-so-far:** line network near-continuous — same-component joins flush,
 cross-component gaps bridged, lost ink re-traced from the source raster;
 8/8 by eye. Sanity: rabbit 0.7272, elephant 0.8599 (composite noisy; eye rules).
-**Next step:** (a) serration corner-nodes + miter-join experiment (design in
-BACKLOG, run-7 research) — the big one; (b) low-chroma shadow-tone merging on
-the elephant (run-8 measurement: Recraft merges our two mid tones into one;
-re-grading REFUTED — never build a tint re-grader). **In-flight:** loop LIVE
-(run 9 next).
+**Next step:** serration corner-nodes + miter-join experiment (design in
+BACKLOG from run-7 research) — the last big open defect class. Shadow-tone
+merging SHIPPED (run 9: elephant shadow = Recraft's tone, hue-opposition
+guard). **In-flight:** loop LIVE (run 10 next).
 
 ## Loop operating model (autoresearch plugin)
 

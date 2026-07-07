@@ -162,6 +162,22 @@ Narrative that survives compaction/clear. On resume: read `autoresearch.md`
 - Crystals caveat: palette matching fails on gradient-banded images (many-to-
   one matches) — measure_ramp numbers for crystals are unreliable.
 
+### Run 9: merge near-duplicate shadow tones — quality=0.8562 (KEEP, by EYE)
+- Timestamp: 2026-07-08 · commit a3ccbd3 (parent run 4) · focus elephant
+- Change: `_merge_shadow_tones` in quantize_contours (called from
+  contour_lines): merge label pairs with OKLab C<0.08, |dL|<0.03, dE<0.06.
+- Debug 1: first version merged mountain's WARM cream snowband into the COOL
+  blue-gray sky (both low-chroma, equal-L). Added hue-opposition guard
+  (cos dh > 0.3). Lesson: at low chroma, hue TEMPERATURE still reads across
+  large areas — never merge across warm/cool.
+- Eye verdict: elephant cast shadow now renders Recraft's exact tone (merged
+  a4b8d1 vs their a6b8d0 — 2/255 apart, derived from data); fox merge mirrors
+  Recraft's own; chopchop bowl sliver + rabbit ear arc joined as bonus;
+  mountain warm/cool preserved; logo/monster identical. 8/8 → SHIP.
+- Sanity: delta_e 1.61→1.83 BY DESIGN (we moved color away from the source
+  toward Recraft — the metric penalizes idealization, spec §4). quality 0.8562.
+- Remaining big item: serration corner-nodes + miter joins (design in BACKLOG).
+
 ## Key Insights
 - The metric is a sanity check, not the gate. A change can raise `quality` by
   copying noise and still LOOK worse — always render `tb.crops` and decide by eye.

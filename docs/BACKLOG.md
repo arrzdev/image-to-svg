@@ -81,12 +81,10 @@ at the affected spots.
   tints — do not build a re-grader. The elephant's apparent tint gap is
   structural: our TWO mid shadow tones (aeb4c8 3.1% + 98bee3 2.5%) map onto
   Recraft's ONE (a6b8d0) — they MERGE shading tones.
-- [ ] **Merge near-duplicate shadow tones** (from run-8 measurement): on the
-  elephant, Recraft uses one mid shadow tone where we keep two. Candidate
-  atomic change: post-consolidation, merge LOW-CHROMA (OKLCH C<0.08) label
-  pairs in the same hue family whose separation survives merge_de only due to
-  hue noise; re-quantize their union's color. Must NOT touch chromatic ramps
-  (crystals!). Eye-verify elephant shading reads cleaner, broaden 8.
+- [x] **Merge near-duplicate shadow tones** — SHIPPED run 9 (a3ccbd3):
+  `_merge_shadow_tones` (C<0.08, |dL|<0.03, dE<0.06 + hue-opposition guard
+  cos dh>0.3). Elephant shadow = Recraft's tone (a4b8d1 vs a6b8d0). Lesson:
+  never merge across warm/cool even at low chroma (mountain snowband).
 - [ ] Harness quirk: chopchop sanity quality ≈ 0.14 (alpha/background
   handling in metric?) — numbers meaningless for this target, eye only.
   Investigate as a deliberate re-baseline step if it starts mattering.
