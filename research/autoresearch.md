@@ -12,10 +12,10 @@ Mission: **research/docs/PROJECT_SPEC.md** · Work: **research/docs/BACKLOG.md**
 - GOAL: an *idealized* vector reconstruction (clean confident lines, solid flat
   regions, source noise removed) that **beats OUR LAST VERSION by EYE**, Recraft
   (`data/targets/`) in frame as the north-star. NOT pixel fidelity.
-- CURRENT VERSION: **v5 `contour_lines`** (git `9242186`); focus **monster-flat-line** (`./research/autoresearch.focus`).
-- BEST-SO-FAR: run 16 A-sliver — whole-carried sliver steal + bead absorption + end tucking (monster slivers → clean capsules; first §8 full-coverage + §9 artifact-dir iteration); on r15 capsules+chord bridges. 12 keeps / 4 discards.
+- CURRENT VERSION: **v5 `contour_lines`** (git `c61755e`); focus **monster-flat-line** (`./research/autoresearch.focus`).
+- BEST-SO-FAR: it17 = runs 17–20 all kept — medial_axis rng-pin (renders BYTE-DETERMINISTIC: byte-identical = legit skip), A-apexsnap (corridor-sliver absorption, apex nub gone), B-arcsupport (rabbit heart CLOSED via any-endpoint tangent-arc bridging + ridge2 gate, chopchop trunk×2, 0 welds). 14 keeps / 4 discards.
 - ⚠ ITERATIONS ARE WORKTREE-PARALLEL — if `research/autoresearch.iteration.json` phase≠idle, RESUME that in-flight iteration (see "Worktree-parallel iterations"); the SessionStart hook surfaces it.
-- OPEN: heart top-left lobe (arc support), capsule apex nub, mouth-corner hook (donor-size/curvature signal), donor stump, wheel-arc/k-means nondeterminism pinning, chopchop S-wavy/strap-curl/lattice tangles → research/docs/BACKLOG.md.
+- OPEN: it18 = monster TEETH serration (brief pre-staged `research/it18/brief.md`, A/B pair: label-side spike guard + fitter-side corner fit); then mouth-corner hook, donor stump, fill-fitter tip-curl family, corner-aware capsule fit, rabbit buttons/tiny-ring closed-loop loss, heart-lobe flattening → research/docs/BACKLOG.md.
 
 ## The metric is NOT the arbiter here (the key adaptation)
 The stock autoresearch loop treats a bare number as the keep/discard gate. **This
