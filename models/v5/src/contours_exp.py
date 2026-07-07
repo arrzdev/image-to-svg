@@ -350,7 +350,7 @@ def extract_contour_strokes(labels: np.ndarray, centers: np.ndarray,
             area = int(mask.sum())
             if area < min_area:
                 continue
-            skel, dist = medial_axis(mask, return_distance=True)
+            skel, dist = medial_axis(mask, return_distance=True, rng=0)
             if not skel.any():
                 continue
             med_w = float(np.median(dist[skel] * 2.0))
@@ -438,7 +438,7 @@ def extract_contour_strokes(labels: np.ndarray, centers: np.ndarray,
                     mask = mask & ~blob_mask
                     if int(mask.sum()) < min_area:
                         continue
-                    skel, dist = medial_axis(mask, return_distance=True)
+                    skel, dist = medial_axis(mask, return_distance=True, rng=0)
                     if not skel.any():
                         continue
 
@@ -1119,7 +1119,7 @@ def _light_line_capsules(labels: np.ndarray, centers: np.ndarray,
         area = int(m.sum())
         if area < min_area:
             continue
-        skel, dist = medial_axis(m, return_distance=True)
+        skel, dist = medial_axis(m, return_distance=True, rng=0)
         skel_px = int(skel.sum())
         med_w = float(np.median(dist[m]) * 2.0)
         if med_w > max_med_w or skel_px < min(min_skel_px, whole_min_skel):
@@ -1150,7 +1150,7 @@ def _light_line_capsules(labels: np.ndarray, centers: np.ndarray,
                 continue
             if float(beads[m].sum()) / area < 0.5:
                 continue                   # label barely carries it: leave
-            bskel, bdist = medial_axis(beads, return_distance=True)
+            bskel, bdist = medial_axis(beads, return_distance=True, rng=0)
             if bskel.sum() < 5:
                 continue
             rr = bdist[bskel]

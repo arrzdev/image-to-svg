@@ -96,7 +96,7 @@ def line_components(labels: np.ndarray, centers: np.ndarray,
             mask = comp == ci
             if int(mask.sum()) < min_area:
                 continue
-            skel, dist = medial_axis(mask, return_distance=True)
+            skel, dist = medial_axis(mask, return_distance=True, rng=0)
             widths = dist[skel] * 2.0
             if widths.size == 0:
                 continue
@@ -120,7 +120,7 @@ def line_components(labels: np.ndarray, centers: np.ndarray,
                     mask = mask & ~blob_mask
                     if int(mask.sum()) < min_area:
                         continue
-                    skel, dist = medial_axis(mask, return_distance=True)
+                    skel, dist = medial_axis(mask, return_distance=True, rng=0)
                     widths = dist[skel] * 2.0
                     if widths.size == 0:
                         continue
