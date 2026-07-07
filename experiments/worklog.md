@@ -25,6 +25,21 @@ Narrative that survives compaction/clear. On resume: read `autoresearch.md`
 - Next: fix the open stroke defects on the elephant, one atomic change each —
   perpendicular-crossing gaps first (highest visual impact, see BACKLOG.md).
 
+### Run 2 (in progress): junction anchor → nearest other-branch centerline
+- Timestamp: 2026-07-07 evening
+- Hypothesis chain: (a) dropped junction-junction connectors → REFUTED, 0 found
+  on elephant defaults; (b) missing-ink clusters → mostly deliberate
+  width_scale=0.85 undershoot, NOT gaps; (c) 8k-zoom eye pass at junction nodes
+  → CONFIRMED defect: side-stroke round cap anchored at node-cluster CENTROID
+  overshoots through the through-line (nub pokes through silhouette into sky at
+  T-junctions; node13 of elephant ear). Recraft: flush.
+- Change (one atomic): in extract_contour_strokes, anchor junction ends to the
+  nearest pixel of ANOTHER kept branch's path near the node (fallback:
+  centroid). Cap lands flush under the through stroke by construction.
+- Focus-target eye verdict (8k grid, 4 spots): nub GONE at T; Y tighter/solid;
+  other spots unchanged. new > prev, no regression seen on elephant.
+- Broadening to all 8 targets: rendering new vs prev, cropping top diff spots.
+
 ## Key Insights
 - The metric is a sanity check, not the gate. A change can raise `quality` by
   copying noise and still LOOK worse — always render `tb.crops` and decide by eye.

@@ -283,13 +283,37 @@ def extract_contour_strokes(labels: np.ndarray, centers: np.ndarray,
 
             info["components"] += 1
             deg = _branch_degrees(branches)
+            # anchor target per node: the node-cluster centroid is elongated by
+            # junction ink pooling, so it can sit OFF the through-line's
+            # centerline — a side branch capped there pokes a nub through the
+            # through stroke (visible on the silhouette). Anchor instead to the
+            # nearest pixel of ANOTHER incident branch's path near the node:
+            # the cap then lands flush under the through stroke by construction
+            # (all strokes share w_body). Falls back to the centroid when no
+            # other branch passes nearby (true endpoint clusters).
+            med_w_a = float(np.median(dist[skel] * 2.0))
             for br in branches:
                 pix = np.asarray(br["pix"], float)
                 widths = dist[tuple(pix.astype(int).T)] * 2.0
                 w_med = float(np.median(widths))
                 for end, nid in ((0, br["a"]), (-1, br["b"])):
                     if not br["closed"] and nid and cent.get(nid) is not None:
-                        pix[end] = cent[nid]
+                        target = cent[nid]
+                        # tight radius: the through-line passes THROUGH the
+                        # node (centroid bias <= w/2); parallel neighboring
+                        # strokes sit >= 1 width away — must never be caught
+                        # (dense-line art: snapping to them detaches the end).
+                        best_d2 = max(2.0, 0.8 * med_w_a) ** 2
+                        for ob in branches:
+                            if ob is br:
+                                continue
+                            op = np.asarray(ob["pix"], float)
+                            d2 = ((op - target) ** 2).sum(axis=1)
+                            j = int(np.argmin(d2))
+                            if d2[j] < best_d2:
+                                best_d2 = float(d2[j])
+                                target = op[j]
+                        pix[end] = target
                 pts = pix[:, ::-1] + 0.5      # (y,x) -> (x,y) pixel centers
                 head_free = (not br["closed"]
                              and (br["a"] == 0 or deg.get(br["a"], 0) <= 1))
