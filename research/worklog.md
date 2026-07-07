@@ -441,3 +441,18 @@ See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
   the tie-jitter noise floor — first iteration where "only the fix changed"
   is literally provable from the diff of two renders.
 - Next: B-arcsupport verdict when it reports; then it17 ship + docs.
+
+### Run 20: B-arcsupport integrated — rabbit heart CLOSED (KEEP) — commit c61755e
+- Timestamp: 2026-07-08 03:35
+- What changed: arc-aware endpoint bridging pass (free end x any endpoint,
+  tangent-arc / strict-chord, ridge2 both-sides-light gate). Run-15 >72deg
+  folklore corrected: real blocker = endpoint consumption by midpoint
+  bridges.
+- Result: rabbit heart top + tuft apex closed; chopchop trunk outline x2 +
+  cup rim + chair micro-break, 0 welds; elephant/monster/fox BYTE-IDENTICAL
+  (deterministic no-side-effect proof). 9 focus spots + 8 full-coverage
+  pages eyed. Sanity: rabbit 0.7492 (idealization penalty), elephant flat.
+- it17 complete: research (17) + rng-pin (18) + A-apexsnap (19) + B (20),
+  four keeps, two worktrees removed. Iteration wait-time yielded 5 diagnosis
+  addenda + it18 brief.
+- Next: iteration 18 from research/it18/brief.md (teeth A/B pair).

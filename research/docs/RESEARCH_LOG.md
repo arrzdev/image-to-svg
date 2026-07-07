@@ -26,6 +26,45 @@ results → `research/autoresearch.jsonl`; running narrative →
 
 ---
 
+## 2026-07-08 · Run 20 (iteration 17 complete) — B-arcsupport SHIPS (c61755e); it17 = research + pin + A + B, all four kept
+
+**Candidate B-arcsupport — VERIFIED, SHIPPED.** Its measurement REVISES the
+run-15 diagnosis (log correction): the rabbit heart-top gap is NOT a
+free-free pair diverging >72° off-chord — in 18/18 deterministic repros the
+still-free end at (490.7,745.8)@1024 faces a notch whose counterpart ends
+were already CONSUMED by a run-3 midpoint bridge, so no free partner exists;
+chord support there is overwhelming (fan-min mean 41–43, bright-run 0). The
+new pass (after the long-bridge block) generalizes bridging two ways: targets
+= ANY other stroke's endpoint (free or not), and path = tangent-ray quadratic
+ARC for short strongly-curved gaps (chord fallback). Measured constants with
+margins: arc reach ≤2.5gw (true ≤1.8 vs false ≥4.4); chord turn ≤40°
+(true ≤35 vs false ≥46) + fan-mean <50 (true ≤43 vs false ≥51, the thin
+margin deliberately double-covered by the turn gate); NEW ridge2 ≥0.5 — ≥50%
+of path samples must have light ground on BOTH sides at ±1.1gw (true ≥0.58
+vs fill-edge ≤0.27) — this single gate kills ~100 chopchop scribble/fill
+candidates. Orchestrator verification, twice (artifact SVGs, then the
+integrated build vs deterministic head19 baselines): rabbit heart top CLOSED
+(the objective) + head-tuft apex closed; chopchop trunk outline reconnected
+×2 + coconut-cup rim + chair-joint micro-break, ZERO welds (struts/Vs/
+lattice/deck eyed); scallop + ring stay-open controls held; elephant/monster/
+fox BYTE-IDENTICAL to head19 — the determinism pin turned "no side effects"
+from a sampling claim into a proof. 8 full-coverage pages, zero regressions.
+Sanity: rabbit 0.7492 (−0.006 = idealization penalty, eye decisive),
+elephant 0.853 byte-flat.
+
+**Iteration-17 protocol notes.** Both candidates native-dispatched with
+model inherited + deliberate effort; B silently stalled once and was nudged
+via SendMessage (it was alive — measurement phase); every verdict came from
+orchestrator-rendered grids off the shared artifact dirs; integration was
+orchestrator-owned and one-at-a-time (pin → A → B) with re-verification at
+each step; the wait time produced runs 17–18 (root-cause research + infra
+fix) plus five diagnosis addenda now feeding BACKLOG/it18.
+
+**B leads (→ BACKLOG):** heart lobes render FLATTENED (~5px label-map crown
+loss — idealization refit, not bridging); rabbit tiny ring (424,737) renders
+as a "v" hook every run (closed-loop loss in skeletonization); chopchop
+serration S-wavy zone unchanged (existing item).
+
 ## 2026-07-08 · Runs 18–19 (iteration 17, partial — B-arcsupport still in flight)
 
 **Run 18 — determinism pin (infra keep, da5d4b6, orchestrator-owned).**

@@ -17,9 +17,19 @@ at the affected spots.
   Measured negative result: the run-4 ridge walker NEVER reached its 4w cap
   (dies 0-2.3w: absolute dark_lum on antialiased ink, ridge test beside
   shading, |dTheta| turn budget burnt by staircase jitter in 5-9 steps).
-- [ ] **Rabbit heart top-left lobe still open** (run-15 B lead): the two ends
-  diverge >72 deg off-chord — chord support can't see the curved ink path;
-  needs an arc-aware support test.
+- [x] **Rabbit heart top-left lobe** — SHIPPED run 20 (c61755e, it17
+  B-arcsupport). Diagnosis CORRECTED: not a >72deg divergence — the
+  counterpart ends were consumed by an earlier midpoint bridge; the long
+  bridge required two FREE ends. Fix: bridge free ends to ANY endpoint via
+  tangent-arc (<=2.5gw) or strict chord (turn<=40, mean<50) + ridge2>=0.5
+  both-sides-light gate. Heart + tuft closed; chopchop trunk x2, 0 welds.
+- [ ] **Heart lobes render flattened** (run-20 B lead): label-map crown is
+  ~5px low vs source — curvature idealization / source-guided refit of the
+  lobe outline; separate from bridging.
+- [ ] **Tiny closed rings lost by skeletonization** (run-20 B lead): rabbit
+  ring at (424,737) renders as a "v" hook every run — small closed circles
+  need closed-loop detection before branch extraction (same neighborhood as
+  the coat-buttons loss, run 18).
 - [ ] **Ridge walker: charge NET signed turn** (run-15 B lead): swapping the
   per-step |dTheta| for net curl would restore the walker's intended 4w range
   if it's ever needed again.
