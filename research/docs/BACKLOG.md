@@ -26,10 +26,15 @@ at the affected spots.
 - [ ] **Heart lobes render flattened** (run-20 B lead): label-map crown is
   ~5px low vs source — curvature idealization / source-guided refit of the
   lobe outline; separate from bridging.
-- [ ] **Tiny closed rings lost by skeletonization** (run-20 B lead): rabbit
-  ring at (424,737) renders as a "v" hook every run — small closed circles
-  need closed-loop detection before branch extraction (same neighborhood as
-  the coat-buttons loss, run 18).
+- [ ] **Thin dark subfeatures eroded by the label chain** (run-20 lead,
+  CORRECTED by run-21-wait diagnosis `diag18_buttons.png`): rabbit's button
+  ring (~(358,676)) and strap J-curve arrive at rawquant INTACT and leave
+  despeckle/smooth as open "u"/")" hooks — the loss is in the LABEL CHAIN,
+  not skeletonization as first logged. This is the dark-on-light DUAL of the
+  monster-teeth disease (it18 A-spikeguard protects light spikes on dark
+  regions): thin dark annuli/curves inside light regions need the same
+  boundary-subfeature protection. If it18-A ships, extending its guard to
+  the dark side is a ready follow-up candidate.
 - [ ] **Ridge walker: charge NET signed turn** (run-15 B lead): swapping the
   per-step |dTheta| for net curl would restore the walker's intended 4w range
   if it's ever needed again.

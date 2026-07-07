@@ -456,3 +456,10 @@ See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
   four keeps, two worktrees removed. Iteration wait-time yielded 5 diagnosis
   addenda + it18 brief.
 - Next: iteration 18 from research/it18/brief.md (teeth A/B pair).
+
+### it18 wait diagnosis: buttons/ring die in the LABEL CHAIN (correction)
+- Stage strip diag18_buttons.png: rabbit button ring + strap J-curve are
+  INTACT at rawquant, broken to "u"/")" hooks by despeckle/smooth, render
+  faithfully reproduces the broken labels. Run-20 "skeletonization" guess
+  corrected in BACKLOG. Dark-on-light dual of the monster-teeth disease —
+  natural extension of it18 A-spikeguard if it ships.
