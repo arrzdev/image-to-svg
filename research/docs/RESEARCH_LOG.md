@@ -26,6 +26,45 @@ results → `research/autoresearch.jsonl`; running narrative →
 
 ---
 
+## 2026-07-08 · Runs 18–19 (iteration 17, partial — B-arcsupport still in flight)
+
+**Run 18 — determinism pin (infra keep, da5d4b6, orchestrator-owned).**
+Integration step 1, executed while candidates ran: `rng=0` at all six
+`medial_axis` call sites (contours_exp 353/441/1122/1153, strokes 99/123).
+The monster render is now byte-identical across repeated runs AND separate
+processes (probe hash d68bde3c39; before the pin, four consecutive renders
+produced four different hashes). The one-time tie-pick shift was eyed on
+five targets (monster/rabbit/chopchop/elephant/fox, `orch17_pin_*.png`) —
+lateral everywhere, no welds, no losses; sanity flat (monster 0.9595,
+elephant 0.853). Payoff: "byte-identical SVG = skip" is now a routinely
+available shortcut, diffpx spot-finding is noise-free, and integration
+re-verification is exact. Incidental find filed to BACKLOG: rabbit's coat
+BUTTONS render as a thin line + hook in ours (~(358,676)@1024) where
+original and Recraft draw two circles — pre-existing, eye-loud, gold-pair
+target.
+
+**Run 19 — candidate A-apexsnap SHIPPED (1e0adb6).** Dispatched under the
+full §1/§8/§9 protocol (native worktree, artifact dir, orchestrator-own
+renders); agent survived one silent stall and reported with a CORRECTED
+diagnosis: the monster apex nub was never a capsule-end overshoot — with
+capsule strokes stripped, the nub is the fill fitter curling the tip of a
+thin background-component tentacle carried under the capsule corridor
+(fragmented branch keeps big components whole; only sub-400px beads were
+absorbed). Fix, one mechanism: for each KEPT large light component
+overlapping a corridor, absorb only overlap pixels farther than
+sliver_reach=6.0px (windowed distance transform) from the out-of-corridor
+body — junction roots and edge grazes stay. Measured margin: genuine grazes
+max 5.0px vs carried-sliver mass 8–53px. Orchestrator verification (own
+renders from `research/it17/candidates/A-apexsnap/` artifacts, then again
+after integration onto pinned main): apex nub gone (560,690), mid-segment
+double-render gone (600,712), left-end kink cleaner (524,732); capsules
+5/5; 4 focus spots + 4 full-coverage pages, zero regressions; determinism
+made the re-verify exact — only A's fix differs between renders. Sanity
+0.9591 flat, points 815→773. Leads → BACKLOG: fill-fitter tip-curl is a
+FAMILY (swoosh hooks suspected); Recraft draws the apex as a sharp Λ —
+corner-aware capsule fitting (run-10 style) is the remaining headroom;
+agent independently re-confirmed the pre-pin in-process wobble.
+
 ## 2026-07-08 · Run 17 (research, orchestrator-side) — render nondeterminism ROOT-CAUSED: skimage `medial_axis`, not k-means
 
 Measured while iteration-17 candidates A-apexsnap/B-arcsupport were in flight

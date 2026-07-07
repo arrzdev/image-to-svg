@@ -137,10 +137,21 @@ at the affected spots.
   fragments), not the fitter alone; fix = source-traced light capsules
   (>=3-fragment gate, flux-based width 1-3px). Monster scratches continuous.
   Leads still open below (apex nub; fragments=1 slivers).
-- [ ] **Capsule-end nub at scratch apex** (run-15 A lead, monster ~1024
-  (560,690)): capsule end overshoots where it meets the surviving light
-  sliver at a ridge apex — snap capsule ends to adjacent light-region
-  boundaries.
+- [x] **Capsule-end nub at scratch apex** — SHIPPED run 19 (1e0adb6,
+  it17 A-apexsnap): diagnosis CORRECTED — the nub was the fill fitter
+  curling a corridor-carried background tentacle tip, not capsule overshoot.
+  Fix: absorb corridor-overlap pixels >6px reach from the out-of-corridor
+  body (grazes max 5.0 vs carried mass 8-53). Also cured the mid-segment
+  double-render.
+- [ ] **Fill-fitter tip-curl family** (run-19 A lead): free-ending thin
+  tentacles of large fill components curl at the tip (the apex nub was one;
+  chopchop strap-end curl and swoosh hooks suspected same family) — a
+  general tip-straightening or tentacle-absorption rule could close several
+  BACKLOG items at once.
+- [ ] **Corner-aware capsule fit** (run-19 A lead): Recraft draws the
+  monster apex as a sharp Lambda; our capsule fits a rounded crest. Split
+  capsule centerlines at high-curvature apexes with miter joins (run-10
+  serration treatment applied to capsules).
 - [x] **Whole-carried thin light slivers render lumpy** — SHIPPED run 16
   (9242186, candidate A-sliver): whole-carried components stolen iff the mask
   confesses lumpiness (cv_w≥0.2 AND wmean/max(med_w,2)≤1.45, skel≥20px,
