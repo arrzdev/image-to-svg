@@ -122,6 +122,39 @@ def _smooth_open_corners(pts: np.ndarray, win: int,
     return np.vstack(out)
 
 
+# ------------------------------------------------------------- texture gate
+
+def _wiggle_rate(pix, win: int = 9, step: int = 3) -> float:
+    """Alternating-turn density of a branch chain: (total |turning| minus
+    |net turning|) per px of arclength, measured on the smoothed chain.
+
+    A drawn line is straight, a single arc, or a deliberate curl — its turns
+    all point one way, so total ~= net and the rate sits near 0 (elephant
+    network branches: <= ~1.9 even at junction-merged S-bends; isolated real
+    marks: <= ~0.9). A painted TEXTURE daub wobbles back and forth — turns
+    cancel, total >> net (chopchop trunk/wood squiggles: 1.5-7.8). The win-9
+    smoothing first removes skeleton staircase so it never reads as wiggle."""
+    p = np.asarray(pix, float)
+    if len(p) < 2 * step + 3:
+        return 0.0
+    p = _smooth_open(p, win)
+    q = p[::step]
+    if len(q) < 3:
+        return 0.0
+    v = np.diff(q, axis=0)
+    n = np.linalg.norm(v, axis=1)
+    keep = n > 1e-9
+    v, n = v[keep], n[keep]
+    if len(v) < 2:
+        return 0.0
+    ang = np.arctan2(v[:, 1], v[:, 0])
+    d = np.diff(ang)
+    d = (d + np.pi) % (2 * np.pi) - np.pi
+    tot = float(np.degrees(np.abs(d).sum()))
+    net = float(abs(np.degrees(d.sum())))
+    return (tot - net) / max(float(n.sum()), 1e-9)
+
+
 # --------------------------------------------------- junction continuation
 
 def _end_dir(pix: List, at_head: bool, k: int = 9) -> Optional[np.ndarray]:
@@ -385,11 +418,106 @@ def extract_contour_strokes(labels: np.ndarray, centers: np.ndarray,
             branches = _prune_and_merge(branches, dist, spur_factor)
             med_w_c = float(np.median(dist[skel] * 2.0))
             branches = _prune_fork_tines(branches, med_w_c)
+
+            # ---- per-branch texture gate, BEFORE continuation merging: a
+            # painted texture daub that touches the line network (directly or
+            # via fleck absorption) becomes a short high-wiggle side branch —
+            # stroked, it renders as a squiggly "noodle"; worse, the tangent
+            # merge can fuse it into a real through-line and hook its end.
+            # Drop such branches while they are still their own chains and
+            # CARVE their ink out of the absorbed mask (nearest-skeleton-
+            # branch ownership) so the fill layer renders the daub instead.
+            # Threshold 2.2 clears every real elephant network branch
+            # (max ~1.9 with junction-merged S-bends; pre-merge branches sit
+            # lower still); measured daub branches run 2.4-7.8.
+            if not is_band and len(branches) > 1:
+                removed_chains: List[np.ndarray] = []
+                noodle = [i for i, b in enumerate(branches)
+                          if len(b["pix"]) >= 10
+                          and _wiggle_rate(b["pix"]) > 2.2]
+                for i in noodle:
+                    removed_chains.append(
+                        np.asarray(branches[i]["pix"], int))
+                branches = [b for i, b in enumerate(branches)
+                            if i not in noodle]
+                # a daub glued END-TO-END onto a real line (no junction —
+                # fleck absorption does this a lot) extends the line's own
+                # branch with a squiggly tail that global wiggle can't see:
+                # trim FREE ends back while their terminal window squiggles.
+                deg_t = _branch_degrees(branches)
+                K = 24
+                for b in branches:
+                    if b["closed"] or len(b["pix"]) < 2 * K:
+                        continue
+                    for at_head in (True, False):
+                        nid = b["a"] if at_head else b["b"]
+                        if nid != 0 and deg_t.get(nid, 0) > 1:
+                            continue          # junction end: leave anchored
+                        cut = 0
+                        while (len(b["pix"]) - cut >= 2 * K
+                               and cut <= len(b["pix"]) // 3):
+                            term = (b["pix"][cut:cut + K] if at_head
+                                    else b["pix"][-K - cut:
+                                                  len(b["pix"]) - cut])
+                            if _wiggle_rate(term) <= 2.2:
+                                break
+                            cut += K // 2
+                        if cut:
+                            if at_head:
+                                removed_chains.append(
+                                    np.asarray(b["pix"][:cut], int))
+                                b["pix"] = b["pix"][cut:]
+                            else:
+                                removed_chains.append(
+                                    np.asarray(b["pix"][-cut:], int))
+                                b["pix"] = b["pix"][:-cut]
+                            info["texture_trims"] = (
+                                info.get("texture_trims", 0) + 1)
+                if removed_chains:
+                    brid = np.zeros(mask.shape, np.int32)
+                    for b in branches:
+                        yx = np.asarray(b["pix"], int)
+                        brid[yx[:, 0], yx[:, 1]] = 1
+                    for yx in removed_chains:
+                        brid[yx[:, 0], yx[:, 1]] = 2
+                    on = brid > 0
+                    _, (iy2, ix2) = ndimage.distance_transform_edt(
+                        ~on, return_indices=True)
+                    drop_px = mask & (brid[iy2, ix2] == 2)
+                    mask = mask & ~drop_px
+                    info["texture_branches"] = (
+                        info.get("texture_branches", 0) + len(noodle))
+                    branches = [b for b in branches
+                                if len(b["pix"]) >= min_branch_px]
+                    if not branches or int(mask.sum()) < min_area:
+                        continue
+
             if merge_turn_deg > 0:
                 branches = _merge_continuations(branches, merge_turn_deg)
             branches = [b for b in branches if len(b["pix"]) >= min_branch_px]
             if not branches:
                 continue
+
+            # ---- texture-squiggle gate: a SMALL isolated component whose
+            # centerline wiggles back and forth is a painted texture daub
+            # (wood grain / trunk marks), not a drawn line — stroked at
+            # constant width it renders as a wobbly "noodle". Leave it OUT of
+            # the stroke mask entirely so the fill layer renders the daub
+            # faithfully (blobby, like the source). Guard rails: bands are
+            # exempt (serration zigzag is intentional); big multi-branch
+            # networks are exempt (junction-merged through-strokes can carry
+            # legitimate S-bends, elephant measures up to ~1.9); long chains
+            # are exempt (a long wavy line is drawn, not daubed). Isolated
+            # REAL marks measure <= ~0.9; daubs 1.5-7.8.
+            if not is_band and len(branches) <= 3:
+                chain_len = sum(len(b["pix"]) for b in branches)
+                if chain_len <= 160:
+                    wavg = sum(_wiggle_rate(b["pix"]) * len(b["pix"])
+                               for b in branches) / max(chain_len, 1)
+                    if wavg > 1.0:
+                        info["texture_fills"] = info.get("texture_fills",
+                                                         0) + 1
+                        continue
 
             # node centroids: every incident branch ends on the same point
             cent = {0: None}

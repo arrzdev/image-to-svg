@@ -22,6 +22,7 @@ from .base import Param, Pipeline
 from .quantize_contours import (
     _consolidate_palette,
     _despeckle_labels,
+    _dissolve_speckle,
     _merge_shadow_tones,
     _quantize,
     _smooth_labels,
@@ -72,6 +73,7 @@ class ContourLinesPipeline(Pipeline):
             labels, centers = _merge_shadow_tones(labels, centers)
             labels = _despeckle_labels(labels, max(p["min_area"], 16), centers)
             labels = _smooth_labels(labels, len(centers), centers=centers)
+            labels = _dissolve_speckle(labels, centers, 300)
 
         svg, _info = contour_svg(labels, centers, fill_tol=p["fill_tol"],
                                  fill_smooth=p["fill_smooth"],

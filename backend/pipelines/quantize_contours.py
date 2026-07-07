@@ -205,6 +205,67 @@ def _despeckle_labels(labels: np.ndarray, min_component_px: int,
     return _reassign_pixels(labels, junk)
 
 
+def _dissolve_speckle(labels: np.ndarray, centers: np.ndarray,
+                      min_area: int) -> np.ndarray:
+    """Dissolve small components of NON-dark labels into the surrounding FILL.
+
+    Targets residual daubs (e.g. darker-brown speckle inside chopchop's flat
+    tan trunk/planks) that survive `_despeckle_labels` because they sit above
+    its floor. Two hard guards keep this from repeating past catastrophes:
+
+    - Dark labels (luminance < DARK_LINE_LUM) are never dissolved — the line
+      network stays untouchable.
+    - A component is never merged INTO a dark label. Last attempt filled the
+      thin white seam between a dark blob and its outline solid; speckle must
+      dissolve into fills, never into ink. If the majority-boundary neighbor
+      is dark, the largest non-dark neighbor wins instead; if every neighbor
+      is dark, the component is left alone.
+    """
+    out = labels.copy()
+    dark = np.array([_luminance(c) < DARK_LINE_LUM for c in centers])
+    kernel = np.ones((3, 3), np.uint8)
+    h, w = labels.shape
+    for ci in np.unique(labels):
+        if dark[ci]:
+            continue
+        mask = (labels == ci).astype(np.uint8)
+        ncomp, comp, stats, _ = cv2.connectedComponentsWithStats(mask, 8)
+        for k in range(1, ncomp):
+            if stats[k, cv2.CC_STAT_AREA] >= min_area:
+                continue
+            x0 = max(0, stats[k, cv2.CC_STAT_LEFT] - 1)
+            y0 = max(0, stats[k, cv2.CC_STAT_TOP] - 1)
+            x1 = min(w, stats[k, cv2.CC_STAT_LEFT] + stats[k, cv2.CC_STAT_WIDTH] + 1)
+            y1 = min(h, stats[k, cv2.CC_STAT_TOP] + stats[k, cv2.CC_STAT_HEIGHT] + 1)
+            sub = comp[y0:y1, x0:x1] == k
+            ring = cv2.dilate(sub.astype(np.uint8), kernel).astype(bool) & ~sub
+            neigh = out[y0:y1, x0:x1][ring]
+            if neigh.size == 0:
+                continue
+            counts = np.bincount(neigh, minlength=len(centers))
+            counts[ci] = 0
+            counts[dark] = 0                      # fills only, never ink
+            if counts.max() == 0:
+                continue                          # ink-locked: leave it
+            # daub-vs-facet guard (orchestrator debug 1): a NOISE daub sits
+            # inside ONE flat fill -- its ring is dominated by a single
+            # non-dark label. A gem FACET sits in a mosaic (ring split among
+            # facets and dark edge lines) -- never dissolve those (crystals
+            # regression: real facets were being eaten).
+            if counts.max() < 0.6 * neigh.size:
+                continue
+            # darker-only guard (orchestrator debug 2): noise daubs are DARK
+            # stains on their fill; LIGHT accents are drawn intent (mountain
+            # cloud wisp, plank-top highlight -- Recraft keeps both). Never
+            # dissolve a component lighter than its absorber.
+            tgt = int(np.argmax(counts))
+            if _luminance(centers[ci]) >= _luminance(centers[tgt]):
+                continue
+            region = out[y0:y1, x0:x1]
+            region[sub] = tgt
+    return out
+
+
 def _smooth_labels(labels: np.ndarray, n_labels: int, ksize: int = 3,
                    centers: np.ndarray = None) -> np.ndarray:
     """Majority (mode) filter on the label map — de-jags region boundaries.
