@@ -25,8 +25,8 @@ Narrative that survives compaction/clear. On resume: read `autoresearch.md`
 - Next: fix the open stroke defects on the elephant, one atomic change each —
   perpendicular-crossing gaps first (highest visual impact, see BACKLOG.md).
 
-### Run 2 (in progress): junction anchor → nearest other-branch centerline
-- Timestamp: 2026-07-07 evening
+### Run 2: junction anchor → nearest other-branch centerline — quality=0.8669 (KEEP, by EYE)
+- Timestamp: 2026-07-07 evening · commit c0adad6 (parent run 1)
 - Hypothesis chain: (a) dropped junction-junction connectors → REFUTED, 0 found
   on elephant defaults; (b) missing-ink clusters → mostly deliberate
   width_scale=0.85 undershoot, NOT gaps; (c) 8k-zoom eye pass at junction nodes
@@ -36,9 +36,20 @@ Narrative that survives compaction/clear. On resume: read `autoresearch.md`
 - Change (one atomic): in extract_contour_strokes, anchor junction ends to the
   nearest pixel of ANOTHER kept branch's path near the node (fallback:
   centroid). Cap lands flush under the through stroke by construction.
-- Focus-target eye verdict (8k grid, 4 spots): nub GONE at T; Y tighter/solid;
-  other spots unchanged. new > prev, no regression seen on elephant.
-- Broadening to all 8 targets: rendering new vs prev, cropping top diff spots.
+- Debug 1: first radius (1.5w) snapped ends onto PARALLEL neighboring strokes in
+  dense-line art (chopchop: detached ends, white slivers) → tightened to 0.8w
+  (through-line is ≤0.5w from centroid; parallel neighbors ≥1w away). Fixed.
+- Eye verdict: elephant T-nub GONE, Y flush (matches Recraft); chopchop joins
+  continuous (≥prev); crystals facet-edge breaks now CONNECT (improved);
+  rabbit/fox/mountain unchanged; logo-geometric/monster-flat-line 0px diff.
+  8/8 no regression → SHIP.
+- Sanity metric: quality 0.8669 (−0.15% vs 0.8682) — expected: the nub used to
+  cover source ink; metric rewards noise-copying (spec §4). Eye rules.
+- Next: rabbit ear-line still stops short of the outline in BOTH versions —
+  cross-component junction (line and outline in different label components; no
+  shared skeleton node, so anchoring can't reach it). That's the real
+  "crossing gap" class. Candidate: snap free stroke ends to NEARBY strokes of
+  other components/labels when source ink is continuous across.
 
 ## Key Insights
 - The metric is a sanity check, not the gate. A change can raise `quality` by

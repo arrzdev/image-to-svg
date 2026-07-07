@@ -10,18 +10,23 @@ draws its next experiment from here.
 Files: backend/contours_exp.py + backend/strokes.py. Judge by 4096 zoom crops
 at the affected spots.
 
-- [ ] **Perpendicular crossings leave gaps** — strokes crossing at ~90° don't
-  touch; caps stop short of the intersection. Detect crossing/T junctions in
-  the skeleton, snap/extend incident endpoints to the shared point (extend the
-  existing junction union-find/patch machinery to perpendicular crossings) or
-  patch the crossing.
+- [~] **Junction joins (run 2, c0adad6):** same-component T/Y nubs + pinches
+  FIXED — ends now anchor to the nearest other-branch centerline (0.8w radius).
+  REMAINING: **cross-component gaps** — e.g. rabbit's ear line stops short of
+  the outline because line and outline sit in different label components (no
+  shared skeleton node, anchoring can't reach). Candidate: snap free stroke
+  ends onto strokes of OTHER components/labels when the source ink is
+  continuous across the junction. Negative results: contour_lines drops zero
+  junction-junction connectors at defaults; missing-ink clusters ≈ deliberate
+  width_scale undershoot, not gaps.
 - [ ] **Some curvatures differ from original** — centerline smoothing+fit
   alters drawn shape. Try curvature-aware smoothing or fit the centerline with
   svgcore.fit_open_parsimony instead of Schneider.
 - [ ] **Rectangular nub artifacts at joins** — butt caps / segment seams at
   branch joins render little rectangles. Audit `_stroke_elements`/`_ribbon`
   cap+join style (want round joins); ensure continuation-merged branches emit
-  as ONE path, not abutting segments.
+  as ONE path, not abutting segments. (Cap poke-through variant fixed in run 2;
+  check remaining seam/butt cases on chopchop.)
 
 ## Line quality (the user's three defects — TOP PRIORITY)
 

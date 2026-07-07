@@ -9,6 +9,40 @@ and a running narrative to `experiments/worklog.md`.
 
 ---
 
+## 2026-07-07 · Run 2 — junction anchor: flush joins, no more nubs (commit c0adad6)
+
+**What changed:** `extract_contour_strokes` (contours_exp.py) anchored branch
+ends at the junction node-cluster *centroid*; ink pooling elongates that
+cluster, so the centroid sits off the through-line's centerline and the round
+cap pokes a nub through it — visible on the silhouette (elephant ear T) as a
+bump into the sky. Now ends anchor to the nearest pixel of another kept
+branch's centerline within a 0.8-width radius (fallback: centroid), so caps
+land flush under the through stroke by construction.
+
+**Why 0.8w:** the first attempt (1.5w) snapped ends onto *parallel neighboring*
+strokes in dense-line art — chopchop grew detached ends and white slivers.
+Through-lines pass ≤0.5w from the centroid; parallel neighbors sit ≥1w away.
+
+**Eye verdict (8k grids, new vs prev vs Recraft):** elephant T-nub gone and
+Y-join flush (both now match Recraft's cleanliness); chopchop joins continuous;
+crystals facet-edge breaks now connect; rabbit/fox/mountain unchanged;
+logo-geometric/monster-flat-line bit-identical. 8/8 no regression.
+
+**Benchmark delta (sanity only):** quality 0.8682 → 0.8669 (−0.15%), ssim
+0.9643 → 0.9630 — expected: the nub covered source ink, and the metric rewards
+copying it (PROJECT_SPEC §4). Eye verdict rules.
+
+**Negative results kept:** (a) "dropped junction-junction connector" hypothesis
+refuted on the elephant — contour_lines drops zero such connectors at defaults;
+(b) missing-ink clusters are mostly the deliberate width_scale=0.85 undershoot,
+not gaps — don't chase them as defects.
+
+**Next:** rabbit's ear line stops short of the outline in both versions — a
+*cross-component* junction (different label components ⇒ no shared skeleton
+node ⇒ anchoring can't reach). That's the remaining true "crossing gap" class.
+
+---
+
 ## 2026-07-07 · Loop N+1 — course correction: vision-first
 
 **User verdict on the milestone:** benchmarks say we beat Recraft; eyes say

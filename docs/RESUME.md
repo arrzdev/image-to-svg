@@ -5,11 +5,13 @@ vision-verdict procedure: **autoresearch.md**. Then `docs/STATE.md`
 (architecture) and `docs/BACKLOG.md` (ranked work). `docs/RESEARCH_LOG.md` is
 the full journal if you need history.
 
-**Current version:** v4 (`contour_lines`, git `d5fad37`). **Current focus
-target:** elephant (`./autoresearch.focus`). **Best-so-far:** quality 0.8682 /
-ssim 0.9643 / 2609 pts by the sanity harness — but judged by EYE at Recraft's
-tier on the elephant. **Next step:** perpendicular-crossing gaps (top of
-BACKLOG). **In-flight:** none — loop is set up but PAUSED (`.autoresearch-off`).
+**Current version:** v4 + run-2 junction fix (`contour_lines`, git `c0adad6`).
+**Current focus target:** elephant (`./autoresearch.focus`). **Best-so-far:**
+flush junction joins on 8/8 targets by eye (sanity metric 0.8669 — the −0.15%
+vs baseline is the metric rewarding the removed noise-copying nub; eye rules).
+**Next step:** cross-component junction gaps — rabbit ear line stops short of
+the outline because line and outline live in different label components (no
+shared skeleton node). **In-flight:** autoresearch loop LIVE (run 3 next).
 
 ## Loop operating model (autoresearch plugin)
 
