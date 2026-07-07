@@ -223,3 +223,15 @@ Narrative that survives compaction/clear. On resume: read `autoresearch.md`
 
 ## Next Ideas
 See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
+
+### Run 12: worktree-parallel iteration (A ships, B discarded) — commit 4c616ce
+- FIRST run under the new worktree-parallel architecture. 2 independent
+  candidates in git worktrees off best; orchestrator re-verified both itself.
+- A-fleck (contours_exp.py): adjacency fleck absorption — SHIPPED. chopchop 234
+  flecks -> black line, -50KB; rabbit dabs absorbed; elephant no-op; eye 8/8.
+- B-speckle (quantize_contours.py): shading despeckle — DISCARDED. Sub-agent
+  said "mild win"; ORCHESTRATOR eye said lateral (despeckle already clears
+  <120px first). Lead: retry only at a floor >120px on trunk-plank speckle.
+- Methodology: pipeline renders are non-deterministic (~8k self-diff floor on
+  elephant); diffpx is a spot-finder, not a verdict. Eye gate unaffected.
+- Both worktrees removed; /clear mid-cycle resume verified (single + merge).

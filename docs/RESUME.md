@@ -10,11 +10,13 @@ git `5eb37ad`). **Current focus target:** rabbit (`./autoresearch.focus`).
 **Best-so-far:** line network near-continuous — same-component joins flush,
 cross-component gaps bridged, lost ink re-traced from the source raster;
 8/8 by eye. Sanity: rabbit 0.7272, elephant 0.8599 (composite noisy; eye rules).
-**Next step:** the original defect list is CLEARED (junctions runs 2–4,
-curvature measured-resolved run 5, palette run 9, serrations run 10). Open:
-chopchop brown-fleck fragments + junction blobs, remaining rabbit long-gap
-breaks, then broaden/polish or speed. Consider a models/v5 snapshot — the
-run 2–10 arc is a structural step. **In-flight:** loop LIVE (run 11 next).
+**Next step:** ITERATIONS ARE NOW WORKTREE-PARALLEL (autoresearch.md
+"Worktree-parallel iterations"; architecture commit 32da8eb). Run 12 shipped
+adjacency fleck absorption (A) and discarded a shading-despeckle candidate (B)
+via orchestrator re-verification. Open: chopchop trunk noodles/junction blobs,
+shading-despeckle-above-floor retry (run-12 lead), rabbit long-gap breaks.
+**In-flight:** none — iteration.json idle; loop LIVE (next iteration when
+resumed).
 
 ## Loop operating model (autoresearch plugin)
 

@@ -62,11 +62,14 @@ for c in d.get("candidates", []):
     print(f"- candidate `{c.get('id')}` [{c.get('domain')}] wt={c.get('worktree')} "
           f"| sub-agent said: {c.get('subagent_verdict','?')} "
           f"| ORCHESTRATOR verdict: {c.get('orchestrator_verdict','PENDING — re-verify yourself')}")
-ig = d.get("integration")
-if ig:
-    print(f"- integration: applying {ig.get('order')} in wt={ig.get('worktree')}; "
-          f"applied={ig.get('applied')} step={ig.get('step')} "
-          f"last_verified_ok={ig.get('last_verified_ok')}")
+ig = d.get("integration") or {}
+if ig.get("order"):          # a real multi-winner merge is in progress
+    print(f"- integration (MID-MERGE): applying {ig.get('order')} in "
+          f"wt={ig.get('worktree')}; applied={ig.get('applied')} "
+          f"step={ig.get('step')} last_verified_ok={ig.get('last_verified_ok')}")
+elif ig.get("single_winner"):
+    print(f"- integration: single winner {ig.get('single_winner')} — "
+          f"no combination; broaden it to all 8 targets, then ship.")
 print("- Protocol: autoresearch.md → 'Worktree-parallel iterations'. Any "
       "candidate whose ORCHESTRATOR verdict is PENDING must be re-rendered and "
       "eye-judged by YOU (sub-agent self-report is a claim, not a result). If "

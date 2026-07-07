@@ -23,6 +23,62 @@ idea queue. Machine-readable results → `autoresearch.jsonl`; running narrative
 
 ---
 
+## 2026-07-08 · Run 12 (iteration 12) — FIRST worktree-parallel iteration: 2 candidates, A ships, B discarded
+
+Architecture test + real iteration. Two independent candidates dispatched to
+parallel git worktrees off best `32da8eb`; orchestrator independently
+re-rendered both (did NOT trust sub-agent self-reports) and reached a different
+verdict than one sub-agent.
+
+**Candidate A-fleck — SHIPPED (commit 4c616ce).** Change: adjacency-based fleck
+absorption in `backend/contours_exp.py` `extract_contour_strokes` — a small
+(<250px) dark-label component 8-adjacent to a ≥10× larger component of a
+*different* dark label is reassigned to the big neighbor (stroke-layer copy
+only; fill `labels` untouched). This is the run-11 "next design" (union family
+was refuted there). `tb.crops` (orchestrator's own render, cols
+original|A|prev|recraft): the medium-brown fleck-wedges nested in chopchop
+serration notches are absorbed into the black line they hug; serration teeth
+stay sharp; no shading welded (large bands never hit the 10× ratio). Broaden:
+rabbit absorbs a stray blue dab (collar) + a gray belly-line fleck — small
+genuine cleanup; elephant `flecks_absorbed=0` (single dark label, true no-op);
+logo/monster bit-identical. **Disproportionate side effect (noted):** chopchop
+SVG ~50KB smaller (259KB→209KB) and 234 flecks absorbed — each fleck had been
+emitting its own brown micro-stroke, so the fix cleans the outline AND cuts
+file size. quality (elephant sanity) 0.849, points 2604.
+
+**Candidate B-speckle — DISCARDED (orchestrator overruled the sub-agent).**
+Change (in its worktree, never merged): `_dissolve_speckle` in
+`quantize_contours.py` dissolving sub-`min_area` NON-dark components into their
+majority neighbor, called after `_smooth_labels`. Sub-agent self-reported
+"beats prev (mild)". **Orchestrator's own eye verdict: LATERAL — not clearly
+better, discard.** Lead-grade note for later: on chopchop the tan trunk/plank
+speckle is *barely* changed at spots (2600,1500)/(3000,1400)/(1800,1200)
+because `_despeckle_labels` already runs first at floor `max(min_area,16)=120`
+and clears most <120px fill components before `_dissolve_speckle` sees them —
+so the pass is nearly redundant. **To make it real, it must dissolve at a floor
+ABOVE what despeckle already applies** (e.g. 200–400px) and/or target the
+components `_smooth_labels` *re-creates* afterward; retry only with that
+change, on the trunk-plank speckle specifically. One observed non-speckle side
+effect: a thin white seam between a dark blob and its outline got filled solid
+(a blob's tiny component handed to its dark surround) — a fill change slightly
+outside the "speckle" framing, worth watching if retried.
+
+**Methodology finding (affects all diffpx gating, not just this run):** the
+pipeline is **non-deterministic across renders** — same code, two renders →
+~8.3k-pixel self-diff on the elephant (cv2 k-means is not fully seed-stable
+across processes). So "diffpx" spot-finding carries a per-image noise floor
+(~8k elephant); numbers below it (elephant 8408, fox 8379 here) are no-ops, not
+changes. The EYE verdict — the actual gate — is unaffected, and prior runs'
+conclusions stand, but treat diffpx as a spot-finder, never a verdict. New
+BACKLOG item: consider pinning k-means determinism for cleaner ablations.
+
+**Architecture test result:** 2 parallel worktrees ✓; orchestrator
+independently re-verified both, overruling B's self-report ✓; `/clear`
+mid-cycle resume surfaced the live state (both single-winner and simulated
+multi-winner mid-merge) ✓; both worktrees removed regardless of outcome ✓.
+
+---
+
 ## 2026-07-07 · Run 4 — source-ink ridge extension (commit 5eb37ad)
 
 **What changed:** bridging (run 3) spans gaps ≤1.2w; longer ink runs lost by

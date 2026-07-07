@@ -91,14 +91,22 @@ at the affected spots.
 
 ## Chopchop residuals (post-v5)
 
-- [ ] **Brown flecks**: small dark-label fragments along serrations stroked in
-  their own color. Refuted (run 11): full union welds shading bands into the
-  line network; 70%-dominance union is lateral. Design next: ADJACENCY-based
-  recolor — a small dark fragment (< ~200px) touching a ≥10× larger component
-  of another dark label inherits that component's color and mask.
+- [x] **Brown flecks** — SHIPPED run 12 (4c616ce): adjacency fleck absorption
+  (<250px dark fragment 8-adjacent to ≥10× larger dark component → reassigned;
+  stroke-layer only). chopchop 234 flecks→line, −50KB. The run-11 union family
+  was the wrong tool; adjacency is the right one.
 - [ ] **Trunk texture noodles + junction blobs**: trunk interior dark texture
   renders as squiggle ribbons; frond junctions pool black. Both visible in
-  run11b grids; untouched by the union experiments.
+  run11b grids; untouched by the union/fleck experiments.
+- [ ] **Shading despeckle above the despeckle floor** (run-12 B-speckle lead,
+  DISCARDED as lateral): `_dissolve_speckle` at floor ≤120px is redundant with
+  `_despeckle_labels`. Retry ONLY at a floor of 200–400px targeting chopchop
+  trunk/plank speckle, and/or the components `_smooth_labels` re-creates after
+  despeckle. Watch the thin-white-seam fill side effect if retried.
+- [ ] **Pin k-means determinism** (run-12 methodology finding): renders vary
+  ~8k px run-to-run (cv2 k-means not seed-stable across processes), so diffpx
+  spot-finding has a noise floor. Not a quality bug — but pinning it (fixed
+  thread count / deterministic init) would make ablations cleaner.
 
 ## Judge upgrades
 
