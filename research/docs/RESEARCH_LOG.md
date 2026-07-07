@@ -26,6 +26,54 @@ results → `research/autoresearch.jsonl`; running narrative →
 
 ---
 
+## 2026-07-08 · Run 16 (iteration 16) — 1 candidate, SHIPS (A-sliver, commit 9242186); first full §8/§9 protocol iteration
+
+First iteration run end-to-end under the 9-section protocol: candidate wrote
+its outputs to the shared artifact dir `research/it16/candidates/A-sliver/`
+(new_/prev_ SVGs + notes.md) and EVERY orchestrator verdict below came from
+grids the orchestrator rendered ITSELF from those artifact SVGs (§9 — the
+sub-agent's own grid images were never reused); the ship decision was gated on
+`tb.full_grid` FULL-COVERAGE pages (§8), not just focused spots — 16 pages
+eyed across monster (4), fox (4), crystals (4), game-assets-2 (4), on top of
+17 broaden crop-grids and 4 focused monster spots.
+
+**Candidate A-sliver — VERIFIED, SHIPPED alone.** Change
+(`models/v5/src/contours_exp.py`, `_light_line_capsules`): run-15's capsule
+mechanism required >=3 label-chain fragments, so ~10 monster thin lights
+carried WHOLE by the label map (fragments=1, coverage 0.6-0.87) still went to
+the fill fitter and rendered as lumpy slivers. Fix: whole-carried components
+are also stolen iff the mask itself confesses lumpiness — width variation
+`cv_w >= 0.2` AND `wmean/max(med_w,2) <= 1.45` (rejects fat eye-tail-like
+blobs, ratio >=1.53) with skeleton >=20px and >=0.5 light coverage; bead
+pixels absorbed into bg (`src[beads]=bg`); new `_extend_into_light` tucks
+capsule ends up to 8px forward (dot >=0.5 cone) so they terminate inside the
+light line instead of stopping at the fragment edge. Capsule counts attribute
+every visible change: monster 2->5, fox 4, crystals 1, game-assets-2 6,
+chopchop/rabbit/elephant and all others 0 (gate held where it must).
+Orchestrator verdict from its OWN artifact renders: monster's three lumpy
+slivers -> clean constant-width thin light lines (the run-15 leftover lead,
+now closed); fox whisker-crease and game-assets-2 broaden grids read as small
+WINS, everything else lateral-or-identical; full-coverage pages show ZERO
+regressions (fox haunch-crease sliver unchanged, crystals facet squiggle and
+game-assets-2 spotted-hills differ only within the known k-means wobble).
+Sanity in-worktree: monster 0.9596, elephant 0.8515 vs 0.8548 (flat, noise).
+
+**Leads (new, -> BACKLOG):**
+- **Mouth-corner hook** (monster x494-507/y240-261): cv_w 0.396 but ratio
+  1.73 — falls BETWEEN the steal band (<=1.45) and the eye-tail reject band
+  (>=1.53 is safe); discriminating it needs a donor-size or curvature signal,
+  not more ratio-threshold tuning.
+- **Donor stump**: where a sliver is stolen, the donor fill keeps a rounded
+  stump (monster x531) — fill-side sharpening at capsule take-off points.
+- **Wheel-arc nondeterminism**: chopchop wheel white-arc varies run-to-run
+  with identical code+labels; dark-stroke extraction counts wobble 195-200
+  (chopchop) / 64-68 (rabbit) — k-means seed or order sensitivity worth
+  pinning before it muddies a future eye-diff.
+
+Protocol proof points banked this iteration: §1 native dispatch + SendMessage
+resume ✓, §5 /clear next_action rehydration at two sub-boundaries ✓, §8
+full-coverage ship gate ✓, §9 artifact-dir + orchestrator-own renders ✓.
+
 ## 2026-07-08 · Run 15 (iteration 15) — 2 candidates, BOTH ship combined (A+B, commit 44351d0); first NATIVE-isolation iteration
 
 First iteration under the hardened protocol: candidates dispatched via the

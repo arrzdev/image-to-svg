@@ -312,3 +312,31 @@ See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
 - Leads -> BACKLOG: capsule apex nub; fragments=1 lumpy slivers; heart
   top-left lobe (arc-aware support); walker net-turn budget; chopchop lattice
   tangles + scribble nondeterminism.
+
+### ⟳ Compaction checkpoint — 2026-07-08 01:50:27
+- Context is about to compact. State snapshot: experiments/autoresearch.jsonl.precompact.bak
+- Runs so far: 13 | kept: 10
+- On resume: read autoresearch.md, autoresearch.jsonl, and this worklog, then CONTINUE the loop (do not restart).
+
+### Run 16: whole-carried sliver steal + bead absorption + end tucking — quality_monster=0.9596 (KEEP) — commit 9242186
+- Timestamp: 2026-07-08 02:00
+- What changed: `_light_line_capsules` also steals whole-carried slivers
+  (fragments<3) iff cv_w>=0.2 AND wmean/max(med_w,2)<=1.45, skel>=20px,
+  light coverage>=0.5; bead pixels absorbed into bg; `_extend_into_light`
+  tucks capsule ends <=8px into the light line. Closes run-15's
+  "fragments=1 lumpy slivers" lead.
+- Result: monster slivers -> clean constant-width capsules (capsules 2->5);
+  fox 4 / crystals 1 / game-assets-2 6 fired, all others 0. Eye: 4 focused
+  spots + 17 broaden grids + 16 FULL-COVERAGE pages (sec8 gate, first use) —
+  zero regressions; fox + game-assets-2 read as small wins. Sanity:
+  monster 0.9596, elephant 0.8515 vs 0.8548 (flat/noise).
+- Protocol firsts: sec9 shared artifact dir (research/it16/candidates/A-sliver/)
+  with ALL verdicts from orchestrator-own renders of artifact SVGs; sec8
+  tb.full_grid ship gate; agent resumed via SendMessage after API error.
+- Insight: the mask confesses lumpiness — width-variation (cv_w) + fatness
+  ratio separates dashed-line slivers from legit fill blobs, EXCEPT the
+  mouth-corner hook (cv_w 0.396, ratio 1.73) which sits between the bands;
+  needs a donor-size/curvature signal, not more threshold tuning.
+- Next: iteration 17 from BACKLOG (capsule apex nub / mouth-corner hook /
+  donor stump / heart top-left lobe arc-aware support / wheel-arc
+  nondeterminism pinning).

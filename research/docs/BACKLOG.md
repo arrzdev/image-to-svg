@@ -131,10 +131,25 @@ at the affected spots.
   (560,690)): capsule end overshoots where it meets the surviving light
   sliver at a ridge apex — snap capsule ends to adjacent light-region
   boundaries.
-- [ ] **Whole-carried thin light slivers render lumpy** (run-15 A lead): ~10
-  monster thin lights with fragments=1, coverage 0.6–0.87 stay with the fill
-  fitter and read as lumpy slivers; extend capsules with min_fragments>=1 +
-  a lumpiness (fit-residual) test.
+- [x] **Whole-carried thin light slivers render lumpy** — SHIPPED run 16
+  (9242186, candidate A-sliver): whole-carried components stolen iff the mask
+  confesses lumpiness (cv_w≥0.2 AND wmean/max(med_w,2)≤1.45, skel≥20px,
+  light coverage≥0.5) + bead-pixel absorption + `_extend_into_light` end
+  tucking (≤8px, dot≥0.5 cone). Monster capsules 2→5; fox 4 / crystals 1 /
+  game-assets-2 6; zero regressions on the first full-coverage (§8) gate.
+- [ ] **Mouth-corner hook falls between the bands** (run-16 A lead, monster
+  x494-507/y240-261): cv_w 0.396 but fatness ratio 1.73 — above the steal
+  band (≤1.45) yet below nothing (eye-tail rejects sit ≥1.53 by design).
+  Ratio tuning is exhausted; discriminate with a donor-size or curvature
+  signal instead.
+- [ ] **Donor stump where a sliver is stolen** (run-16 A lead, monster x531):
+  the donor fill keeps a rounded stump at the capsule take-off point —
+  fill-side sharpening (carve the stump along the capsule axis) would finish
+  the hand-off.
+- [ ] **Chopchop wheel white-arc nondeterminism** (run-16 observation): the
+  wheel's white arc varies run-to-run with identical code+labels; dark-stroke
+  extraction counts wobble 195–200 (chopchop) / 64–68 (rabbit). Same family
+  as the k-means pinning item below — pin before it muddies a future eye-diff.
 - [ ] **Strap-end curl loopier than reference** (run-14 B lead): the chair
   crossing's strap end traces a loop where original/Recraft draw a tight
   hook — free-end shaping, not pooling. Look at run-4 ridge-extension tails.
