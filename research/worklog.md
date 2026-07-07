@@ -390,3 +390,12 @@ See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
   junction density — bars likely non-dark or tangles not junction-dense;
   next attempt needs run-15's grid coords, not this heuristic. Negative
   result logged so the heuristic isn't retried blind.
+
+### Run 17 addendum 5: rectangular-nub audit + lattice tangles located
+- Nub mechanism found: strokes are round-capped; wedge/ribbon elements are
+  filled polygons with flat width-spanning ends (209 on chopchop). Pictures:
+  flat lattice-bar butts (425,790), maroon slab ~(600,640), diag17_nubs.png.
+  Fix candidates: semicircular ribbon end arcs, or short-ribbon->stroke.
+- Chair-lattice tangles finally LOCATED at (425,790)@1024 (the ribbon
+  first-node listing walked straight into the lattice the junction-density
+  heuristic missed): tangled knot glyph + doubled bars.

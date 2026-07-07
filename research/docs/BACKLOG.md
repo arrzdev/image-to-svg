@@ -23,9 +23,10 @@ at the affected spots.
 - [ ] **Ridge walker: charge NET signed turn** (run-15 B lead): swapping the
   per-step |dTheta| for net curl would restore the walker's intended 4w range
   if it's ever needed again.
-- [ ] **Chopchop chair-lattice junction tangles** (run-15 observation):
-  squiggly stroke tangles where lattice bars cross, equal weight in new/prev;
-  pre-existing, not pooling (run-14 clamp) nor bridging.
+- [ ] **Chopchop chair-lattice junction tangles** (run-15 observation;
+  run-17: LOCATED at (425,790)@1024, `diag17_nubs.png` row 1): the knot/ring
+  junction renders as a tangled glyph with doubled bars; bar ends show flat
+  butts. Pre-existing, not pooling (run-14 clamp) nor bridging.
 - [ ] **Chopchop interior-scribble nondeterminism** (run-15 observation):
   same-code reruns redraw interior texture strokes differently (clusters up
   to 1100px at 1024) — related to k-means pinning item; makes chopchop eye
@@ -35,11 +36,14 @@ at the affected spots.
   the v4-era report predates runs 2–4. Negative result: parsimony centerline
   fit ≈ smooth+Schneider by eye and costs more points — don't retry without a
   new reason.
-- [ ] **Rectangular nub artifacts at joins** — butt caps / segment seams at
-  branch joins render little rectangles. Audit `_stroke_elements`/`_ribbon`
-  cap+join style (want round joins); ensure continuation-merged branches emit
-  as ONE path, not abutting segments. (Cap poke-through variant fixed in run 2;
-  check remaining seam/butt cases on chopchop.)
+- [ ] **Rectangular nub artifacts at joins** — AUDITED run 17, mechanism
+  identified: true strokes already emit `stroke-linecap="round"`; the nubs
+  come from `kind in ("wedge","ribbon")` elements, which are FILLED POLYGONS
+  whose ends are flat width-spanning segments (209 such elements on
+  chopchop). Pictured: flat-butt lattice bar ends at (425,790)@1024 and a
+  rectangular maroon slab ~(600,640) (`diag17_nubs.png`). Fix candidates:
+  emit semicircular end arcs on ribbon polygons, or convert short ribbons
+  to round-capped strokes at emission.
 
 ## Line quality (the user's three defects — TOP PRIORITY)
 
