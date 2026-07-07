@@ -23,9 +23,14 @@ at the affected spots.
   bridge required two FREE ends. Fix: bridge free ends to ANY endpoint via
   tangent-arc (<=2.5gw) or strict chord (turn<=40, mean<50) + ridge2>=0.5
   both-sides-light gate. Heart + tuft closed; chopchop trunk x2, 0 welds.
-- [ ] **Heart lobes render flattened** (run-20 B lead): label-map crown is
-  ~5px low vs source — curvature idealization / source-guided refit of the
-  lobe outline; separate from bridging.
+- [ ] **Heart lobes render flattened** (run-20 B lead; staged run-21-wait,
+  `diag18_lobe.png`): rawquant preserves the two-lobe crown; _despeckle
+  degrades the thin outline arc at the left-lobe apex (gray shadow-tone blob
+  displaces it) and shallows the notch; the fill fitter rounds the rest.
+  THIRD member of the label-chain thin-boundary-feature family (with monster
+  teeth = light spikes, rabbit buttons/ring = dark annuli). A general
+  boundary-subfeature guard in despeckle/smooth could close all three —
+  evaluate it18 A-spikeguard's mechanism for generalization.
 - [ ] **Thin dark subfeatures eroded by the label chain** (run-20 lead,
   CORRECTED by run-21-wait diagnosis `diag18_buttons.png`): rabbit's button
   ring (~(358,676)) and strap J-curve arrive at rawquant INTACT and leave

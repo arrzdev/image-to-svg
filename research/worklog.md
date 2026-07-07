@@ -463,3 +463,10 @@ See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
   faithfully reproduces the broken labels. Run-20 "skeletonization" guess
   corrected in BACKLOG. Dark-on-light dual of the monster-teeth disease —
   natural extension of it18 A-spikeguard if it ships.
+
+### it18 wait diagnosis 2: heart-crown flattening staged — label chain again
+- diag18_lobe.png: crown intact at rawquant; despeckle displaces the thin
+  left-lobe apex outline with a shadow-tone blob + shallows the notch;
+  fitter rounds the remainder. Third label-chain thin-boundary casualty
+  (teeth = light spikes, buttons/ring = dark annuli, lobe = outline arc).
+  One generalized guard could close the family — hinges on it18 A's design.
