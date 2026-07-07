@@ -8,3 +8,12 @@ outputs/
 *.egg-info/
 data/outputs/*
 !data/outputs/.gitkeep
+
+# autoresearch loop — runtime sentinels & snapshots (state itself is tracked:
+# autoresearch.md, autoresearch.jsonl, autoresearch.focus, experiments/worklog.md)
+.autoresearch-off
+.autoresearch-inspect
+autoresearch-dashboard.md
+autoresearch-report.md
+experiments/*.bak
+experiments/autoresearch.jsonl.precompact.bak

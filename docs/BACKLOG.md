@@ -1,7 +1,9 @@
 # Backlog / idea queue
 
-Ranked by expected visual impact (per the vision-first goal).
-**See docs/RESUME.md for the paused-session handoff and top priorities.**
+Ranked by expected visual impact (per the vision-first goal — mission in
+`docs/PROJECT_SPEC.md`). **See docs/RESUME.md for the paused-session handoff and
+top priorities.** This is the **single idea queue** — the autoresearch loop
+draws its next experiment from here.
 
 ## contour_lines stroke defects (USER report 2026-07-07 — TOP PRIORITY)
 

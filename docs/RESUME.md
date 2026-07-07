@@ -1,7 +1,33 @@
 # START HERE — resume point (paused 2026-07-07)
 
-Read this first, then `docs/STATE.md` (architecture) and `docs/BACKLOG.md`
-(ranked work). `docs/RESEARCH_LOG.md` is the full journal if you need history.
+Mission (canonical): **docs/PROJECT_SPEC.md**. Autonomous-loop config +
+vision-verdict procedure: **autoresearch.md**. Then `docs/STATE.md`
+(architecture) and `docs/BACKLOG.md` (ranked work). `docs/RESEARCH_LOG.md` is
+the full journal if you need history.
+
+**Current version:** v4 (`contour_lines`, git `d5fad37`). **Current focus
+target:** elephant (`./autoresearch.focus`). **Best-so-far:** quality 0.8682 /
+ssim 0.9643 / 2609 pts by the sanity harness — but judged by EYE at Recraft's
+tier on the elephant. **Next step:** perpendicular-crossing gaps (top of
+BACKLOG). **In-flight:** none — loop is set up but PAUSED (`.autoresearch-off`).
+
+## Loop operating model (autoresearch plugin)
+
+The `autoresearch` plugin drives the autonomous loop. Trigger it with
+**`/autoresearch`** (this deletes `.autoresearch-off` and resumes from
+`autoresearch.md` + `autoresearch.jsonl`). Pause with **`/autoresearch off`**;
+inspect read-only with **`/autoresearch status`** / **`report`**.
+
+- **Keep/discard is by EYE**, not the metric (spec §4). `./autoresearch.sh`
+  emits `METRIC` numbers for the dashboard as a *regression sanity check only*.
+- The Stop hook keeps the loop going until `maxRuns` (30) or `/autoresearch off`.
+- **Per-iteration `/clear` is NOT automatic.** Claude Code hooks cannot invoke
+  `/clear` (verified against the docs), so the loop runs in one long context with
+  PreCompact snapshots + SessionStart rehydration (matcher now includes `clear`).
+  All state is on disk, so a manual `/clear` — or running each iteration headless
+  via `claude -p` from an external `while` loop — gives a clean context per
+  iteration with zero loss. Choose the operating mode deliberately before an
+  unattended run; see autoresearch.md "Context management between iterations".
 
 ## Where we are
 

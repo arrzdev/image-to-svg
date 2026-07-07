@@ -1,5 +1,10 @@
 # Project spec — image → SVG engine
 
+> **Canonical source of truth.** This file is the verbatim project spec. Every
+> other doc and config (`autoresearch.md`, `docs/RESUME.md`, `docs/BACKLOG.md`,
+> `models/README.md`, …) **references** this file — none of them restate it, so
+> nothing drifts out of sync. If the mission changes, edit it here only.
+
 ## 1. The problem
 
 Turn a raster image (logos, flat illustrations, character/game assets — often
@@ -100,6 +105,7 @@ data/
   outputs/  <name>-<sha>-<ts>.svg our deliverables (gitignored)
   _archive/                        stray files kept for safety
 ```
+
 `tb.target()` returns the matching Recraft SVG (or None). Add a pair by dropping
 `inputs/foo.png` + `targets/foo.svg`.
 

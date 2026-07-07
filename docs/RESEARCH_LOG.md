@@ -1,8 +1,11 @@
 # Research log
 
-One entry per loop iteration, newest first. Format: what happened / what was
-learned / what's next. `docs/STATE.md` holds the current consolidated state;
-`docs/BACKLOG.md` holds the idea queue.
+Append-only, **one entry per shipped iteration**, newest first. Each entry:
+**what changed / why / eye-verdict summary (new vs prev vs Recraft) / benchmark
+delta if run / commit sha**. Mission: `docs/PROJECT_SPEC.md`. `docs/STATE.md`
+holds the current consolidated state; `docs/BACKLOG.md` holds the idea queue.
+The autoresearch loop also logs machine-readable results to `autoresearch.jsonl`
+and a running narrative to `experiments/worklog.md`.
 
 ---
 
