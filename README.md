@@ -43,7 +43,7 @@ models/<v>/MANIFEST.md  # what changed, eye-verdicts, negative results
 | v2      | 2026-07-06                | pre-git   | no (historical) | shared-boundary vectorization + honest shared-edge DV + structural-integrity judge |
 | v3      | 2026-07-07 01:58          | `d7804f5` | **yes**  | parsimony fitter (wobble-free fills), first width-constant contour strokes, cached testbed |
 | v4      | 2026-07-07 03:03          | `c463914` | **yes**  | line/fill idealization: centerline stroke network + flat parsimony shading, Recraft-calibrated line weight |
-| v5      | 2026-07-07 23:29          | `3d251ad` | **yes**  | autoresearch arc (runs 2–14): junction anchoring/bridging/ink-extension, corner+miter serrations, shadow-tone merge, fleck absorption, wiggle-gate texture→daubs, guarded speckle dissolve, light-accent guard (striped straw!), junction pool clamp |
+| v5      | 2026-07-08 03:55          | `c61755e` | **yes**  | autoresearch arc (runs 2–20): junction anchoring/bridging/ink-extension, corner+miter serrations, shadow-tone merge, fleck absorption, wiggle-gate texture→daubs, guarded speckle dissolve, light-accent guard, junction pool clamp, light-line capsules + sliver steal, chord/arc endpoint bridging (rabbit heart closed), byte-deterministic renders |
 
 All runnable versions expose the same pipeline (`contour_lines`, each at its
 own vintage) through `entry.py`; v3's `examples/` additionally keeps its

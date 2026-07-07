@@ -1,6 +1,11 @@
 # v5 — line-network integrity + measured idealization (autoresearch runs 2–10)
 
-Git: 50c0a03 (arc c0adad6..50c0a03, 6 keeps / 2 discards / 2 research passes).
+Git: c61755e (arc c0adad6..c61755e, autoresearch runs 2-20: 14 keeps / 4
+discards / 2 research passes). Examples regenerated at c61755e (2026-07-08).
+Since 50c0a03: light-line capsules (r15) + whole-carried sliver steal (r16)
++ corridor-sliver absorption (r19) un-bead thin light lines; chord/arc
+endpoint bridging closes rabbit heart + chopchop trunk, 0 welds (r15+r20);
+medial_axis rng pinned - renders byte-deterministic (r18).
 Focus: the v4 defect report, now CLEARED — each item eye-verified vs prev +
 Recraft on all 8 targets:
 
