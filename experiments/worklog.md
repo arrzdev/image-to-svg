@@ -233,5 +233,8 @@ See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
   said "mild win"; ORCHESTRATOR eye said lateral (despeckle already clears
   <120px first). Lead: retry only at a floor >120px on trunk-plank speckle.
 - Methodology: pipeline renders are non-deterministic (~8k self-diff floor on
-  elephant); diffpx is a spot-finder, not a verdict. Eye gate unaffected.
+  elephant); diffpx is a spot-finder, not a verdict — a low number does NOT mean
+  no-op (fox: 81 flecks fired under the floor). EYE-checked elephant (identical)
+  + fox (81 flecks, all harmless) explicitly; initial 'no-op' label on fox was
+  a number-inference mistake, corrected by looking.
 - Both worktrees removed; /clear mid-cycle resume verified (single + merge).

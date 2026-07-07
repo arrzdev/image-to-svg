@@ -38,10 +38,20 @@ only; fill `labels` untouched). This is the run-11 "next design" (union family
 was refuted there). `tb.crops` (orchestrator's own render, cols
 original|A|prev|recraft): the medium-brown fleck-wedges nested in chopchop
 serration notches are absorbed into the black line they hug; serration teeth
-stay sharp; no shading welded (large bands never hit the 10× ratio). Broaden:
-rabbit absorbs a stray blue dab (collar) + a gray belly-line fleck — small
-genuine cleanup; elephant `flecks_absorbed=0` (single dark label, true no-op);
-logo/monster bit-identical. **Disproportionate side effect (noted):** chopchop
+stay sharp; no shading welded (large bands never hit the 10× ratio). Broaden (all
+EYE-CHECKED, not inferred): rabbit absorbs a stray blue dab (collar) + a gray
+belly-line fleck — small genuine cleanup; **elephant** grid A-vs-preA visually
+identical (true no-op, `flecks_absorbed=0`, single dark label); **fox** grid
+A-vs-preA equivalent by eye — eyes/ear-lines/whiskers/fur intact, nothing
+welded or broken — but **81 flecks DID fire on fox** (it is NOT a no-op; the
+low diffpx only meant each reassigned fragment is tiny). logo/monster
+bit-identical.
+
+Correction on record: I initially labeled elephant AND fox "no-op within noise"
+from `flecks_absorbed`/diffpx alone. That was wrong for fox (81 flecks fired) —
+vision-first means render and look, never infer "probably fine" from a number,
+including a noise-floor number. Both grids were then rendered and eye-checked
+(outputs/it12_eyecheck_{elephant,fox}.png); both clean, verdict holds. **Disproportionate side effect (noted):** chopchop
 SVG ~50KB smaller (259KB→209KB) and 234 flecks absorbed — each fleck had been
 emitting its own brown micro-stroke, so the fix cleans the outline AND cuts
 file size. quality (elephant sanity) 0.849, points 2604.
@@ -67,9 +77,11 @@ outside the "speckle" framing, worth watching if retried.
 pipeline is **non-deterministic across renders** — same code, two renders →
 ~8.3k-pixel self-diff on the elephant (cv2 k-means is not fully seed-stable
 across processes). So "diffpx" spot-finding carries a per-image noise floor
-(~8k elephant); numbers below it (elephant 8408, fox 8379 here) are no-ops, not
-changes. The EYE verdict — the actual gate — is unaffected, and prior runs'
-conclusions stand, but treat diffpx as a spot-finder, never a verdict. New
+(~8k elephant). A number below it does NOT imply "no change": fox diffpx 8379 ≈
+floor yet 81 flecks fired — the reassignments were just individually tiny, and
+only the eye-check confirmed them harmless. The EYE verdict — the actual gate —
+is what settles it; treat diffpx as a spot-finder, never a verdict, and never
+infer a candidate is fine from it. New
 BACKLOG item: consider pinning k-means determinism for cleaner ablations.
 
 **Architecture test result:** 2 parallel worktrees ✓; orchestrator
