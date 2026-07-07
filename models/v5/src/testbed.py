@@ -177,3 +177,60 @@ class Testbed:
         outp = str((HERE.parent / "outputs" / out))
         Image.fromarray(grid).save(outp)
         return outp
+
+    def full_grid(self, svgs: dict, out: str, grid_n: int = 4, zoom: int = 4096,
+                  size: int = 420, rows_per_page: int = 4):
+        """FULL-COVERAGE vision grid (MANDATORY before any keep/ship decision —
+        research/autoresearch.md, Testing progression §3). Tiles the WHOLE
+        zoom render into grid_n x grid_n blocks; each block becomes a row of
+        ORIGINAL | <variants...> cells. Emits pages of rows_per_page rows named
+        <out>.pageK.png and returns the list of paths — Read and LOOK at every
+        page. Focused crops (self.crops) remain for defect diagnosis; this is
+        the ship gate. [User-mandated harness extension, 2026-07-08 — additive
+        only; does not alter crops/score/metrics.]"""
+        from render import svg_to_rgb
+        from PIL import Image
+        import cv2
+        _, ev, (ow, oh), _ = self.prep()
+        sc = zoom / max(ow, oh)
+        W, H = int(round(ow * sc)), int(round(oh * sc))
+        src = cv2.resize(ev, (W, H), interpolation=cv2.INTER_LANCZOS4)
+        rendered = {n: svg_to_rgb(s_, W, H) for n, s_ in svgs.items()}
+        bw, bh = W // grid_n, H // grid_n
+        sep_v = np.full((size, 12, 3), 255, np.uint8)
+        pages, rows = [], []
+        outp_base = str((HERE.parent / "outputs" / out))
+        if outp_base.endswith(".png"):
+            outp_base = outp_base[:-4]
+        page_i = 0
+        for gy in range(grid_n):
+            for gx in range(grid_n):
+                y0, x0 = gy * bh, gx * bw
+                cells = [cv2.resize(src[y0:y0+bh, x0:x0+bw], (size, size),
+                                    interpolation=cv2.INTER_AREA)]
+                for n in svgs:
+                    cells.append(cv2.resize(rendered[n][y0:y0+bh, x0:x0+bw],
+                                            (size, size), interpolation=cv2.INTER_AREA))
+                row = cells[0]
+                for c in cells[1:]:
+                    row = np.hstack([row, sep_v, c])
+                rows.append(row)
+                if len(rows) == rows_per_page:
+                    sep_h = np.full((12, rows[0].shape[1], 3), 255, np.uint8)
+                    grid = rows[0]
+                    for r in rows[1:]:
+                        grid = np.vstack([grid, sep_h, r])
+                    page_i += 1
+                    pth = f"{outp_base}.page{page_i}.png"
+                    Image.fromarray(grid).save(pth)
+                    pages.append(pth); rows = []
+        if rows:
+            sep_h = np.full((12, rows[0].shape[1], 3), 255, np.uint8)
+            grid = rows[0]
+            for r in rows[1:]:
+                grid = np.vstack([grid, sep_h, r])
+            page_i += 1
+            pth = f"{outp_base}.page{page_i}.png"
+            Image.fromarray(grid).save(pth)
+            pages.append(pth)
+        return pages

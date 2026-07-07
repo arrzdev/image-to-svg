@@ -23,3 +23,7 @@ research/autoresearch.iteration.json
 research/autoresearch.iteration.json.precompact.bak
 .autoresearch-worktrees/
 
+
+# per-iteration scratch artifacts (candidate svgs, baselines, grids)
+research/it*/
+research/it15_baseline_*.svg

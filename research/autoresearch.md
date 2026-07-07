@@ -76,10 +76,19 @@ Every experiment follows this order; **do not commit before step 4**:
    - **The only no-render skip is a *byte-identical* SVG** (`new == prev` as
      strings — then it truly cannot differ). "Small diff" or "count is zero" is
      NOT identity; render it and look.
-3. **Benchmark last (sanity only).** Run `./research/autoresearch.sh` on the focus target
+3. **FULL-COVERAGE eye pass — MANDATORY before any keep/ship decision.**
+   Focused `spots=[...]` crops are for diagnosing a specific defect; they are
+   NEVER sufficient to declare "verified, no regression". Before shipping (and
+   for the focus target before calling a candidate verified), render
+   `tb.full_grid({'new':…,'prev':…,'recraft':…}, out=…)` — it tiles the ENTIRE
+   image into blocks and emits ORIGINAL | new | prev | recraft pages for every
+   block — and LOOK at every page. This is what spec §4's "no regression on
+   the others" actually requires. Focused mode stays for investigation;
+   full-coverage is the final gate on top of it.
+4. **Benchmark last (sanity only).** Run `./research/autoresearch.sh` on the focus target
    (and spot-check others) to catch external regressions in the numbers. A worse
    number after a passed eye verdict is a flag to investigate, not an auto-reject.
-4. **Ship** (spec §3): commit (concise msg) → append `research/docs/RESEARCH_LOG.md` →
+5. **Ship** (spec §3): commit (concise msg) → append `research/docs/RESEARCH_LOG.md` →
    log to `research/autoresearch.jsonl` + `research/worklog.md` → bump `models/vN/` +
    `models/README.md` **iff structural** → update `research/docs/RESUME.md` + memory.
 
@@ -148,9 +157,13 @@ what ships** — including whether to combine multiple winners into one version.
      `DYLD_FALLBACK_LIBRARY_PATH=/opt/homebrew/lib`, the repo venv python,
      `sys.path.insert(0,'models/v5/src')`, render baseline-then-new,
      `tb.crops({'new','prev','recraft'})`, LOOK at the png;
-   - the report format: files changed + mechanism, crop paths, eye verdict
-     (labelled as a claim), side observations, lead-grade notes, **and its
-     worktree path (`pwd`)** so the orchestrator can re-verify in place.
+   - the ABSOLUTE shared artifact dir `<repo>/research/it<N>/candidates/<id>/`
+     (in the MAIN repo — the one path a sub-agent may write outside its
+     worktree): write the final `new.svg`, the baseline `prev.svg`, and any
+     key intermediates there;
+   - the report format: files changed + mechanism, the artifact dir path,
+     crop paths, eye verdict (labelled as a claim), side observations,
+     lead-grade notes, **and its worktree path (`pwd`)**.
 4. **Model & effort policy (every dispatch, no exceptions):**
    - **Model: never set explicitly.** Leave it to inherit so sub-agents always
      run whatever model the orchestrator session is on.
@@ -166,10 +179,15 @@ what ships** — including whether to combine multiple winners into one version.
    their worktrees/output files in wait loops — the framework delivers a
    completion notification per agent. Use the wait to do orchestrator-side
    prep (baseline renders on the main tree) or simply end the turn.
-6. **Orchestrator independently re-verifies — uniformly, no exceptions.** When
-   a sub-agent reports, the orchestrator itself re-renders `tb.crops` from
-   that candidate's worktree (`sys.path` to `<worktree>/models/v5/src`) and
-   forms its own eye verdict before the candidate counts as a winner. A
+6. **Orchestrator independently re-verifies — uniformly, no exceptions.** The
+   orchestrator reads the candidate's `new.svg` from the shared artifact dir
+   and renders ITS OWN comparison grids from it — focused crops on the defect
+   AND the full-coverage grid (`tb.full_grid`) — before any verdict. **A grid
+   image the sub-agent rendered is never the verdict source** (that would be
+   trusting self-report one layer removed); artifacts save re-running the
+   generation pipeline, not the independent comparison render. When in doubt
+   that the SVG matches the code (or the artifact is missing), re-run the
+   pipeline from the candidate's worktree as a spot-check. A
    confident-sounding sub-agent report changes nothing about this.
 7. **Clean up:** the framework auto-removes an unchanged worktree; a worktree
    the candidate modified persists for orchestrator verification — after the
@@ -237,6 +255,7 @@ Schema:
    {"id": "fleck-recolor", "domain": "stroke-extractor (models/v5/src/contours_exp.py)",
     "worktree": "<abs path reported by the sub-agent (native isolation)>",
     "backlog": "brown flecks", "effort": "inherit|low (deliberate, ≤ orchestrator)",
+    "artifacts": "research/it<N>/candidates/<id>/",
     "subagent_verdict": "beats prev|worse|mixed",
     "orchestrator_verdict": "VERIFIED|REFUTED|PENDING", "crop": "outputs/..png"}],
  "integration": {"order": ["a","b"], "applied": ["a"], "step": 1,
