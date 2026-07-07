@@ -380,3 +380,13 @@ See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
   closed for v5. pizza-box 0.875: 166 hairline px in two clusters; worst
   (285,170)@1024 = hairline crack + everted gray lens (eyed,
   diag17_pizza_gap.png) = the known thin-region eversion, now with coords.
+
+### Run 17 addendum 4: lattice-tangle probe — not located; strap-curl pictured
+- Junction-density probe on chopchop's dark skeleton (826 deg>=3 nodes) top
+  clusters = strap (268,617), goggles rim (571,327), coconut (217,760) —
+  diag17_lattice.png. Strap-end curl lead CONFIRMED with picture (current
+  loops where original tapers); goggles junction mild pooling only; coconut
+  scratch daubs lateral. The chair-lattice tangles did NOT surface via dark
+  junction density — bars likely non-dark or tangles not junction-dense;
+  next attempt needs run-15's grid coords, not this heuristic. Negative
+  result logged so the heuristic isn't retried blind.
