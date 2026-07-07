@@ -51,6 +51,9 @@ from strokes import (_STRUCT8, _luminance, _skeleton_branches,
                      _smooth1d, _cubics_to_d, _ribbon, absorb_mask)
 
 
+_DEBUG: dict = {}    # diagnostic capture (pend snapshot); no pipeline effect
+
+
 # ------------------------------------------------------------ centerline fit
 
 def _fit_branch(pts: np.ndarray, tol: float, corner_deg: float,
@@ -786,6 +789,99 @@ def extract_contour_strokes(labels: np.ndarray, centers: np.ndarray,
                         pb["tail_free"] = False
                 info["ink_extended"] = info.get("ink_extended", 0) + 1
 
+        # ---- long-gap chord bridging.  Ends STILL free after bridging and
+        # ridge extension can face each other across gaps far beyond those
+        # caps (rabbit heart-bottom 3.8w, bag outline 6.7w) where the label
+        # map lost a LONG ink run but the SOURCE still shows one continuous
+        # dark line.  The ridge walker cannot cross these (measured: it dies
+        # on the absolute darkness test over thin antialiased ink, on ridge
+        # fails beside shading, or burns its turn budget on staircase jitter
+        # within ~5-9 steps).  Bridge instead: a mutually-facing free-end
+        # pair (both cos >= 0.3 toward each other — the direction gate that
+        # keeps parallel neighbors safe) within 7 widths joins at the chord
+        # midpoint IFF the source ink supports the WHOLE chord — sampled as
+        # the min over a ±1.5px perpendicular fan (the thin line wanders
+        # off the straight chord): mean < 140, >= 60% of samples < 160, and
+        # NO bright run over 2px (>176).  Measured on rabbit: every true
+        # break has bright-run 0 and mean <= 118; every non-break (light
+        # gaps that must stay open) has bright-run >= 7px and mean >= 143.
+        # Bridged ends stop being free: no taper, no stub-drop.
+        ends2 = []
+        for pi, pb in enumerate(pend):
+            if pb["closed"] or len(pb["pts"]) < 2:
+                continue
+            pts = pb["pts"]
+            k = min(6, len(pts) - 1)
+            for side, e_i, k_i in (("head", 0, k), ("tail", -1, -1 - k)):
+                if not pb[side + "_free"]:
+                    continue
+                t = pts[e_i] - pts[k_i]
+                n = np.linalg.norm(t)
+                if n > 1e-9:
+                    ends2.append((pi, side, pts[e_i].copy(), t / n))
+        cand = []
+        for i in range(len(ends2)):
+            for j in range(i + 1, len(ends2)):
+                pi_, _, a, ta = ends2[i]
+                pj_, _, b, tb_ = ends2[j]
+                if pi_ == pj_:
+                    continue
+                v = b - a
+                dch = float(np.linalg.norm(v))
+                if not (1e-6 < dch <= 7.0 * gw):
+                    continue
+                u = v / dch
+                if (float(np.dot(u, ta)) < 0.3
+                        or float(np.dot(-u, tb_)) < 0.3):
+                    continue
+                ns = max(int(dch * 2), 8)
+                q = a[None] + v[None] * np.linspace(0, 1, ns)[:, None]
+                perp = np.array([-u[1], u[0]])
+                vmin = np.full(ns, 255.0)
+                for s in (-1.5, -0.75, 0.0, 0.75, 1.5):
+                    xs = np.clip((q[:, 0] + perp[0] * s).astype(int),
+                                 0, Ws - 1)
+                    ys = np.clip((q[:, 1] + perp[1] * s).astype(int),
+                                 0, Hs - 1)
+                    vmin = np.minimum(vmin, gray[ys, xs])
+                if float(vmin.mean()) >= 140.0:
+                    continue
+                if float((vmin < 160.0).mean()) < 0.6:
+                    continue
+                run = mx = 0
+                for is_br in (vmin > 176.0):
+                    run = run + 1 if is_br else 0
+                    mx = max(mx, run)
+                if mx > 4:          # 2 samples/px: >2px of clear ground
+                    continue
+                cand.append((dch, i, j))
+        cand.sort(key=lambda c: c[0])
+        used: set = set()
+        for dch, i, j in cand:
+            if i in used or j in used:
+                continue
+            pi_, si, a, _ = ends2[i]
+            pj_, sj, b, _ = ends2[j]
+            if (not pend[pi_][si + "_free"]
+                    or not pend[pj_][sj + "_free"]):
+                continue
+            mid = (a + b) / 2.0
+            for pk, sk in ((pi_, si), (pj_, sj)):
+                pbk = pend[pk]
+                if sk == "head":
+                    pbk["pts"][0] = mid
+                    pbk["head_free"] = False
+                else:
+                    pbk["pts"][-1] = mid
+                    pbk["tail_free"] = False
+            used.update((i, j))
+            info["long_bridges"] = info.get("long_bridges", 0) + 1
+            info.setdefault("long_bridge_at", []).append(
+                (float(mid[0]), float(mid[1]), float(dch)))
+
+    _DEBUG.clear()
+    _DEBUG.update({"pend": pend, "gw": gw})
+
     for pb in pend:
         base = gw if width_mode == "global" else pb["w_med"]
         w_body = max(base * width_scale, 0.75)
@@ -882,6 +978,158 @@ def extract_contour_strokes(labels: np.ndarray, centers: np.ndarray,
     return strokes, stroke_mask, info
 
 
+# ------------------------------------------------------- light-line capsules
+
+def _trace_skeleton_path(skel: np.ndarray) -> Optional[np.ndarray]:
+    """Longest path through a thin skeleton, as (x,y) pixel centers.
+
+    Double-BFS over the 8-connected skeleton graph (farthest node from an
+    arbitrary start, then farthest from that) — exact on trees, and thin
+    light scratches skeletonize to near-trees. Side twigs are dropped."""
+    from collections import deque
+
+    ys, xs = np.nonzero(skel)
+    if len(ys) < 3:
+        return None
+    pts = set(zip(ys.tolist(), xs.tolist()))
+    nbrs = {p: [(p[0] + dy, p[1] + dx)
+                for dy in (-1, 0, 1) for dx in (-1, 0, 1)
+                if (dy or dx) and (p[0] + dy, p[1] + dx) in pts]
+            for p in pts}
+
+    def farthest(start):
+        seen = {start: None}
+        q = deque([start])
+        last = start
+        while q:
+            p = q.popleft()
+            last = p
+            for nb in nbrs[p]:
+                if nb not in seen:
+                    seen[nb] = p
+                    q.append(nb)
+        return last, seen
+
+    a, _ = farthest(next(iter(pts)))
+    b, seen = farthest(a)
+    path = [b]
+    while seen[path[-1]] is not None:
+        path.append(seen[path[-1]])
+    if len(path) < 3:
+        return None
+    return np.array([(x + 0.5, y + 0.5) for y, x in path], float)
+
+
+def _light_line_capsules(labels: np.ndarray, centers: np.ndarray,
+                         src_img: np.ndarray,
+                         tophat_thresh: float = 60.0,
+                         min_area: int = 40,
+                         max_med_w: float = 3.5,
+                         min_skel_px: int = 30,
+                         min_elong: float = 8.0,
+                         min_contrast: float = 60.0,
+                         min_fragments: int = 3,
+                         ) -> Tuple[np.ndarray, List[dict]]:
+    """Rescue thin light lines that the label map fragments into bead trails.
+
+    A ~1-2px light line inside a dark region (monster's white scratch)
+    survives quantization only as a DASHED run of small light components; the
+    fill fitter then rounds each dash into a teardrop bead. The source image
+    still carries the line continuously, so: white-tophat the source, keep
+    components that are thin + elongated + light-on-dark, and — ONLY when the
+    label map carries them fragmented (>= min_fragments bead components; a
+    line carried whole is left to the fill fitter, which handles it fine) —
+    reassign the bead pixels to the surrounding dark label and emit ONE
+    continuous stroke capsule along the source centerline instead.
+
+    Returns (patched_labels, capsule_strokes); labels is copied before any
+    patch, capsule strokes are {"d","width","color","kind":"stroke"}.
+    """
+    import cv2
+    from skimage.morphology import medial_axis
+
+    gray = src_img.astype(np.float32).mean(2)
+    kern = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (9, 9))
+    opened = cv2.morphologyEx(gray.astype(np.uint8), cv2.MORPH_OPEN, kern)
+    cand = (gray - opened) > tophat_thresh
+    comp, n = ndimage.label(cand, structure=_STRUCT8)
+    if n == 0:
+        return labels, []
+
+    lum = centers.astype(np.float64).mean(1)
+    patched = None
+    capsules: List[dict] = []
+    for ci in range(1, n + 1):
+        m = comp == ci
+        area = int(m.sum())
+        if area < min_area:
+            continue
+        skel, dist = medial_axis(m, return_distance=True)
+        skel_px = int(skel.sum())
+        med_w = float(np.median(dist[m]) * 2.0)
+        if med_w > max_med_w or skel_px < min_skel_px:
+            continue
+        if skel_px / max(med_w, 1.0) < min_elong:
+            continue
+        dil = ndimage.binary_dilation(m, structure=_STRUCT8, iterations=2)
+        ring = dil & ~m
+        src = labels if patched is None else patched
+        bg = int(np.bincount(src[ring].ravel(),
+                             minlength=len(centers)).argmax())
+        line_lum = float(np.median(gray[m]))
+        if line_lum - lum[bg] < min_contrast:
+            continue                       # not light-on-dark
+        # -- label-map evidence: light labels overlapping the line
+        under = src[m]
+        light_ids = [li for li in np.unique(under)
+                     if lum[li] > lum[bg] + 50.0]
+        beads = np.isin(src, light_ids) & dil if light_ids else \
+            np.zeros_like(m)
+        _, nfrag = ndimage.label(beads, structure=_STRUCT8)
+        if nfrag < min_fragments:
+            continue                       # carried whole (or absent): leave
+        # -- absorb the bead components into the surrounding dark label.
+        # Whole-component test keeps the big light region the line runs
+        # into safe: only small components mostly inside the line get eaten.
+        if patched is None:
+            patched = labels.copy()
+            src = patched
+        for li in light_ids:
+            lcomp, ln = ndimage.label(src == li, structure=_STRUCT8)
+            for lci in np.unique(lcomp[beads]):
+                if lci == 0:
+                    continue
+                cm = lcomp == lci
+                ca = int(cm.sum())
+                if ca < 400 and float((cm & dil).sum()) / ca >= 0.6:
+                    src[cm] = bg
+        # -- one continuous capsule along the source centerline
+        path = _trace_skeleton_path(skel)
+        if path is None:
+            continue
+        d = _fit_branch(path, 2.5, 75.0, 11, False)
+        if not d:
+            continue
+        if light_ids:
+            dom = max(light_ids,
+                      key=lambda li: int((under == li).sum()))
+            color = tuple(int(v) for v in centers[dom])
+        else:
+            med_rgb = np.median(src_img[m].reshape(-1, 3), axis=0)
+            dom = int(np.argmin(((centers.astype(np.float64) - med_rgb) ** 2
+                                 ).sum(1)))
+            color = tuple(int(v) for v in centers[dom])
+        # flux width: integrated tophat excess / (contrast * length) gives the
+        # sub-pixel effective ink width; the thresholded mask itself is fat
+        # with antialias skirt (median mask width read 4px on a ~1.5px line).
+        excess = np.clip(gray - opened, 0, None)[m].sum()
+        contrast = max(line_lum - float(np.median(opened[m])), 1.0)
+        width = float(np.clip(excess / (contrast * skel_px), 1.0, 3.0))
+        capsules.append({"d": d, "width": width, "color": color,
+                         "kind": "stroke"})
+    return (patched if patched is not None else labels), capsules
+
+
 # ------------------------------------------------------------------ emission
 
 def _stroke_elements(strokes: List[dict]) -> str:
@@ -914,6 +1162,11 @@ def contour_svg(labels: np.ndarray, centers: np.ndarray,
 
     strokes, stroke_mask, info = extract_contour_strokes(labels, centers, **kw)
     new_labels = absorb_mask(labels, stroke_mask)
+    capsules: List[dict] = []
+    src_img = kw.get("src_img")
+    if src_img is not None:
+        new_labels, capsules = _light_line_capsules(new_labels, centers,
+                                                    src_img)
     edges, _ = boundary.build_edges(new_labels)
     loops = boundary.region_loops(edges, len(centers))
     svg = boundary.loops_to_svg_curves(new_labels, centers, edges, loops,
@@ -921,10 +1174,14 @@ def contour_svg(labels: np.ndarray, centers: np.ndarray,
                                        corner_deg=fill_corner_deg,
                                        smooth_win=fill_smooth,
                                        parsimony=fill_parsimony)
+    if capsules:                     # light accents under the dark line art
+        svg = svg.replace("\n</svg>",
+                          "\n" + _stroke_elements(capsules) + "\n</svg>")
     if strokes:
         svg = svg.replace("\n</svg>",
                           "\n" + _stroke_elements(strokes) + "\n</svg>")
     info["strokes"] = len(strokes)
+    info["light_capsules"] = len(capsules)
     return svg, info
 
 
