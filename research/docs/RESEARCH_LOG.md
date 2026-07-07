@@ -26,6 +26,34 @@ results → `research/autoresearch.jsonl`; running narrative →
 
 ---
 
+## 2026-07-08 · Run 17 (research, orchestrator-side) — render nondeterminism ROOT-CAUSED: skimage `medial_axis`, not k-means
+
+Measured while iteration-17 candidates A-apexsnap/B-arcsupport were in flight
+(no engine files touched — their scope). The standing "k-means
+nondeterminism" explanation was WRONG:
+
+- **k-means is innocent.** `_quantize` calls `cv2.setRNGSeed(seed)` per call;
+  two full label-cleanup chains hash BYTE-IDENTICAL in-process
+  (quantize `1116d670`, cleaned `ee3b0a20`, both runs).
+- **`contour_svg` on identical inputs still diverges**, and the unified diff
+  isolates it to the light-capsule stroke paths (fitted coordinates change).
+  `svgcore.fit_open` is stable on fixed input (5/5 identical) — the
+  centerline POINTS differ before fitting.
+- **Root cause: `skimage.morphology.medial_axis(rng=None)`** (skimage 0.22)
+  permutes the tie-pixel processing order with an unseeded RNG and consumes
+  global numpy state. Demonstrated: same tie-rich mask, two consecutive calls
+  → different skeletons; `rng=0` → stable in-process AND cross-process.
+- This explains, in one mechanism: the chopchop wheel white-arc run-to-run
+  variance, dark-stroke counts wobbling 195–200 (chopchop) / 64–68 (rabbit),
+  the run-15 mountain crevasse shuffle, and the ~8k px render self-diff floor.
+
+**Fix queued (one atomic commit at it17 integration):** pass a fixed `rng=` at
+all 6 `medial_axis` call sites — contours_exp.py:353/441/1122/1153,
+strokes.py:99/123. Outputs will shift ONCE (different tie-picks freeze), so
+every touched target gets a fresh eye pass per the verify-by-looking rule —
+never assume "same code, cosmetic seed" is a no-op. Probe scripts in the
+session scratchpad; findings reproducible from this entry alone.
+
 ## 2026-07-08 · Run 16 (iteration 16) — 1 candidate, SHIPS (A-sliver, commit 9242186); first full §8/§9 protocol iteration
 
 First iteration run end-to-end under the 9-section protocol: candidate wrote

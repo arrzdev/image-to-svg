@@ -340,3 +340,17 @@ See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
 - Next: iteration 17 from BACKLOG (capsule apex nub / mouth-corner hook /
   donor stump / heart top-left lobe arc-aware support / wheel-arc
   nondeterminism pinning).
+
+### Run 17: nondeterminism root cause — medial_axis rng, not k-means (RESEARCH)
+- Timestamp: 2026-07-08 04:30
+- What changed: nothing (measurement only, while it17 A/B agents in flight).
+- Result: k-means exonerated (seeded; label chains hash byte-identical);
+  divergence isolated to capsule stroke paths; svgcore.fit_open stable;
+  root cause = skimage medial_axis(rng=None) permutes tie-pixel order +
+  consumes global RNG. rng=0 pins it in-process and cross-process.
+- Insight: one mechanism explains the wheel-arc variance, 195-200/64-68
+  stroke-count wobble, mountain crevasse shuffle, and the ~8k px diffpx
+  floor. The "k-means nondeterminism" folklore in earlier entries was wrong.
+- Next: one atomic rng-pin commit at it17 integration (6 call sites:
+  contours_exp 353/441/1122/1153, strokes 99/123) + fresh eye pass on all
+  touched targets (tie-picks shift once, then freeze).

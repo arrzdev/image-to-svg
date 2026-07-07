@@ -146,10 +146,15 @@ at the affected spots.
   the donor fill keeps a rounded stump at the capsule take-off point —
   fill-side sharpening (carve the stump along the capsule axis) would finish
   the hand-off.
-- [ ] **Chopchop wheel white-arc nondeterminism** (run-16 observation): the
-  wheel's white arc varies run-to-run with identical code+labels; dark-stroke
-  extraction counts wobble 195–200 (chopchop) / 64–68 (rabbit). Same family
-  as the k-means pinning item below — pin before it muddies a future eye-diff.
+- [~] **Render nondeterminism — ROOT-CAUSED run 17 (research), fix queued**:
+  NOT k-means (seeded; label chains hash byte-identical). It is
+  `skimage.morphology.medial_axis(rng=None)` permuting tie-pixel order and
+  consuming global RNG → capsule centerlines + dark-stroke skeletons wobble
+  (wheel white-arc, counts 195–200/64–68, mountain crevasse shuffle, ~8k px
+  diffpx floor). Fix = fixed `rng=` at 6 call sites (contours_exp.py
+  353/441/1122/1153, strokes.py 99/123), ONE atomic commit at it17
+  integration + fresh eye pass on all touched targets (tie-picks shift once,
+  then freeze).
 - [ ] **Strap-end curl loopier than reference** (run-14 B lead): the chair
   crossing's strap end traces a loop where original/Recraft draw a tight
   hook — free-end shaping, not pooling. Look at run-4 ridge-extension tails.
@@ -182,10 +187,11 @@ at the affected spots.
   keeps it. Hairline light-on-dark detail lost at quantize/despeckle — likely
   the same family as light-accent preservation (darker-only guard shows the
   principle; this one is sub-despeckle-floor).
-- [ ] **Pin k-means determinism** (run-12 methodology finding): renders vary
-  ~8k px run-to-run (cv2 k-means not seed-stable across processes), so diffpx
-  spot-finding has a noise floor. Not a quality bug — but pinning it (fixed
-  thread count / deterministic init) would make ablations cleaner.
+- [x] **Pin k-means determinism** — CLOSED by run-17 research: the run-12
+  attribution was WRONG; k-means is seeded and stable (label chains hash
+  byte-identical across processes). The real source is medial_axis tie-order
+  (see the root-cause item above). Kept as a record so "k-means
+  nondeterminism" folklore doesn't resurface in future entries.
 
 ## Judge upgrades
 
