@@ -104,6 +104,12 @@ at the affected spots.
   the solid-black straw bar (and friends) were tanking the composite; fixing
   them took it to 0.673. Still trails other targets; eye remains the gate.
 
+- [ ] **Rabbit coat buttons lost** (run-18 pin eye pass, pre-existing):
+  the two coat-button circles render as a thin vertical line + small hook
+  in ours (~(358,676)@1024); original AND Recraft draw circles. Small
+  closed light-ringed circles on white ground — likely eaten at despeckle
+  or absorbed into the seam stroke. Eye-loud on a gold-pair target.
+
 ## Chopchop residuals (post-v5)
 
 - [x] **Brown flecks** — SHIPPED run 12 (4c616ce): adjacency fleck absorption

@@ -412,3 +412,19 @@ See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
 - Agent leads: fill-fitter tip-curl family (swoosh hooks?); confirms
   in-process wobble beyond k-means (= our medial_axis finding); Recraft's
   sharp-Lambda apex needs corner-aware capsule fit (run-10 style).
+
+### Run 18: determinism pin — medial_axis rng=0 (KEEP, infra) — commit da5d4b6
+- Timestamp: 2026-07-08 03:05
+- What changed: rng=0 at all 6 medial_axis call sites (contours_exp
+  353/441/1122/1153, strokes 99/123) = integration step 1 of it17,
+  done orchestrator-side while B-arcsupport ran.
+- Result: monster render byte-identical across runs AND processes
+  (probe d68bde3c39; was 4/4 different). Eye pass on the one-time tie-pick
+  shift: 5 targets all lateral (orch17_pin_*.png), no welds/losses.
+  Sanity flat: monster 0.9595, elephant 0.853.
+- Insight: eye-diffs and diffpx spot-finding are now noise-free — future
+  broaden sweeps can trust "byte-identical = skip" far more often.
+- Incidental lead: rabbit coat BUTTONS render as thin line + hook in both
+  new and prev (original + Recraft show two circles), ~(358,676)@1024 —
+  pre-existing, filed to BACKLOG.
+- Next: A-apexsnap integration onto pinned main once B-arcsupport reports.
