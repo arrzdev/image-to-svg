@@ -60,7 +60,7 @@ at the affected spots.
 
 ## Shape & palette idealization (run-6 diagnosis, 2026-07-08)
 
-- [ ] **Serration/notch shape idealization** (chopchop) — DESIGN READY (run-7
+- [x] **Serration/notch shape idealization** — SHIPPED run 10 (50c0a03) (run-7
   research): heavy outlines are the FILL layer; Recraft-style fix = centerline
   network with CORNERS AS HARD NODES + constant width + `stroke-linejoin:
   miter` (miterlimit 6-10) so every V-notch re-sharpens geometrically (the

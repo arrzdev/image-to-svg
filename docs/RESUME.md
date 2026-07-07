@@ -10,10 +10,11 @@ git `5eb37ad`). **Current focus target:** rabbit (`./autoresearch.focus`).
 **Best-so-far:** line network near-continuous — same-component joins flush,
 cross-component gaps bridged, lost ink re-traced from the source raster;
 8/8 by eye. Sanity: rabbit 0.7272, elephant 0.8599 (composite noisy; eye rules).
-**Next step:** serration corner-nodes + miter-join experiment (design in
-BACKLOG from run-7 research) — the last big open defect class. Shadow-tone
-merging SHIPPED (run 9: elephant shadow = Recraft's tone, hue-opposition
-guard). **In-flight:** loop LIVE (run 10 next).
+**Next step:** the original defect list is CLEARED (junctions runs 2–4,
+curvature measured-resolved run 5, palette run 9, serrations run 10). Open:
+chopchop brown-fleck fragments + junction blobs, remaining rabbit long-gap
+breaks, then broaden/polish or speed. Consider a models/v5 snapshot — the
+run 2–10 arc is a structural step. **In-flight:** loop LIVE (run 11 next).
 
 ## Loop operating model (autoresearch plugin)
 

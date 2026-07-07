@@ -178,7 +178,7 @@ Narrative that survives compaction/clear. On resume: read `autoresearch.md`
   toward Recraft — the metric penalizes idealization, spec §4). quality 0.8562.
 - Remaining big item: serration corner-nodes + miter joins (design in BACKLOG).
 
-### Run 10 (in progress): serration corner-nodes + miter joins (run-7 design)
+### Run 10: serration corner-nodes + miter joins — KEEP (commit 50c0a03)
 - Change: outline-BAND exemption in the shape gate + corner-preserving
   smoothing (_corner_indices on RAW chain + _smooth_open_corners) + constant
   width + stroke-linejoin:miter (miterlimit 8) for band strokes.
@@ -192,8 +192,13 @@ Narrative that survives compaction/clear. On resume: read `autoresearch.md`
 - Chopchop eye verdict (before debug 3, unaffected by it): serration Vs
   visibly SHARPER + uniform weight, clear step toward Recraft. Excess-ink
   metric flat all along — it cannot see sharpness; eye rules.
-- Pending: fox re-verify after med_w gate (flicks should revert to fills =
-  prev behavior), then rabbit/crystals/mountain sweeps, sanity, ship/discard.
+- Final eye sweep: chopchop serration Vs SHARPER + uniform (main win);
+  elephant tail-fork/toe joins crisper (bands fire via pipeline path — merged
+  labels shift component stats); rabbit ear lines normalized from fat fills to
+  drawn weight; fox flicks reverted to fills (med_w gate ✓); crystals/mountain
+  small+safe; logo/monster identical. 8/8 → SHIP.
+- Sanity: elephant 0.8574 (flat vs 0.8562), points 2601. Chopchop metric
+  still meaningless (0.144) — eye only, as established run 6.
 
 ## Key Insights
 - The metric is a sanity check, not the gate. A change can raise `quality` by
