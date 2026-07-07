@@ -9,13 +9,12 @@ Mission (canonical): **docs/PROJECT_SPEC.md** · Handoff: **docs/RESUME.md** · 
 - GOAL: an *idealized* vector reconstruction (clean confident lines, solid flat
   regions, source noise removed) that **beats OUR LAST VERSION by EYE**, Recraft
   (`data/targets/`) in frame as the north-star. NOT pixel fidelity.
-- CURRENT VERSION: **v4 + run-2 junction fix** (git `c0adad6`).
+- CURRENT VERSION: **v4 + runs 2–4** (git `5eb37ad`).
 - CURRENT FOCUS TARGET: **rabbit** (source of truth: `./autoresearch.focus`).
-- BEST-SO-FAR (run 2): flush same-component junctions on 8/8 by eye;
-  elephant sanity quality 0.8669.
-- OPEN DEFECTS (ranked): cross-component junction gaps (rabbit ear) →
-  curvature drift → residual join seams → palette idealization.
-  Detail: docs/BACKLOG.md + RESUME.md.
+- BEST-SO-FAR (run 4): line network near-continuous (junction anchoring +
+  cross-component bridging + source-ink extension), 8/8 by eye.
+- OPEN DEFECTS (ranked): true source gaps (light-pixel jump) → curvature
+  drift → junction ink pooling → palette idealization. See docs/BACKLOG.md.
 
 ## The metric is NOT the arbiter here (the key adaptation)
 The stock autoresearch loop treats a bare number as the keep/discard gate. **This
@@ -170,5 +169,14 @@ and a meta-review of which *classes* of change win vs lose.
 - v3→v4: `contour_lines` (width-constant centerline strokes + parsimony-fitted
   flat shading) reached Recraft's tier on the elephant by eye. Resolved the
   three original defects (wobble, width thinning, shadows-over-lines).
-- Known-open (v4): perpendicular-crossing gaps, curvature drift, rectangular
-  join nubs, palette idealization. These are the next experiments.
+- Run 2 (c0adad6): junction ends anchor to nearest other-branch centerline
+  (0.8w) — T-nubs/Y-pinches fixed. Lesson: 1.5w radius snapped parallel
+  neighbors (chopchop) — keep snap radii under ~0.8w near dense lines.
+- Run 3 (2570c63): free ends bridge across label components (1.2w, fwd<60°,
+  midpoint end-to-end) — rabbit dash-gaps closed. Lesson: direction gate is
+  what keeps parallel lines safe, not the radius alone.
+- Run 4 (5eb37ad): still-free ends walk the source-ink ridge (≤4w). Lesson:
+  UNGUARDED walkers roam dark fills (curls on chopchop) — the perpendicular
+  ridge test + ~120° cumulative turn cap are mandatory for any ink tracer.
+- Metric lesson: composite `quality` swings ±1% on tiny geometry changes with
+  flat ssim/ms-ssim — never steer by it; sub-metrics + eye only.

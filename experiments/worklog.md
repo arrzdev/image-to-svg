@@ -74,6 +74,30 @@ Narrative that survives compaction/clear. On resume: read `autoresearch.md`
   left outline — needs source-ink-continuity extension (walk the darkness
   ridge in the ORIGINAL image beyond the label map), a separate experiment.
 
+### Run 4: source-ink ridge extension — rabbit 0.7272 / elephant 0.8599 (KEEP, by EYE)
+- Timestamp: 2026-07-07 night · commit 5eb37ad (parent run 3) · focus rabbit
+- Change (one atomic): still-free ends walk the SOURCE raster's dark ridge
+  (probe fan, < dark_lum) up to 4w; snap to another stroke if reached, else
+  keep the traced tail (taper at true ink end).
+- Debug 2: unguarded walker ROAMED DARK FILLS on chopchop (curled hooks on the
+  arm line, junction blobs) → added (a) perpendicular ridge test: light ground
+  within ~1.1w on BOTH sides at every step — a line, not a blob; (b) ~120°
+  cumulative turn cap — real lines curve, blob-boundary curls don't ship.
+  Guards fixed chopchop AND kept every rabbit/elephant win.
+- Eye verdict: rabbit heart arcs + coat edge now near-continuous, sleeve
+  junction + carrot vein joined; elephant lost ear line COMPLETES; chopchop's
+  long-detached handle outline finally attached (pre-existing defect fixed);
+  fox/crystals equal-plus; mountain 467 diff px; logo/monster identical.
+  8/8 no regression → SHIP.
+- Sanity: rabbit 0.713→0.7272 (+2%). Elephant composite 0.8708→0.8599 (−1.25%)
+  FLAG: sub-metrics flat (ssim −0.0015, msssim −0.0009) — dip is in the
+  composite's coherence/local terms, eye clearly better; composite `quality`
+  is noisy at the ±1% level; keep watching the trend, don't chase it.
+- Next candidates: (a) remaining rabbit heart tip/top-left gaps (ends whose
+  ink truly breaks in source — needs gap-jump across LIGHT pixels when both
+  sides' tangents agree, riskier); (b) curvature drift (BACKLOG #2);
+  (c) chopchop toe-blob / junction ink pooling cleanup.
+
 ## Key Insights
 - The metric is a sanity check, not the gate. A change can raise `quality` by
   copying noise and still LOOK worse — always render `tb.crops` and decide by eye.

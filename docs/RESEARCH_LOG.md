@@ -9,6 +9,33 @@ and a running narrative to `experiments/worklog.md`.
 
 ---
 
+## 2026-07-07 · Run 4 — source-ink ridge extension (commit 5eb37ad)
+
+**What changed:** bridging (run 3) spans gaps ≤1.2w; longer ink runs lost by
+despeckle/label-smoothing still broke lines (rabbit heart, elephant ear). A
+still-free end now walks the SOURCE raster's dark ridge (probe fan, darkest
+sub-`dark_lum` pixel per step, ≤4 widths), snapping to another stroke if
+reached, else keeping the traced tail with a taper at the true ink end. Two
+guards proved essential (debug attempt 2): a **perpendicular ridge test**
+(light ground within ~1.1w on both sides each step — never roam filled
+regions) and a **~120° cumulative turn cap** (kills blob-boundary curls).
+
+**Eye verdict:** rabbit heart arcs + coat edge near-continuous, sleeve and
+carrot-vein joins closed; elephant's lost ear line completes to the silhouette;
+chopchop's long-detached handle outline finally attached (fixed a pre-existing
+defect); fox/crystals equal-plus; mountain/logo/monster unchanged. 8/8.
+
+**Benchmark (sanity):** rabbit 0.713 → 0.7272. Elephant composite 0.8708 →
+0.8599 with FLAT sub-metrics (ssim −0.0015) — dip sits in the composite's
+noisy coherence/local terms while the eye is clearly better; logged as a flag,
+not a gate. Unguarded version (roaming walker) was caught by eye on chopchop
+and never shipped — negative result kept.
+
+**Next:** true source gaps (light-pixel jumps where tangents agree) — riskier;
+curvature drift; chopchop junction ink pooling.
+
+---
+
 ## 2026-07-07 · Run 3 — bridge free ends across label components (commit 2570c63)
 
 **What changed:** the label map breaks a drawn line wherever a lighter region
