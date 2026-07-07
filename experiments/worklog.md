@@ -113,6 +113,27 @@ Narrative that survives compaction/clear. On resume: read `autoresearch.md`
 - Next: chopchop junction ink pooling / toe blobs (last visible join defect),
   or palette idealization (the declared last gap to Recraft on the elephant).
 
+### Run 6: chopchop serration heaviness — DISCARD, but the diagnosis is the win
+- Timestamp: 2026-07-08 · vs HEAD 2899af9 · focus chopchop
+- Palette pre-check (before any code): per-label MEDIANS == kmeans means
+  (≤3/255) — our tints are faithful to the source; Recraft *deliberately
+  re-grades* shadow tints (our 98bee3 → their A6B8D0, −13% saturation, cooler).
+  Matching that = a re-grading POLICY (taste), parked in BACKLOG, likely wants
+  user input.
+- Serration diagnosis (measured): chopchop excess ink = 17.7k px, of which
+  STROKES contribute only 271 — the heavy blobby outlines are the FILL layer:
+  96/144 dark components fail the shape gate (notch pooling makes them
+  width-varying) and render as faithful ink-pool fills.
+- Tried (one change, two coherent halves): swell cap 1.6×w + shape_p90 1.5→2.0
+  (69 components became strokes). Excess ink flat (17.7k→17.8k), eye = lateral:
+  the stroked serrations lay the same ink. Reverted.
+- Real gap vs Recraft: it REDRAWS serrated outlines as uniform-weight strokes
+  with SHARPENED V-notches — shape idealization of notch geometry, not a knob.
+  Queued in BACKLOG as a design item.
+- Harness quirk noted: chopchop sanity quality = 0.14 (vs elephant ~0.87) —
+  likely background/alpha handling in the metric for this PNG; treat chopchop
+  numbers as meaningless, eye only. (Harness is locked; not investigating now.)
+
 ## Key Insights
 - The metric is a sanity check, not the gate. A change can raise `quality` by
   copying noise and still LOOK worse — always render `tb.crops` and decide by eye.

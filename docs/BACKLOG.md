@@ -58,6 +58,22 @@ at the affected spots.
   quantizer exploits the reduced palette. Prior art: L0 tested — hurts clean
   flat art, helps noisy inputs (opt-in, idealize.py).
 
+## Shape & palette idealization (run-6 diagnosis, 2026-07-08)
+
+- [ ] **Serration/notch shape idealization** (chopchop): heavy leaf outlines
+  are the FILL layer (96/144 dark components shape-gated; strokes = 271 of
+  17.7k excess px). Recraft REDRAWS serrated outlines as uniform-weight
+  strokes with sharpened V-notches. Fix = idealize notch geometry (corner
+  sharpening / uniform outline re-stroke of serrated fills), not knobs —
+  negative result: swell cap 1.6w + shape_p90 2.0 is visually lateral.
+- [ ] **Palette re-grading policy** (elephant): our tints are source-faithful
+  (per-label median == kmeans mean ≤3/255); Recraft deliberately re-grades
+  shadows (98bee3 → A6B8D0: −13% sat, cooler, darker). Needs a taste policy
+  (e.g. chroma-normalized shadow ramp) — propose to user before building.
+- [ ] Harness quirk: chopchop sanity quality ≈ 0.14 (alpha/background
+  handling in metric?) — numbers meaningless for this target, eye only.
+  Investigate as a deliberate re-baseline step if it starts mattering.
+
 ## Judge upgrades
 
 - [ ] **Line-consistency metric component**: the tournament objective can't
