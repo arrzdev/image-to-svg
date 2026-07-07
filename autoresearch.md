@@ -9,10 +9,10 @@ Mission (canonical): **docs/PROJECT_SPEC.md** · Handoff: **docs/RESUME.md** · 
 - GOAL: an *idealized* vector reconstruction (clean confident lines, solid flat
   regions, source noise removed) that **beats OUR LAST VERSION by EYE**, Recraft
   (`data/targets/`) in frame as the north-star. NOT pixel fidelity.
-- CURRENT VERSION: **v5 `contour_lines`** (git `b409934`); focus **chopchop** (`./autoresearch.focus`).
-- BEST-SO-FAR: run 13 A+B — trunk noodles→fill daubs (wiggle gate) + guarded plank-speckle dissolve; fleck absorption (r12); v4 defects cleared (r2–10). 9 keeps / 4 discards.
+- CURRENT VERSION: **v5 `contour_lines`** (git `3d251ad`); focus **chopchop** (`./autoresearch.focus`).
+- BEST-SO-FAR: run 14 A+B — straw/light-accents un-flooded (despeckle guard) + junction pools clamped; r13 wiggle gate + speckle dissolve; v4 defects cleared. 10 keeps / 4 discards.
 - ⚠ ITERATIONS ARE WORKTREE-PARALLEL — if `autoresearch.iteration.json` phase≠idle, RESUME that in-flight iteration (see "Worktree-parallel iterations"); the SessionStart hook surfaces it.
-- OPEN: chopchop junction-blobs/S-wavy strokes/lattice flood, rabbit long-gap breaks, monster scratch-line → docs/BACKLOG.md.
+- OPEN: thin-light-region beading (fill emitter), chopchop S-wavy strokes/strap curl, rabbit long-gap breaks → docs/BACKLOG.md.
 
 ## The metric is NOT the arbiter here (the key adaptation)
 The stock autoresearch loop treats a bare number as the keep/discard gate. **This

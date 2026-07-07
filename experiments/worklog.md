@@ -262,3 +262,26 @@ See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
   scratch line lost by prev AND new (Recraft keeps it).
 - All 3 worktrees (A-noodles, B-speckle2, _integrate) removed; iteration.json
   -> idle.
+
+### Run 14: worktree-parallel iteration (A+B BOTH ship combined) — commit 3d251ad
+- Timestamp: 2026-07-08
+- Scout first: full-frame + zoom grids found the two dominant chopchop
+  residuals and a label probe pinned domains (quantize vs stroke) -> N=2.
+- A-strawguard (quantize_contours.py): light-accent guard in _despeckle_labels
+  (ring >=0.6 ink among SURVIVING neighbors + >=80 lum gap; excluding fellow
+  sub-floor fragments is what makes sandwiched stripes work). Straw striped
+  again; co-wins: crystals gem vein, monster scratch tapers, FOX EYE GLINT
+  restored, game-assets potion highlight. SHIPPED.
+- B-junctionpool (contours_exp.py): junction pools (<4x med_w, deg>=3 node)
+  stay in the stroke mask (no fill splat) + swell profile clamped within
+  2.5x w_body of junctions. Frond centers + chair crossings cross cleanly;
+  rabbit leaf-base pooling cleaned. SHIPPED.
+- Broaden: 13 grids eyed + 3 byte-identical skips; no regressions (mountain
+  lateral ticks match recraft's own; texture targets shuffle equally-rough).
+- Sanity: chopchop quality 0.144 -> 0.6732 (black straw bar was a major
+  driver of the metric quirk); elephant 0.8533 flat.
+- Leads: vectorizer beads 1-2px light regions (fill emitter, monster scratch
+  second half); strap-end curl loopier (free-end shaping); dissolve 0.6
+  ring-guard is what lets rescued stripes survive (don't lower it).
+- Process: a stale cwd created a nested worktree mid-integration; caught by
+  loud cp failure. Rule: absolute paths for all worktree ops.

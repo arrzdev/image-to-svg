@@ -85,9 +85,9 @@ at the affected spots.
   `_merge_shadow_tones` (C<0.08, |dL|<0.03, dE<0.06 + hue-opposition guard
   cos dh>0.3). Elephant shadow = Recraft's tone (a4b8d1 vs a6b8d0). Lesson:
   never merge across warm/cool even at low chroma (mountain snowband).
-- [ ] Harness quirk: chopchop sanity quality ≈ 0.14 (alpha/background
-  handling in metric?) — numbers meaningless for this target, eye only.
-  Investigate as a deliberate re-baseline step if it starts mattering.
+- [~] Harness quirk: chopchop sanity quality ≈ 0.14 — MOSTLY EXPLAINED run 14:
+  the solid-black straw bar (and friends) were tanking the composite; fixing
+  them took it to 0.673. Still trails other targets; eye remains the gate.
 
 ## Chopchop residuals (post-v5)
 
@@ -99,8 +99,27 @@ at the affected spots.
   `_wiggle_rate` alternating-turn-density gate >2.2 per branch + small-component
   gate + free-end trim; dropped ink carved to fill layer (soft daubs, Recraft's
   treatment). Measured separation: real lines ≤1.9, texture daubs 2.4–7.8.
-- [ ] **Junction blobs**: frond junctions still pool black (run11b grids);
-  untouched by union/fleck/wiggle experiments.
+- [x] **Junction blobs** — SHIPPED run 14 (3d251ad, candidate B): pools were
+  blob-split FILL splats + swollen ribbons. Fix: pool components <4.0×med_w
+  containing a deg≥3 skeleton node stay in the stroke mask; swell profile
+  clamped within 2.5×w_body of junction nodes. Discriminator measured: pools
+  ≤3.8×med_w, genuine glyph blobs 6–14×med_w.
+- [x] **Black-blob flood (straw) / light accents eaten by despeckle** —
+  SHIPPED run 14 (3d251ad, candidate A): `_despeckle_labels` light-accent
+  guard (ring ≥0.6 ink among SURVIVING neighbors — fellow sub-floor fragments
+  excluded, that's what makes sandwiched stripes work — + ≥80 lum gap).
+  Rescued: chopchop straw stripes, crystals gem vein, monster scratch
+  T-branches, fox eye glint, game-assets potion highlight. Also mostly
+  explains the chopchop metric quirk (0.144→0.673 after the fix).
+- [ ] **Thin light regions bead at vectorization** (run-14 A lead): monster's
+  vertical scratch survives the LABEL map end-to-end (~928px) but
+  `contour_svg` fragments the ~1–2px light region into a dotted bead-trail.
+  The light-hairline fix's second half lives in the fill emitter — probably
+  needs a minimum-width treatment (light counterpart of the stroke layer) or
+  merging beads into a capsule. Check chopchop straw stripes' edges too.
+- [ ] **Strap-end curl loopier than reference** (run-14 B lead): the chair
+  crossing's strap end traces a loop where original/Recraft draw a tight
+  hook — free-end shaping, not pooling. Look at run-4 ridge-extension tails.
 - [ ] **Residual S-wavy strokes under the wiggle gate** (run-13 A lead): a few
   wavy strokes sit at wiggle 1.5–2.2 on chopchop; lowering the cutoff welds
   real lines. Needs a SECOND signal (width variance along branch? contrast vs
@@ -120,10 +139,11 @@ at the affected spots.
   are exempt from dissolve by the ink-lock; some are genuine noise. Adjacent
   ones get stroke-layer fleck absorption (run 12); ISOLATED dark daubs still
   pass through untreated. Decide a principled rule.
-- [ ] **Black-blob lattice flood** (run-13 B-agent lead, never dispatched):
-  chopchop's big black blob regions may flood through the plank lattice —
-  B-agent proposed detecting lattice-crossing dark regions and splitting them
-  before stroke extraction. Re-scope from the grids before building.
+- [x] **Black-blob lattice flood** — RESOLVED by reframe, run 14: the visible
+  "flood" was the straw (despeckle eating its light stripes → one wide dark
+  region, candidate A) plus junction pooling (candidate B). No separate
+  lattice-splitting mechanism needed; don't build one without a NEW grid
+  showing a residual case.
 - [ ] **monster-flat-line drops a thin white scratch line** inside the dark
   shape (run-13 broadening observation): pre-existing in prev AND new; Recraft
   keeps it. Hairline light-on-dark detail lost at quantize/despeckle — likely

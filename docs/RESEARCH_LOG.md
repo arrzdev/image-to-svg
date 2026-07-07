@@ -23,6 +23,80 @@ idea queue. Machine-readable results → `autoresearch.jsonl`; running narrative
 
 ---
 
+## 2026-07-08 · Run 14 (iteration 14) — 2 candidates, BOTH ship combined (A+B, commit 3d251ad)
+
+Scout pass found the two dominant chopchop residuals and pinned domains before
+dispatch: the striped straw rendering as a SOLID BLACK BAR (label probe: the
+straw's pale stripe labels, lum 155/210, are sub-120px fragments absorbed by
+`_despeckle_labels` — which has no ink-lock — into the black outline, black
+963→1585px in the probe window), and junction ink pooling (frond centers,
+chair-frame/strap crossings). Quantize domain vs stroke domain → genuinely
+independent, N=2.
+
+**Candidate A-strawguard — VERIFIED, SHIPPED in combination.** Change
+(`quantize_contours.py`): light-accent guard in `_despeckle_labels`, two-pass.
+A sub-floor light component ≥10px is exempt from despeckle when its ring —
+**after excluding fellow sub-floor fragments** — is ≥0.6 ink and the component
+is ≥80 lum lighter than that ink. The fellow-fragment exclusion is the
+load-bearing insight (sub-agent's, from a failed first attempt): stripes
+sandwich each other, so a white fragment's ring is ~40% ink + ~40% blue
+fragments and no plain ring test fires; once both junk, `_reassign_pixels`
+hands the whole straw to the outline. A genuine light fleck sits ON a big
+surviving fill → still dissolves. Orchestrator re-verified: straw striped at
+rim AND bend. Broaden co-wins (each eye-confirmed): crystals pink gem Y-vein
+continuous again (prev broke it dark); monster scratch-line T-branches render
+as thin tapers near Recraft (prev: blunt wedges); **fox eye specular glint
+restored** (prev lost it entirely; Recraft keeps it) — initially flagged as a
+suspect new speck, resolved by locating all rescued-light clusters and zooming:
+the 301px cluster IS the glint. game-assets potion highlight splits into its
+true two-piece shape. Cost: chopchop SVG 219→254KB (+16%), points 12.9k→15.8k.
+
+**Candidate B-junctionpool — VERIFIED, SHIPPED in combination.** Diagnosis
+first (sub-agent): the "pooled blob" was TWO element types — the chair-crossing
+splat was a blob-split FILL polygon (pool EDT 2.85×med_w passes blob_factor,
+251px passes the keep gate → heart-shaped splat), the frond-center mass was
+swollen RIBBONS (the swell profile follows pooled junction EDT, fattening every
+converging branch). Measured discriminator: junction pools extend ≤~3.8×med_w
+and contain a deg≥3 skeleton node; genuine glyph blobs run 6–14×med_w. Change
+(`contours_exp.py`): (1) a kept blob component with extent <4.0×med_w
+containing a deg≥3 node stays in the stroke mask (17 fired on chopchop);
+(2) swell clamp — `swell &= junc_dist > 2.5*w_body` via per-chain-point
+distance to junction nodes. No snap radii touched (run-2 weld landmine);
+run-10 bands and run-13 wiggle gate untouched by construction. Orchestrator
+re-verified: frond center crosses cleanly, chair splat gone, serrations and
+coconut unregressed. Side effect logged: width calibration 5.83→6.08 (pool px
+now count as stroke ink), line weight visually unchanged; branch topology
+shifts (220→196 branches) with no visible harm. Broaden co-win: rabbit
+cabbage-leaf base black pooling cleaned.
+
+**Combined (orchestrator, `_integrate`, A then B, re-verified after each):**
+no interaction regression — A is fill-label domain, B is stroke domain.
+Full broaden: 13 rendered grids eye-checked + 3 byte-identical skips
+(logo-badge/geometric/wordmark); pizza-box/logo-lineart diffs are pure edge
+drift (invisible at zoom); mountain lateral (crevasse picks up small ticks —
+Recraft's own crevasse has similar nicks); game-assets-2/app-asset/files-pile
+lateral shuffles in already-rough texture regions; shield lateral-to-better
+(prev's over-wide purple rim crescent thinned). **Sanity: chopchop quality
+0.144 → 0.6732** — the black straw bar was a major driver of the "chopchop
+metric ≈ 0.14 known-meaningless" quirk (partially explained now); elephant
+0.8533/ssim 0.961 flat.
+
+**Leads (new):** strap-end curl at the chair crossing traced loopier than
+reference in ours (free-end shaping, not pooling); **vectorizer beads thin
+light regions** — monster's vertical scratch is in the label map end-to-end
+(923px pre-despeckle, 928 after all stages) but `contour_svg` fragments a
+~1-2px light region into a dotted bead-trail → the light-hairline fix's second
+half lives in the fill emitter, not quantize; A×dissolve interaction to
+remember: rescued blue stripes survive `_dissolve_speckle` only because white
+ring fraction 0.47 < its 0.6 ring-dominance guard — lowering that threshold
+would eat them; occasional off-color light-gray fleck where a rescued fragment
+quantizes grayish (chopchop plank end) — minor vs the black mass it replaces.
+Iteration hiccup logged: one integration command ran with a stale cwd inside
+the B worktree and created a NESTED worktree + rendered unmodified code —
+caught because the cp failed loudly; always absolute-path worktree ops.
+
+---
+
 ## 2026-07-08 · Run 13 (iteration 13) — 2 candidates, BOTH ship combined (A+B, commit b409934)
 
 Two independent candidates in worktrees off best `4c616ce`… (`e0a1c45` local
