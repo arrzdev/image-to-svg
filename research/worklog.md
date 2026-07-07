@@ -501,3 +501,17 @@ See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
   pinning-before-fit beats alphamax tuning.
 - Next: A-spikeguard verdict; combination should compound to full-height
   sharp teeth.
+
+### Run 22: A-spikeguard integrated — severed-tip rescue; A+B COMPOUND lands (KEEP) — commit ea329bd
+- Timestamp: 2026-07-08 04:00
+- What changed: despeckle rescues anchored, contrast-extremal (gap>=210)
+  severed spike tips and welds them via clean corridors. diag17 corrected:
+  the half-height kill was discrete tip-severing at quantize.
+- Result: corner tooth full height; COMPOUND with run-21 corner pinning
+  eye-verified: teeth tall AND sharp, approaching Recraft. 5/6 broaden
+  byte-identical; chopchop lattice reshuffles equal-quality, planks flat
+  (the 128-false-rescue naive-gap landmine was real and dodged). Sanity
+  monster 0.9587 / elephant 0.853 flat.
+- it18 complete: 2 dispatched, 2 shipped, compound verified; 6 wait-time
+  diagnoses banked. Next headline (it19): generalize A's rescue+weld to the
+  thin-boundary family (rabbit buttons/ring, heart crown, cream-on-ink).

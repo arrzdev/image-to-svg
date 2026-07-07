@@ -230,22 +230,13 @@ at the affected spots.
   components on monster: none fully missing (closed by eye at the 3
   lowest-presence spots, `diag17_scratch.png`). Remaining light-line defects
   are the mouth family (items below).
-- [ ] **Monster mouth teeth scalloped, should be sharp zigzag** (run-17
-  research, ~x430-560/y230-280 @1024, eye-loud on the FOCUS target): original
-  AND Recraft keep sharp triangular teeth; ours degrade in TWO stages
-  (stage strip `models/v5/outputs/diag17_teeth_stages2.png`, quantize itself
-  innocent):
-  1. `_despeckle_labels`/`_smooth_labels` erode the thin tooth spikes to
-     ~half height (spike tips are sub-thin features of a LARGE region's
-     boundary — the run-14 light-accent guard only protects whole
-     components, not boundary subparts);
-  2. the fill fitter rounds the surviving nubs into scallops (the run-10
-     corner-as-hard-node + miter cure never reached light-region
-     boundaries).
-  Two independent candidate domains (label-side spike guard vs fitter-side
-  corner preservation) — natural A/B pair for iteration 18. Top priority.
-  Full dispatch brief pre-staged at `research/it18/brief.md` (gitignored
-  disk state, like all it<N> dirs).
+- [x] **Monster mouth teeth scalloped** — SHIPPED runs 21+22 (it18 A+B
+  compound, c51d025 + ea329bd): B corner-pins fill fits (V-notches survive
+  as hard vertices; corpus-wide sharpness win), A rescues+welds severed
+  spike tips in despeckle (diag17 corrected: loss is DISCRETE tip-severing
+  at quantize, not gradual erosion; gap>=210 population-measured). Teeth
+  now tall AND sharp, approaching Recraft. Residual polish: mid-teeth sit
+  ~1px lower than Recraft (smooth-stage nibble); mouth-left plateau step.
 - [x] **Pin k-means determinism** — CLOSED by run-17 research: the run-12
   attribution was WRONG; k-means is seeded and stable (label chains hash
   byte-identical across processes). The real source is medial_axis tie-order

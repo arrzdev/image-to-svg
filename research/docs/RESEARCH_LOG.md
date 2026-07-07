@@ -26,6 +26,55 @@ results → `research/autoresearch.jsonl`; running narrative →
 
 ---
 
+## 2026-07-08 · Runs 21–22 (iteration 18 complete) — the TEETH iteration: A+B both ship, compound verified (c51d025 + ea329bd)
+
+Attacked run-17's staged diagnosis (label chain erodes monster's tooth
+spikes; fill fitter rounds the survivors) with a disjoint-scope A/B pair.
+Both shipped; the compound was eye-verified explicitly: **teeth are now tall
+AND sharp, approaching Recraft** — prev (B-only) was sharp-but-low, A-only
+tall-but-scalloped.
+
+**Run 21 — B-cornerfit SHIPPED (c51d025), fill emitter.**
+`_fill_edge_corners` detects corners on the RAW crack-lattice edge polyline
+(turn ≥80° over k=6 chords, NMS, two-scale localization ratio ≥0.7 to
+reject tight smooth arcs; measured: teeth 90–117°, eye-triangles 117–127°,
+smooth staircase floor ≤18° — ~60° margin) and the parsimony path splits
+edges at corners, fitting each piece with endpoints exact so V-notches
+survive as hard vertices. Verified from artifacts by orch-own renders,
+including diff-LOCATED broaden grids: teeth scallops → sharp Vs; eye lenses
+→ wedges; and a corpus-wide sharpness win — mountain pine tips, fox fur
+wisps, crystals facet joins, logo-badge blade points. Landmine controls
+smooth (rabbit heart/eye, elephant domes, mountain clouds). 2 targets
+byte-identical; integrated render byte-identical to the artifact (exact
+transplant). Lateral trades logged: mouth-left plateau step; two
+capsule/arm 90°-steps (same angle class as teeth — not threshold-separable).
+Lead: the mouth-corner swoosh square-step points at the capsule/fill SEAM.
+
+**Run 22 — A-spikeguard SHIPPED (ea329bd), label chain.** Its pixel-level
+diagnosis CORRECTED diag17: connected teeth lose only ~1px to smooth — the
+half-height kill is DISCRETE. A sharp spike's sub-pixel tip anti-aliases
+into midtones and quantization SEVERS it into a tiny same-label island
+(corner tooth: 8px island, 4px from parent) which despeckle junked. The
+guard rescues sub-floor light fragments iff anchored (survivor ≤5px),
+contrast-extremal (gap ≥210 — population-measured: true tips 218, AA-fringe
+falses ≤204; the brief's naive gap 60 fired 128 chopchop FALSE rescues —
+the run-13 landmine confirmed and dodged), and weldable via a 2px clean
+corridor that never overwrites survivors. Two refuted designs logged
+(exemption-without-weld → floating comma; naive nearest-pair weld →
+self-abort). Orch verification: corner tooth at (504,245) restored to full
+quantize height matching original+Recraft; weld sites artifact-free;
+chopchop planks flat, no daubs; 14 targets byte-identical (claim verified
+5/6 on the integrated build; chopchop = equal-quality lattice reshuffles).
+Sanity: monster 0.9587, elephant 0.853 flat; points 815→713 across it18.
+
+**Iteration write-off:** the label-chain thin-boundary-feature FAMILY
+(buttons/ring, heart-crown, cream-on-ink tips) now has a proven mechanism
+to extend (A's rescue+weld with per-family signals) — queued as the it19
+headline. Wait-time diagnoses this iteration: buttons/ring root-caused
+(label chain, not skeletonization), heart-crown staged, strap-curl
+attributed to stroke layer, width-metric methodology negative result,
+scribble-nondeterminism item closed, v5 examples refreshed.
+
 ## 2026-07-08 · Run 20 (iteration 17 complete) — B-arcsupport SHIPS (c61755e); it17 = research + pin + A + B, all four kept
 
 **Candidate B-arcsupport — VERIFIED, SHIPPED.** Its measurement REVISES the
