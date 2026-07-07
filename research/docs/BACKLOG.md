@@ -47,10 +47,11 @@ at the affected spots.
   run-17: LOCATED at (425,790)@1024, `diag17_nubs.png` row 1): the knot/ring
   junction renders as a tangled glyph with doubled bars; bar ends show flat
   butts. Pre-existing, not pooling (run-14 clamp) nor bridging.
-- [ ] **Chopchop interior-scribble nondeterminism** (run-15 observation):
-  same-code reruns redraw interior texture strokes differently (clusters up
-  to 1100px at 1024) — related to k-means pinning item; makes chopchop eye
-  comparisons noisy.
+- [x] **Chopchop interior-scribble nondeterminism** — CLOSED by run 18
+  (da5d4b6 rng-pin): verified directly post-pin, two chopchop renders are
+  BYTE-IDENTICAL (hash b4510fe016 twice). Chopchop eye comparisons are no
+  longer noisy; the run-15 "k-means" attribution was the medial_axis
+  tie-order all along (run-17 root cause).
 - [x] **Some curvatures differ from original** — RESOLVED as measured (run 5,
   2026-07-08): mean source-skeleton→render drift 0.04px, p95=0 at current HEAD;
   the v4-era report predates runs 2–4. Negative result: parsimony centerline

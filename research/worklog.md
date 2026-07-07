@@ -483,3 +483,7 @@ See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
   approach). A viable line-consistency metric needs junction-to-junction
   branch decomposition + separate light-line handling. Filed under Judge
   upgrades; no metric work shipped (harness stays locked).
+
+### it18 wait: chopchop scribble-nondeterminism item closed (verified)
+- Double render post-pin: byte-identical (b4510fe016 x2). Run-15 observation
+  was the medial_axis tie-order; BACKLOG item closed against run 18.
