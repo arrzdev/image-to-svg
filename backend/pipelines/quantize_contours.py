@@ -182,6 +182,12 @@ def _reassign_pixels(labels: np.ndarray, dis_mask: np.ndarray) -> np.ndarray:
     return out
 
 
+# Light-accent guard constants (straw-stripe fix, see _despeckle_labels):
+_ACCENT_INK_RING_FRAC = 0.6   # non-small ring must be this dominated by ink
+_ACCENT_INK_LUM_GAP = 80.0    # component must be this much lighter than the ink
+_ACCENT_MIN_PX = 10           # below this it's a stray fleck -- dissolve as usual
+
+
 def _despeckle_labels(labels: np.ndarray, min_component_px: int,
                       centers: np.ndarray = None) -> np.ndarray:
     """Dissolve connected components smaller than a floor, in every layer,
@@ -191,17 +197,67 @@ def _despeckle_labels(labels: np.ndarray, min_component_px: int,
     networks legitimately fragment into small pieces (eyes, brows, short line
     segments) — a uniform floor massacres them, which was the seed-lottery
     catastrophe's kill stage (forensics: despeckle erased the whole outline).
+
+    Light-accent guard (straw-stripe fix, mirrors _dissolve_speckle's rules):
+    a sub-floor LIGHT component that is INK-LOCKED — once fellow sub-floor
+    fragments are excluded, its ring is essentially all ink far darker than
+    itself — is a drawn accent (straw stripe, white scratch line), not noise:
+    nearest-pixel reassignment would paint it into the ink (striped straw →
+    solid black bar). Exempt it. The fellow-fragment exclusion matters
+    because stripes sandwich each other (white ring = ink + blue fragments;
+    neither alone looks ink-locked, and junking both hands the whole straw to
+    the outline). A genuine light fleck sits ON a big fill: its non-small
+    ring IS that fill, not ink, so it still dissolves — as do speck-scale
+    bits below _ACCENT_MIN_PX.
     """
-    junk = np.zeros(labels.shape, dtype=bool)
+    lum = dark = None
+    if centers is not None:
+        lum = np.array([_luminance(c) for c in centers])
+        dark = lum < DARK_LINE_LUM
+    kernel = np.ones((3, 3), np.uint8)
+    h, w = labels.shape
+    # pass 1: mark every sub-floor component (per-label floors)
+    small = np.zeros(labels.shape, dtype=bool)
     for ci in np.unique(labels):
         floor = min_component_px
-        if centers is not None and _luminance(centers[ci]) < DARK_LINE_LUM:
+        if dark is not None and dark[ci]:
             floor = max(6, min_component_px // 10)
         mask = (labels == ci).astype(np.uint8)
         ncomp, comp, stats, _ = cv2.connectedComponentsWithStats(mask, 8)
         for k in range(1, ncomp):
             if stats[k, cv2.CC_STAT_AREA] < floor:
-                junk |= comp == k
+                small |= comp == k
+    # pass 2: junk sub-floor components unless ink-locked light accents
+    junk = np.zeros(labels.shape, dtype=bool)
+    for ci in np.unique(labels):
+        floor = min_component_px
+        if dark is not None and dark[ci]:
+            floor = max(6, min_component_px // 10)
+        mask = (labels == ci).astype(np.uint8)
+        ncomp, comp, stats, _ = cv2.connectedComponentsWithStats(mask, 8)
+        for k in range(1, ncomp):
+            if stats[k, cv2.CC_STAT_AREA] >= floor:
+                continue
+            if (dark is not None and not dark[ci]
+                    and stats[k, cv2.CC_STAT_AREA] >= _ACCENT_MIN_PX):
+                x0 = max(0, stats[k, cv2.CC_STAT_LEFT] - 1)
+                y0 = max(0, stats[k, cv2.CC_STAT_TOP] - 1)
+                x1 = min(w, stats[k, cv2.CC_STAT_LEFT] + stats[k, cv2.CC_STAT_WIDTH] + 1)
+                y1 = min(h, stats[k, cv2.CC_STAT_TOP] + stats[k, cv2.CC_STAT_HEIGHT] + 1)
+                sub = comp[y0:y1, x0:x1] == k
+                ring = cv2.dilate(sub.astype(np.uint8), kernel).astype(bool) & ~sub
+                # judge only against SURVIVING neighbors: fellow sub-floor
+                # fragments are junk candidates themselves, not absorbers
+                ring &= ~small[y0:y1, x0:x1]
+                neigh = labels[y0:y1, x0:x1][ring]
+                if neigh.size:
+                    ink = dark[neigh]
+                    # ink-dominated survivor ring + big luminance drop =
+                    # drawn accent between ink edges: exempt from despeckle.
+                    if (ink.mean() >= _ACCENT_INK_RING_FRAC
+                            and lum[ci] >= lum[neigh[ink]].min() + _ACCENT_INK_LUM_GAP):
+                        continue
+            junk |= comp == k
     return _reassign_pixels(labels, junk)
 
 

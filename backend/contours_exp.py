@@ -404,6 +404,31 @@ def extract_contour_strokes(labels: np.ndarray, centers: np.ndarray,
                 sizes = np.bincount(bl.ravel())
                 keep = [b for b in range(1, nb + 1)
                         if sizes[b] > (1.5 * med_w) ** 2]
+                # junction-pool exemption: a SMALL wide zone sitting ON a
+                # skeleton junction (deg >= 3) is crossing-ink POOLING, not a
+                # drawn blob — cut to a fill it renders as a black splat where
+                # the reference keeps thin crossing lines. Keep it in the
+                # stroke mask instead: the crossing strokes overlap there at
+                # constant width (same color — the overlap is invisible).
+                # Measured separation on chopchop: pools extent <= ~3.8x
+                # med_w; genuine glyph blobs (trunk knots) >= 6x.
+                if keep:
+                    deg0 = ndimage.convolve(skel.astype(np.uint8),
+                                            np.ones((3, 3), np.uint8),
+                                            mode="constant") - 1
+                    deg0[~skel] = 0
+                    jn0 = skel & (deg0 >= 3)
+                    kept2 = []
+                    for b in keep:
+                        m = bl == b
+                        yx = np.argwhere(m)
+                        ext = int(max(yx[:, 0].ptp(), yx[:, 1].ptp())) + 1
+                        if ext < 4.0 * med_w and (m & jn0).any():
+                            info["junction_pools"] = (
+                                info.get("junction_pools", 0) + 1)
+                            continue
+                        kept2.append(b)
+                    keep = kept2
                 if keep:
                     blob_mask = np.isin(bl, keep)
                     info["blob_px"] += int(blob_mask.sum())
@@ -528,6 +553,20 @@ def extract_contour_strokes(labels: np.ndarray, centers: np.ndarray,
 
             info["components"] += 1
             deg = _branch_degrees(branches)
+            # distance-to-junction map for the swell clamp at emit time:
+            # junction ink pooling inflates the EDT right where branches
+            # meet, and the swell profile (sm_w > 1.3*w_body) would follow
+            # it — every converging branch fattens and the union renders as
+            # a black blob. Junction nodes come from the SAME skeleton the
+            # branches were traced on, so merged through-strokes see their
+            # mid-chain junctions too.
+            degj = ndimage.convolve(skel.astype(np.uint8),
+                                    np.ones((3, 3), np.uint8),
+                                    mode="constant") - 1
+            degj[~skel] = 0
+            jnm = skel & (degj >= 3)
+            jdist = (ndimage.distance_transform_edt(~jnm) if jnm.any()
+                     else None)
             # anchor target per node: the node-cluster centroid is elongated by
             # junction ink pooling, so it can sit OFF the through-line's
             # centerline — a side branch capped there pokes a nub through the
@@ -540,6 +579,9 @@ def extract_contour_strokes(labels: np.ndarray, centers: np.ndarray,
             for br in branches:
                 pix = np.asarray(br["pix"], float)
                 widths = dist[tuple(pix.astype(int).T)] * 2.0
+                junc_d = (jdist[tuple(pix.astype(int).T)]
+                          if jdist is not None
+                          else np.full(len(pix), 1e9))
                 w_med = float(np.median(widths))
                 for end, nid in ((0, br["a"]), (-1, br["b"])):
                     if not br["closed"] and nid and cent.get(nid) is not None:
@@ -567,7 +609,7 @@ def extract_contour_strokes(labels: np.ndarray, centers: np.ndarray,
                 pend.append({"pts": pts, "widths": widths, "w_med": w_med,
                              "closed": br["closed"], "color": color,
                              "head_free": head_free, "tail_free": tail_free,
-                             "band": is_band})
+                             "band": is_band, "junc_d": junc_d})
                 info["widths"].append(w_med)
                 info["wlens"].append(len(br["pix"]))
                 info["branches"] += 1
@@ -729,14 +771,17 @@ def extract_contour_strokes(labels: np.ndarray, centers: np.ndarray,
                 ext = np.asarray(trail)
                 wext = np.full(len(ext), pb["widths"][0 if side == "head"
                                                       else -1], float)
+                jext = np.full(len(ext), 1e9)   # open ink: no junction near
                 if side == "head":
                     pb["pts"] = np.vstack([ext[::-1], pts])
                     pb["widths"] = np.r_[wext, pb["widths"]]
+                    pb["junc_d"] = np.r_[jext, pb["junc_d"]]
                     if snapped is not None:
                         pb["head_free"] = False
                 else:
                     pb["pts"] = np.vstack([pts, ext])
                     pb["widths"] = np.r_[pb["widths"], wext]
+                    pb["junc_d"] = np.r_[pb["junc_d"], jext]
                     if snapped is not None:
                         pb["tail_free"] = False
                 info["ink_extended"] = info.get("ink_extended", 0) + 1
@@ -785,7 +830,14 @@ def extract_contour_strokes(labels: np.ndarray, centers: np.ndarray,
         varying = False
         if not pb["closed"]:
             swell = sm_w > 1.3 * w_body
-            if swell.any():
+            # junction-pool clamp: a swell within ~2.5 widths of a skeleton
+            # junction node is crossing-ink pooling, not a calligraphic
+            # joint — the drawn lines pass through at their own weight and
+            # simply overlap. Following the pooled EDT there fattens every
+            # converging branch into one black blob (palm-frond centers).
+            jd = pb.get("junc_d")
+            if jd is not None and len(jd) == len(swell):
+                swell &= np.asarray(jd, float) > 2.5 * w_body
                 prof[swell] = sm_w[swell]
                 varying = True
             if taper_ends:
