@@ -1408,6 +1408,122 @@ def _light_line_capsules(labels: np.ndarray, centers: np.ndarray,
 
 # ------------------------------------------------------------------ emission
 
+def _fill_edge_corners(pts: np.ndarray, k: int = 6,
+                       min_turn_deg: float = 80.0,
+                       loc_ratio: float = 0.7,
+                       closed: bool = False) -> List[int]:
+    """Sharp-corner indices on a RAW crack-lattice fill-edge polyline
+    (serration V-notches on region boundaries — monster teeth).
+
+    Same idea as _corner_indices (run 10, stroke bands) extended to the fill
+    fitter: turning angle between the incoming/outgoing chords of length k,
+    measured BEFORE any fitting — the parsimony fitter's polygon+merge passes
+    round exactly these small notches into scallops.
+
+    Two-scale LOCALIZATION test separates a true corner from a tight smooth
+    arc: at a corner the turning angle survives when the chord halves
+    (ratio ~0.8+); on an arc it halves with the chord (~0.5). Measured on
+    monster teeth: ang(k=6)=104-117 deg, ang(k=3)=90 -> ratio ~0.83; a
+    lattice circle of radius ~8px reads ang(k=6)~86 but ratio ~0.5. Smooth
+    big-radius boundaries sit at the staircase noise floor (<=27 deg @k=4).
+
+    closed=True treats pts as a loop (pts[0]==pts[-1]) with wraparound;
+    returned indices are into pts[:-1]."""
+    p = np.asarray(pts, float)
+    if closed:
+        p = p[:-1]
+    n = len(p)
+    if n < (2 * k + 3 if not closed else 3 * k):
+        return []
+
+    def turn(q, kk):
+        if closed:
+            ext = np.vstack([q[-kk:], q, q[:kk]])
+            v1 = ext[kk:kk + n] - ext[:n]
+            v2 = ext[2 * kk:2 * kk + n] - ext[kk:kk + n]
+        else:
+            v1 = q[kk:n - kk] - q[:n - 2 * kk]
+            v2 = q[2 * kk:] - q[kk:n - kk]
+        dot = (v1 * v2).sum(1) / (np.linalg.norm(v1, axis=1)
+                                  * np.linalg.norm(v2, axis=1) + 1e-9)
+        return np.degrees(np.arccos(np.clip(dot, -1, 1)))
+
+    k2 = max(2, k // 2)
+    a_k = turn(p, k)                     # index i -> pts[i(+k if open)]
+    a_k2 = turn(p, k2)
+    off = 0 if closed else k
+    off2 = 0 if closed else k2
+    idx: List[int] = []
+    order = np.argsort(a_k)[::-1]
+    taken = np.zeros(n, bool)
+    for i in order:
+        if a_k[i] < min_turn_deg:
+            break
+        j = i + off                      # index into p
+        j2 = j - off2                    # index into a_k2
+        if not closed and not (0 <= j2 < len(a_k2)):
+            continue
+        if a_k2[j2 % len(a_k2)] < loc_ratio * a_k[i]:
+            continue                     # distributed turning: smooth arc
+        lo, hi = j - k, j + k
+        if closed:
+            win = np.arange(lo, hi + 1) % n
+            if taken[win].any():
+                continue
+            taken[j] = True
+        else:
+            if taken[max(0, lo):hi + 1].any():
+                continue
+            taken[j] = True
+        idx.append(int(j))
+    return sorted(idx)
+
+
+def _fill_svg_corner_pinned(labels: np.ndarray, centers: np.ndarray,
+                            edges, loops_by_region,
+                            parsimony: float) -> str:
+    """Parsimony fill emission with serration corners pinned as fit
+    breakpoints (drop-in for boundary.loops_to_svg_curves, parsimony>0).
+
+    Each edge polyline is split at _fill_edge_corners; every piece is fitted
+    independently with svgcore.fit_open_parsimony (endpoints exact), so the
+    corner survives as a hard vertex the merge pass cannot round away. A
+    closed loop with corners is rotated to start at its first corner first,
+    so ALL its corners become pinned endpoints. Edges without corners fit
+    byte-identically to the un-pinned path."""
+    import svgcore
+    import boundary
+
+    fitted = {}
+    for i, e in enumerate(edges):
+        if boundary._is_border_edge(e):
+            fitted[i] = boundary._line_cubics(e["pts"])
+            continue
+        pts = np.asarray(e["pts"], float)
+        closed = bool(len(pts) > 1 and tuple(pts[0]) == tuple(pts[-1]))
+        corners = _fill_edge_corners(pts, closed=closed)
+        if closed and corners:
+            body = pts[:-1]
+            r0 = corners[0]
+            body = np.roll(body, -r0, axis=0)
+            pts = np.vstack([body, body[:1]])
+            corners = [c - r0 for c in corners]
+        cubics: List[Tuple[float, ...]] = []
+        bounds = [0] + [c for c in corners if 0 < c < len(pts) - 1] \
+            + [len(pts) - 1]
+        for a, b in zip(bounds[:-1], bounds[1:]):
+            seg = pts[a:b + 1]
+            if len(seg) < 2:
+                continue
+            flat = [float(v) for xy in seg for v in xy]
+            cs = svgcore.fit_open_parsimony(flat, 1.0, parsimony)
+            cubics += [tuple(cs[j:j + 8]) for j in range(0, len(cs), 8)]
+        fitted[i] = cubics
+    svg, _plan = boundary._emit_regions(labels, centers, loops_by_region,
+                                        fitted)
+    return svg
+
+
 def _stroke_elements(strokes: List[dict]) -> str:
     parts = []
     for st in strokes:
@@ -1445,11 +1561,17 @@ def contour_svg(labels: np.ndarray, centers: np.ndarray,
                                                     src_img)
     edges, _ = boundary.build_edges(new_labels)
     loops = boundary.region_loops(edges, len(centers))
-    svg = boundary.loops_to_svg_curves(new_labels, centers, edges, loops,
-                                       tol=fill_tol,
-                                       corner_deg=fill_corner_deg,
-                                       smooth_win=fill_smooth,
-                                       parsimony=fill_parsimony)
+    if fill_parsimony > 0:
+        # corner-pinned parsimony fills: serration V-notches (monster teeth)
+        # survive as hard vertices instead of rounding into scallops
+        svg = _fill_svg_corner_pinned(new_labels, centers, edges, loops,
+                                      parsimony=fill_parsimony)
+    else:
+        svg = boundary.loops_to_svg_curves(new_labels, centers, edges, loops,
+                                           tol=fill_tol,
+                                           corner_deg=fill_corner_deg,
+                                           smooth_win=fill_smooth,
+                                           parsimony=fill_parsimony)
     if capsules:                     # light accents under the dark line art
         svg = svg.replace("\n</svg>",
                           "\n" + _stroke_elements(capsules) + "\n</svg>")
