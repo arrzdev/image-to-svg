@@ -9,11 +9,13 @@ Mission (canonical): **docs/PROJECT_SPEC.md** · Handoff: **docs/RESUME.md** · 
 - GOAL: an *idealized* vector reconstruction (clean confident lines, solid flat
   regions, source noise removed) that **beats OUR LAST VERSION by EYE**, Recraft
   (`data/targets/`) in frame as the north-star. NOT pixel fidelity.
-- CURRENT VERSION: **v4 `contour_lines`** (git `d5fad37`).
-- CURRENT FOCUS TARGET: **elephant** (source of truth: `./autoresearch.focus`).
-- BEST-SO-FAR (run 1): contour_lines — quality 0.8682, ssim 0.9643, 2609 pts.
-- OPEN DEFECTS (ranked): perpendicular-crossing gaps → curvature drift →
-  rectangular join nubs → palette idealization. Detail: docs/BACKLOG.md + RESUME.md.
+- CURRENT VERSION: **v4 + run-2 junction fix** (git `c0adad6`).
+- CURRENT FOCUS TARGET: **rabbit** (source of truth: `./autoresearch.focus`).
+- BEST-SO-FAR (run 2): flush same-component junctions on 8/8 by eye;
+  elephant sanity quality 0.8669.
+- OPEN DEFECTS (ranked): cross-component junction gaps (rabbit ear) →
+  curvature drift → residual join seams → palette idealization.
+  Detail: docs/BACKLOG.md + RESUME.md.
 
 ## The metric is NOT the arbiter here (the key adaptation)
 The stock autoresearch loop treats a bare number as the keep/discard gate. **This

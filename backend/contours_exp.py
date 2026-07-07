@@ -343,6 +343,61 @@ def extract_contour_strokes(labels: np.ndarray, centers: np.ndarray,
     info["median_width"] = float(np.average(w, weights=l))
     info["spread"] = float((hi - lo) / max(gw, 0.5))
 
+    # ---- cross-component free-end bridging.  The label map breaks a drawn
+    # line wherever a lighter region crosses it (straps, highlights, AA fuzz):
+    # the pieces land in different components (or labels), no shared skeleton
+    # node exists, and every break renders as a dash-gap the run-2 anchoring
+    # can't reach.  Bridge them here: a FREE end that continues FORWARD
+    # (<60° off its outward tangent — never sideways onto a parallel
+    # neighbor) into another stroke within ~1.2 widths snaps onto it; two
+    # mutually-facing free ends meet at their midpoint.  Snapped ends stop
+    # being "free": no taper, no stub-drop (rescues tiny bridge dashes).
+    raw_ends = []            # (pend_idx, 'head'|'tail', end_pt, out_tangent)
+    for pi, pb in enumerate(pend):
+        if pb["closed"] or len(pb["pts"]) < 2:
+            continue
+        pts = pb["pts"]
+        k = min(6, len(pts) - 1)
+        if pb["head_free"]:
+            t = pts[0] - pts[k]
+            raw_ends.append((pi, "head", pts[0].copy(),
+                             t / (np.linalg.norm(t) + 1e-9)))
+        if pb["tail_free"]:
+            t = pts[-1] - pts[-1 - k]
+            raw_ends.append((pi, "tail", pts[-1].copy(),
+                             t / (np.linalg.norm(t) + 1e-9)))
+    snap_r = max(2.0, 1.2 * gw)
+    free_end_pts = {(pi, side): pt for pi, side, pt, _ in raw_ends}
+    for pi, side, end, tdir in raw_ends:
+        best = None
+        for pj, ob in enumerate(pend):
+            if pj == pi:
+                continue
+            d = np.linalg.norm(ob["pts"] - end, axis=1)
+            j = int(np.argmin(d))
+            if 1e-6 < d[j] < (best[0] if best else snap_r):
+                best = (float(d[j]), pj, ob["pts"][j].copy(), j, len(ob["pts"]))
+        if best is None:
+            continue
+        v = best[2] - end
+        cosang = float(np.dot(v, tdir)) / (np.linalg.norm(v) + 1e-9)
+        if cosang < 0.5:          # >60° off-tangent: parallel neighbor, skip
+            continue
+        target = best[2]
+        # mutually-facing free ends meet halfway (end-to-end dash bridge)
+        oj, olen = best[3], best[4]
+        oside = "head" if oj <= 1 else ("tail" if oj >= olen - 2 else None)
+        if oside is not None and (best[1], oside) in free_end_pts:
+            target = (end + free_end_pts[(best[1], oside)]) / 2.0
+        pb = pend[pi]
+        if side == "head":
+            pb["pts"][0] = target
+            pb["head_free"] = False
+        else:
+            pb["pts"][-1] = target
+            pb["tail_free"] = False
+        info["bridged_ends"] = info.get("bridged_ends", 0) + 1
+
     for pb in pend:
         base = gw if width_mode == "global" else pb["w_med"]
         w_body = max(base * width_scale, 0.75)
