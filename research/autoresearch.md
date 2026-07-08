@@ -359,3 +359,49 @@ and a meta-review of which *classes* of change win vs lose.
   touched target; the only no-render skip is a byte-identical SVG.
 - Render nondeterminism: same code → ~8k-px `diffpx` self-diff (cv2 k-means not
   seed-stable across processes). `diffpx` is a spot-finder, never a verdict.
+  CLOSED run 18 (da5d4b6): root cause was the `medial_axis` tie-order, not
+  k-means; an rng-pin made chopchop renders byte-identical. Pin determinism
+  BEFORE chasing a "noisy" eye-diff — the noise was our own tie-break.
+
+### Meta-review, runs 13–22 (iterations 13–18, all worktree-parallel)
+Which *classes* of change win vs lose, distilled to steer candidate picks:
+
+- **The label chain (`quantize_contours.py` despeckle/smooth) is the dominant
+  defect source, not the fitter.** Run after run, the visible damage traced to
+  despeckle/smooth eroding a THIN BOUNDARY SUBFEATURE of a large region before
+  the fitter ever sees it: monster light scratches beaded (r15), straw stripes
+  flooded (r14), monster teeth spikes severed (r22). The run-14 light-accent
+  guard protects whole COMPONENTS; the recurring miss is SUBPARTS of a big
+  region's boundary. **This is a family, and it has a proven cure shape:**
+  source-anchored rescue + contrast-extremal gate + clean weld corridor
+  (r15 capsules for light lines, r22 spike-tips for light spikes). it19-A
+  extends it to the DARK dual (buttons/heart). When a defect looks like "a
+  thin drawn detail went missing/lumpy," suspect the label chain FIRST and
+  reach for the rescue+weld shape.
+- **Corner geometry must be pinned BEFORE fitting, never tuned into alphamax**
+  (r10 stroke serrations, r21 fill V-notches). Detect corners on the raw
+  polyline (turn-angle over a k-chord + a two-scale localization test to
+  reject smooth arcs) and split the fit there. Tuning the fitter's smoothing
+  to "keep corners" always loses — the polygon step drops the vertex first.
+- **Disjoint-scope A/B pairs compound cleanly; same-function pairs don't.**
+  Every shipped combination (r13, r14, r21+r22) paired candidates on
+  genuinely separate code paths (label chain vs stroke net vs fill emitter).
+  The r21+r22 teeth win REQUIRED both halves (B sharpened surviving nubs, A
+  restored severed ones) — neither alone reached Recraft. Pick candidates by
+  code-path disjointness, and expect the real win to be the interaction.
+- **Population-measure every threshold with margin; the naive brief value is
+  usually a landmine.** r22's naive contrast gap 60 fired 128 FALSE rescues on
+  chopchop; the measured separation (true tips 218, falses ≤204) set gap 210.
+  Always measure the true-feature population against the false-fire population
+  before trusting a constant.
+- **Byte-identical + integrated-render-equals-artifact = verification transfers
+  exactly.** r21/r22 confirmed the candidate's artifact SVG was byte-identical
+  to the integrated-on-main render, so the artifact eye-verdict applied
+  verbatim — determinism turned "re-verify after integrate" into a hash check.
+  Worth reproducing: render the integrated build and compare to the artifact
+  before re-eyeballing everything.
+- **Negative results banked (don't retry blind):** parsimony centerline fit ≈
+  smooth+Schneider by eye at higher point cost (r5); palette re-grading refuted
+  by measurement — Recraft does NOT re-grade tints (r8); the run-4 ridge walker
+  never reached its 4w cap (dies 0–2.3w) so "raise the cap" is the wrong lever
+  (r15).
