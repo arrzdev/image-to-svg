@@ -369,14 +369,36 @@ def _tangents(pts: np.ndarray) -> np.ndarray:
     return t / np.maximum(n, 1e-9)
 
 
+def _cap_subpath(center: np.ndarray, n_unit: np.ndarray, t_unit: np.ndarray,
+                 r: float, n: int = 10) -> str:
+    """A closed 180° round-cap subpath (extra `M…L…Z` appended to a ribbon's
+    path 'd'). Runs from center + n_unit*r, through the OUTWARD bulge
+    center + t_unit*r, to center - n_unit*r — i.e. a semicircle whose chord is
+    exactly the ribbon's flat butt edge (the two nub corners) and whose bulge
+    sits just past the end. As its own subpath it leaves the body fit
+    byte-for-byte unchanged; the union with the body simply rounds the butt."""
+    th = np.linspace(0.0, np.pi, n)
+    p = (center[None, :]
+         + np.cos(th)[:, None] * n_unit[None, :] * r
+         + np.sin(th)[:, None] * t_unit[None, :] * r)
+    d = f" M {p[0, 0]:.2f} {p[0, 1]:.2f}"
+    for q in p[1:]:
+        d += f" L {q[0]:.2f} {q[1]:.2f}"
+    return d + " Z"
+
+
 def _ribbon(pts: np.ndarray, halfw: np.ndarray, tol: float,
             head_tip_r: Optional[float] = None,
             tail_tip_r: Optional[float] = None) -> str:
     """Variable-width ribbon fill: symmetric offsets of the SAME centerline
     (so width is smooth and symmetric by construction — no independent-side
     waver). Ends with tip_r set get a pointed apex extended by that leftover
-    medial radius (the true ink tip); ends without are cut flat (they sit
-    under other strokes at a junction)."""
+    medial radius (the true ink tip); ends without were cut flat — a
+    width-spanning straight butt that reads as a rectangular NUB where the
+    ribbon meets another element. Those flat butts now get a semicircular
+    ROUND CAP (radius = the end half-width), appended as a separate subpath so
+    the body fit is untouched, matching the stroke-linecap="round" of true
+    strokes."""
     import svgcore
 
     pts = _smooth_open(np.asarray(pts, float), 5)
@@ -394,7 +416,15 @@ def _ribbon(pts: np.ndarray, halfw: np.ndarray, tol: float,
     seq.append(left[:1])
     poly = np.vstack(seq)
     flat = [float(v) for p in poly for v in p]
-    return _cubics_to_d(svgcore.fit_open(flat, tol, 45.0), True)
+    d = _cubics_to_d(svgcore.fit_open(flat, tol, 45.0), True)
+    if not d:
+        return d
+    # round-cap the flat butts (tip_r None); bulge outward past the end
+    if tail_tip_r is None:
+        d += _cap_subpath(pts[-1], norm[-1], tang[-1], float(halfw[-1]))
+    if head_tip_r is None:
+        d += _cap_subpath(pts[0], -norm[0], -tang[0], float(halfw[0]))
+    return d
 
 
 # ---------------------------------------------------------- junction patches
