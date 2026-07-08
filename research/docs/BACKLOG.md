@@ -43,10 +43,19 @@ at the affected spots.
 - [ ] **Ridge walker: charge NET signed turn** (run-15 B lead): swapping the
   per-step |dTheta| for net curl would restore the walker's intended 4w range
   if it's ever needed again.
-- [ ] **Chopchop chair-lattice junction tangles** (run-15 observation;
+- [~] **Chopchop chair-lattice junction tangles** (run-15 observation;
   run-17: LOCATED at (425,790)@1024, `diag17_nubs.png` row 1): the knot/ring
   junction renders as a tangled glyph with doubled bars; bar ends show flat
-  butts. Pre-existing, not pooling (run-14 clamp) nor bridging.
+  butts. **it19-wait re-diagnosis (`diag19_lattice.png`, head19 e759194):
+  the "tangle" is NOT reproduced at (425,790) — the ring now renders as a
+  clean dark annulus and the lattice bars are clean vs Recraft.** The
+  original observation predates the run-14 pool clamp AND the run-18 rng-pin
+  (the "tangle" was likely the medial_axis tie-order nondeterminism, now
+  pinned). Residual is only the flat-butt bar ends — which is the SAME
+  defect as the "Rectangular nub artifacts" item below, currently owned by
+  it19 candidate B-ribboncap. DO NOT stage a separate lattice-tangle
+  candidate without a fresh diag showing a residual tangle; fold any
+  remaining flat-butt cases into the ribbon-cap work.
 - [x] **Chopchop interior-scribble nondeterminism** — CLOSED by run 18
   (da5d4b6 rng-pin): verified directly post-pin, two chopchop renders are
   BYTE-IDENTICAL (hash b4510fe016 twice). Chopchop eye comparisons are no
