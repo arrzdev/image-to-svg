@@ -5,6 +5,27 @@ Ranked by expected visual impact (per the vision-first goal — mission in
 top priorities.** This is the **single idea queue** — the autoresearch loop
 draws its next experiment from here.
 
+## ⚠⚠ USER EYE-VERDICT 2026-07-08 — TOP PRIORITY (see [[user-visual-priorities]] memory)
+The user reviewed v5 output directly. These outrank everything below. chopchop is
+THE benchmark ("get close to Recraft on chopchop = amazing"); compare our chopchop
+vs Recraft per zoomed grid square.
+- [ ] **Line OVER-ROUNDING / poor straight lines.** pizza-box straight edges waver;
+  rabbit heart pendant collapses toward a CIRCLE. The fitter rounds everything.
+  Likely the same fitter co-bottleneck A-darkguard exposed (it19). Candidate dirs:
+  the smooth/parsimony/Schneider fit path (contours_exp.py fill + strokes.py). Needs
+  a straightness/corner prior that PROTECTS long straight runs and sharp vertices.
+- [ ] **OVER-JOINING lines that shouldn't connect.** Our bridge/chord/extension
+  chain (runs 3,4,15,20) is too aggressive somewhere. User idea: **color-guarded
+  junction joining** — refuse a join when the colour breaks across it.
+- [ ] **Meaningful small details removed** — rabbit paw/hand finger lines vanish.
+  Distinguish drawn-intent detail from noise (despeckle/dissolve floor too blunt?).
+- [ ] **Colour matching should target the ORIGINAL, not Recraft.** Earlier models
+  matched colour better; now we copy Recraft's palette, sometimes wrong vs original.
+- [ ] **Palette reduction too aggressive/global.** User idea: merge LOCAL neighbourhood
+  colours smartly instead of a harsh global k reduction.
+- [ ] **User research ideas to test:** pre-sharpen raster before vectorize (cut
+  blur/AA squariness); tiled rasterization (grid of squares, vectorize each, merge).
+
 ## contour_lines stroke defects (USER report 2026-07-07 — TOP PRIORITY)
 
 Files: backend/contours_exp.py + backend/strokes.py. Judge by 4096 zoom crops

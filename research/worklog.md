@@ -515,3 +515,22 @@ See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
 - it18 complete: 2 dispatched, 2 shipped, compound verified; 6 wait-time
   diagnoses banked. Next headline (it19): generalize A's rescue+weld to the
   thin-boundary family (rabbit buttons/ring, heart crown, cream-on-ink).
+
+### Run 23: it19 — B-ribboncap ships, A-darkguard discarded — commit a8d728d
+- Timestamp: 2026-07-08 04:50
+- B-ribboncap (KEEP): round-cap ribbon/wedge polygon ends via separate cap
+  subpath; bodies byte-identical, only cap crescent added. chopchop 347 caps
+  (dark ribbon ends round to original+recraft), monster byte-identical,
+  rabbit 92 / fox 15 clean. END-CAP rounding, NOT line-body.
+- A-darkguard (DISCARD/hold): dark-subfeature rescue+weld in despeckle
+  (dual of it18-A). Regression-free (chopchop landmine clear, monster
+  byte-identical) but NO visible win — proved the contour_lines FITTER is a
+  co-bottleneck: the lower button's label map is a solid dark dot in BOTH
+  new and prev yet renders as a 'u' hook in both. Label-side half is ready
+  to compose once a fitter-side "small isolated dark region -> filled
+  dot/closed loop" fix exists. Do not ship dead code for no visible gain.
+- ⚠ USER STEER (mid-iteration): top defects are line OVER-ROUNDING
+  (heart->circle, pizza straight lines), OVER-JOINING, and loss of
+  MEANINGFUL small details (rabbit paw fingers). Color match should target
+  ORIGINAL not recraft. chopchop is THE benchmark. it20 re-orients to this;
+  see [[user-visual-priorities]] memory + BACKLOG top.
