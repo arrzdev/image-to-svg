@@ -20,12 +20,11 @@
    gate sends them to fills). Residual: verify remaining tangle scope at the
    crown/lattice before staging more junction work; worst tiles now
    (2,3),(1,3),(1,1) at rSSIM .873.
-2. **Straight-line waver residual** — run 25 fixed the label-chain share; run
-   28 added chord-straight L-emit (dev<=1.2px) and PROVED the remaining pizza
-   checker bow is IN THE CENTERLINE POLYLINE (medial axis of the wobbly
-   quantized band, >1.2px off-chord) — upstream of the fit. Culprit
-   CORRECTED: centerline regularization needed (straighten near-straight raw
-   skeleton runs pre-fit), not fit tuning. [it20 A-linefit, re-aimed]
+2. **Straight-line waver — MOSTLY CLOSED runs 25+28+29** (label-chain lock;
+   chord-straight stroke emit; fill straight-piece prior — pizza's grid was
+   100% FILL-layer, instrumented). Checker horizontals now ruler-straight.
+   Residual: junction-adjacent HOOKS on verticals (fill-edge corner zones)
+   — fold into A-linefit with #4. [surgical scope]
 3. ~~**PIZZA "ZZ" letterforms mangled**~~ — CLOSED run 27: letters (lum~76,
    spread 151) passed dark_lum<96 and were stroke-ified; the two-tier chroma
    gate (lum<60 OR spread<=45) keeps them as fills — ZZA now crisp, ~original.

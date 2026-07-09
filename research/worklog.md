@@ -608,3 +608,15 @@ See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
   NOT the fit. A-linefit brief updated: regularize/straighten the
   centerline polyline (or fit with line candidates at laxer tolerance);
   the fit call was the wrong lever.
+
+### Run 29: fill-fit straight-piece prior (KEEP) — pizza straights land
+- Timestamp: 2026-07-08 08:40
+- Instrumented first: pizza checker grid = 100% FILL-layer (0 open branches,
+  0 ribbons) — the run-21 parsimony fill fit was the bower, not strokes.
+  Fix: TLS-line pieces between pinned corners emit straight cubics.
+- Eye: checker horizontals RULER-STRAIGHT (user defect #1 visible progress);
+  all-8-target size drop (simpler geometry); mountain/monster/rabbit/fox/
+  elephant sweep — zero curve flattening. Residual: vertical hooks near
+  junctions (fill-edge corner region) + heart notch depth -> A-linefit scope
+  now surgical: junction-adjacent fill-edge behavior + concave cusp depth.
+- Run 30 = maxRuns boundary next; prepare segment report.
