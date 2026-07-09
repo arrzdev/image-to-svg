@@ -356,6 +356,17 @@ def _fit_polyline(pts: np.ndarray, tol: float, corner_deg: float,
                             [smooth_win:-smooth_win] for i in range(2)], 1)
         pts = np.vstack([pts, pts[:1]])
     else:
+        # Straight-run fit (run 28, GAP_LEDGER #2): a drawn ruler line arrives
+        # as a jittery staircase polyline; smooth+Schneider bows it (pizza
+        # checker grid). If the RAW branch never leaves its chord by >1.2px
+        # over >=30px, it IS a straight line — emit one segment, no bezier.
+        p0, p1 = pts[0], pts[-1]
+        chord = p1 - p0
+        clen = float(np.hypot(*chord))
+        if clen >= 30.0:
+            dev = np.abs(np.cross(chord / clen, pts - p0))
+            if float(dev.max()) <= 1.2:
+                return (f"M {p0[0]:.2f} {p0[1]:.2f} L {p1[0]:.2f} {p1[1]:.2f}")
         pts = _smooth_open(pts, smooth_win)
     flat = [float(v) for p in pts for v in p]
     return _cubics_to_d(svgcore.fit_open(flat, tol, corner_deg), closed)
