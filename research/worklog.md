@@ -1089,3 +1089,14 @@ See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
 - D = WIP handoff (worktree commit + REPORT requested; resume next session).
 - Loop OFF. Next session: D resume/re-dispatch -> it26 (E-stroke brief
   ready) -> E7. v12 cut decision next session (A+B+C = clearly structural).
+
+### D-shadowideal handoff landed (post-stop): plumbed + candidate-verified, integration-ready
+- Timestamp: 2026-07-10 (after run 63; no run logged — USER stop in effect)
+- D finished further than directed: _idealize_shadows plumbed (commit 407db19
+  in its worktree), candidate eye verdicts: app-asset WIN (7/7 moats gone,
+  bg flat = recraft), 6 landmines byte-identical (incl monster), rabbit
+  honest LATERAL (measured non-separability vs elephant's drawn control),
+  mountain 2px peak nub flagged. 3 refuted mechanisms banked. REPORT.md +
+  14-target artifacts in research/it25/candidates/D-shadowideal/.
+- NOT integrated (USER budget stop) — next session's first action per
+  iteration.json. D's worktree preserved.
