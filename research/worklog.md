@@ -908,3 +908,18 @@ See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
   stays open, likely A's "3-label blend" subclass.
 - Next: B's REPORT -> then integration (A first, then B), broaden 18,
   keep decision.
+
+### Run 52 (integrate): A applied + verified in integration worktree — mountain surprise WIN (DISCARD-by-convention until ship)
+- Timestamp: 2026-07-10 05:10
+- A's diff (141 insertions, quantize_contours.py + contour_lines.py wiring)
+  applied cleanly off 1173cf8. Verification: app-asset integrated render ==
+  A's artifact BYTES (r21-style verdict transfer) + integrity .988;
+  monster + crystals byte-identical to v10 baseline (landmine claims
+  CONFIRMED); mountain NOT byte-identical (A's report claim wrong there)
+  -> mandatory eye-check: WIN (peak stain fragments absorbed, ridge
+  boundary cleaner, hills unchanged; verifyINT_mountain_{peak,hills}.png),
+  integrity .488 -> 1.000. Ledger 0l: BOTH halves fixed by A.
+- Process note: "byte-identical" claims from candidates get re-checked on
+  the integrated build ALWAYS (this one was wrong in the lucky direction).
+- Holding ship one cycle for B's REPORT (hand fix verified run 51); then
+  apply B to the same worktree, re-eye, broaden all 18, keep/ship.
