@@ -1009,3 +1009,18 @@ See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
   Recraft re-draws it at full strength (amplify, like the teeth run 57).
 - Pattern echo: 0b joins runs 28/47 as "the plausible suspect was innocent"
   - three staged probes, three exonerations. Measure-first keeps winning.
+
+### Run 59 (measure): 0j paw probe — label chain exonerated again; E3 family points downstream (DISCARD-by-convention)
+- Timestamp: 2026-07-10 08:50
+- paw_probe.py: paw white interior (share .95) + ink outline (.96) both
+  survive the full chain. Combined with run 58 (0b stripe survives too):
+  the E3 boundary-destruction family is NOT a label-chain problem on these
+  two cases - it lives in stroke extraction/network merging or fill
+  emission. This REVISES audit24's E3 framing (was: "despeckle/dissolve
+  cannot tell drawn lines from noise" - true in it19-22 era, but the locks
+  shipped since then hold; the remaining destruction is geometric).
+- Caveat: bbox covers the paw core; the finger-vegetable contact zone needs
+  a render-diff-guided re-probe (it26 first step, with the 0b stroke strip).
+- it26 brief shape firming up: ONE stroke-network candidate covering 0b
+  absorption + 0j junction mangling + E5 teeth amplification (all
+  stroke/geometry-stage, all with measured acceptance).
