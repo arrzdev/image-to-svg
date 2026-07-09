@@ -13,12 +13,12 @@ Mission: **research/docs/PROJECT_SPEC.md** · Work: **research/docs/BACKLOG.md**
   Work the defect scoreboard `research/docs/GAP_LEDGER.md` — close items with
   before/after grids. chopchop is THE benchmark target. Idealized vector look
   (clean confident lines, flat regions, noise removed), NOT pixel fidelity.
-- CURRENT VERSION: **v5 `contour_lines`** (git `5ad6d14`); focus **chopchop** (`./research/autoresearch.focus`).
+- CURRENT VERSION: **v5 `contour_lines`** (git `8431d34`); focus **chopchop** (`./research/autoresearch.focus`). SEGMENT 0 COMPLETE (30/30) — re-arm to continue.
 - Numeric direction gauge: `research/tools/recraft_gap.py [target] --spots` (ours-vs-RECRAFT render rSSIM/rΔE + worst tiles → mandatory eye-spots). Spot-finder + per-keep secondary; NEVER the gate.
 - ⚠ CULPRIT PROTOCOL: every eye verdict that sees ours < recraft must PAUSE and name (a) the concrete defect, (b) the suspected pipeline stage (staged-diagnosis strips when unsure), (c) ledger/BACKLOG entry. See "How better is judged".
-- BEST-SO-FAR: run 25 — thin-dark-line lock (heart notch + paw fingers + pizza straights restored); atop it19 round caps, it18 teeth compound (tall+sharp), it17 determinism+bridging. 19 keeps.
+- BEST-SO-FAR: runs 25-29 inline series — thin-dark-line lock, two-tier chroma gate (ZZA letterforms + chopchop junction tangles CURED), fill straight-piece prior (pizza checkers ruler-straight). Ledger #1,#2,#3 closed/mostly. 23 keeps. Gauge: chopchop .871, elephant .981.
 - ⚠ ITERATIONS ARE WORKTREE-PARALLEL — if `research/autoresearch.iteration.json` phase≠idle, RESUME that in-flight iteration (see "Worktree-parallel iterations"); the SessionStart hook surfaces it.
-- OPEN: GAP_LEDGER items 1–7 (chopchop junction tangles = #1; fitter straightness/cusp depth [it20-A]; PIZZA "ZZ" letterforms; color-guarded joining [it21]; buttons-ring fitter dual; color-to-ORIGINAL [it20-B re-scoped]) → details in GAP_LEDGER.md + BACKLOG.md.
+- OPEN (next segment): junction-adjacent hooks + heart cusp depth (A-linefit surgical); color-guarded joining (#5); buttons-ring fitter dual (#6); color-to-ORIGINAL (#7, rabbit dE 4.16); crystals re-eye → GAP_LEDGER.md.
 
 ## The metric is NOT the arbiter here (the key adaptation)
 The stock autoresearch loop treats a bare number as the keep/discard gate. **This
