@@ -1522,6 +1522,25 @@ def _fill_svg_corner_pinned(labels: np.ndarray, centers: np.ndarray,
             seg = pts[a:b + 1]
             if len(seg) < 2:
                 continue
+            # Straight-piece prior (run 29, GAP_LEDGER #2): pizza's black grid
+            # is ALL fill-layer (zero stroke geometry); parsimony bows its
+            # ruler-straight boundaries. A piece whose TLS line explains it at
+            # RMS<=0.9px / max<=2.8px over >=20px IS straight — one cubic on
+            # the endpoint chord (degenerate line; keeps the cubic plumbing).
+            q0, q1 = seg[0], seg[-1]
+            plen = float(np.hypot(*(q1 - q0)))
+            if plen >= 20.0 and len(seg) >= 12:
+                c0 = seg.mean(0)
+                _, _, vt = np.linalg.svd(seg - c0, full_matrices=False)
+                resid = np.abs(np.cross(vt[0], seg - c0))
+                if (float(np.sqrt((resid ** 2).mean())) <= 0.9
+                        and float(resid.max()) <= 2.8):
+                    third = (q1 - q0) / 3.0
+                    p1c = q0 + third
+                    p2c = q0 + 2 * third
+                    cubics.append((q0[0], q0[1], p1c[0], p1c[1],
+                                   p2c[0], p2c[1], q1[0], q1[1]))
+                    continue
             flat = [float(v) for xy in seg for v in xy]
             cs = svgcore.fit_open_parsimony(flat, 1.0, parsimony)
             cubics += [tuple(cs[j:j + 8]) for j in range(0, len(cs), 8)]

@@ -356,10 +356,16 @@ def _fit_polyline(pts: np.ndarray, tol: float, corner_deg: float,
                             [smooth_win:-smooth_win] for i in range(2)], 1)
         pts = np.vstack([pts, pts[:1]])
     else:
-        # Straight-run fit (run 28, GAP_LEDGER #2): a drawn ruler line arrives
-        # as a jittery staircase polyline; smooth+Schneider bows it (pizza
-        # checker grid). If the RAW branch never leaves its chord by >1.2px
-        # over >=30px, it IS a straight line — emit one segment, no bezier.
+        # Straight-run fit (runs 28+29, GAP_LEDGER #2): a drawn ruler line
+        # arrives as a jittery/bowed staircase polyline; smooth+Schneider bows
+        # it further (pizza checker grid). Two tiers on the RAW branch:
+        #  - chord-straight (run 28): never leaves the endpoint chord by
+        #    >1.2px over >=30px -> one L segment.
+        #  - line-like (run 29): the centerline itself bows 1.2-2.8px off
+        #    chord (medial axis of a wobbly band) but a total-least-squares
+        #    line explains it at RMS<=0.9px -> straighten by emitting the
+        #    endpoint projections onto that TLS line. Genuine shallow arcs
+        #    (elephant brow ~8-15px dev) stay far outside both bands.
         p0, p1 = pts[0], pts[-1]
         chord = p1 - p0
         clen = float(np.hypot(*chord))
@@ -367,6 +373,15 @@ def _fit_polyline(pts: np.ndarray, tol: float, corner_deg: float,
             dev = np.abs(np.cross(chord / clen, pts - p0))
             if float(dev.max()) <= 1.2:
                 return (f"M {p0[0]:.2f} {p0[1]:.2f} L {p1[0]:.2f} {p1[1]:.2f}")
+            if float(dev.max()) <= 2.8 and len(pts) >= 40:
+                c = pts.mean(0)
+                u, s, vt = np.linalg.svd(pts - c, full_matrices=False)
+                axis = vt[0]
+                resid = np.abs(np.cross(axis, pts - c))
+                if float(np.sqrt((resid ** 2).mean())) <= 0.9:
+                    q0 = c + axis * float((p0 - c) @ axis)
+                    q1 = c + axis * float((p1 - c) @ axis)
+                    return (f"M {q0[0]:.2f} {q0[1]:.2f} L {q1[0]:.2f} {q1[1]:.2f}")
         pts = _smooth_open(pts, smooth_win)
     flat = [float(v) for p in pts for v in p]
     return _cubics_to_d(svgcore.fit_open(flat, tol, corner_deg), closed)
