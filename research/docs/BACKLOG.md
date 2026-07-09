@@ -337,3 +337,4 @@ at the affected spots.
   edges of sub-window-width regions past each other → self-intersecting
   lens + cracked seam. Fix: thickness-aware smoothing clamp or post-fit
   crossing check. (Parsimony fitting sidesteps it — no smoothing.)
+- VectorArk-style degradation regression suite: render data/targets/*.svg small+blurred+jpeg, run engine, diff output geometry vs the clean target SVG — automated idealization QA (paper notes idea #5, run 44).

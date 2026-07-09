@@ -788,3 +788,26 @@ See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
   Fragmentation to undo: 5-7 labels per shadow today.
 - Candidates A/B still in flight; A got a path correction (label chain is
   pipelines/quantize_contours.py).
+
+### Run 44 (research): paper digests landed + forwarded to in-flight candidates (KEEP, docs-only)
+- Timestamp: 2026-07-10 02:05
+- All 8 batch-1 papers extracted (agent read the PDFs): full digests in
+  research/docs/PAPER_NOTES.md with a ranked TRANSFERABLE IDEAS section
+  mapped to root causes E1-E8.
+- Direct hits on in-flight work, forwarded via SendMessage:
+  B-lineintent <- Potrace alphamax (a=4gamma/3, >=1.0 sharp corner; long
+  segments at slight angles = corners = drawing intent) + +-0.5px
+  straightness certificate + direction test + corner-exclusion-from-
+  smoothing (Depixelizing) + reminder that svgcore already has the potrace
+  parsimony port (check what feeds it before writing new fit code).
+  A-transown <- two-tier shading/contour edge classes (YUV merge vs contour
+  thresholds), T-junction rule (contour edges continue, shading edges
+  terminate), island/curve-continuation votes, decide-colors-last.
+- New idealization-QA idea banked (BACKLOG-worthy): VectorArk degradation
+  suite — render recraft targets small+blurred, run our engine, diff vs the
+  clean geometry = automated idealization regression our eye-only gate can't
+  scale to.
+- Correction: Layered Semantic Simplification = arXiv 2406.05404 (the
+  reference sheet's 2412.15673 is a trajectory paper; sheet is USER-verbatim,
+  correction recorded here + PAPER_NOTES only).
+- Batch-2 (judge/layering papers) agent was USER-cancelled; not relaunched.
