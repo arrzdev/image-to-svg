@@ -811,3 +811,19 @@ See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
   reference sheet's 2412.15673 is a trajectory paper; sheet is USER-verbatim,
   correction recorded here + PAPER_NOTES only).
 - Batch-2 (judge/layering papers) agent was USER-cancelled; not relaunched.
+
+### Run 45 (measure+PoC): 0h seam diagnosis — recraft is overlap-sealed; seal-stroke PoC works; NEW bug 0l isolated (DISCARD-by-convention)
+- Timestamp: 2026-07-10 02:30
+- structcheck census OURS (v10): coincident seams 30-87 px/kb on ALL 18;
+  true open gaps only app-asset (score .412) + mountain (.488).
+  RECRAFT: 7/10 overlap-sealed (seam=0 = "pro style"); monster via holes;
+  their chopchop scores .072 at deep zoom -> recraft tolerates deep-zoom
+  gaps on complex art; the bar is normal-zoom appearance.
+- PoC same-color 0.06%-width strokes: seam 84/78/83 -> 0.7/0/0.4; monster
+  right-eye gray smudge FIXED by eye (grids/seam_poc_monster.png, BASE vs
+  SEALED vs RECRAFT). Trade: thin white cutouts shrink ~w/2 -> ship fix =
+  underpaint dilation in paint order = E8 layered emission. 0h+E8 = ONE
+  it25 candidate.
+- NEW ledger 0l: app-asset/mountain open gaps = run-40 flatten boundary
+  mismatch (geometry-level; strokes don't fix). Pairs naturally with
+  A-transown's domain -> assess after A lands.

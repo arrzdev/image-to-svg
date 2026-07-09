@@ -44,6 +44,21 @@
    generally. Fix directions: slight overlap of lower layers under upper
    (paint-order-aware dilation of underpaint), or seam-covering boundary
    strokes. Needs a dedicated diagnosis pass on the emission layer. [it24]
+   **DIAGNOSED run 45:** structcheck census — ours has coincident seams on
+   ALL 18 targets (30-87 px/kboundary); RECRAFT is overlap-sealed on 7/10
+   (seam=0; monster uses holes; their chopchop even tolerates deep-zoom
+   gaps — the bar is normal-zoom). Same-color seal-stroke PoC kills the
+   seam class (84→0.7) and fixes the monster eye smudge by eye
+   (audit24/grids/seam_poc_monster.png), but shifts thin-feature widths →
+   ship-grade fix = underpaint dilation in paint order, i.e. E8 layered
+   emission. 0h and E8 are ONE candidate. [it25]
+0l. **Gradient-flatten OPEN GAPS (found run 45, structcheck):** app-asset
+   integrity 0.412 (7.15 hairline px/kb), mountain 0.488 — TRUE open gaps,
+   not AA seams (seal strokes don't fix them). Suspected culprit: run-40
+   flatten stamps region colors post-consolidate, producing label
+   boundaries that no longer coincide with the boundary graph's edges.
+   Matches run-40's own "faint flatten-seam" lead. Stage: quantize
+   (flatten stamp) → boundary extraction handoff. [it25, pairs with A]
 0i. ~~**Monster mouth mangled**~~ — REGRESSION (run 37) FIXED run 38.
    POSTMORTEM (process): the sharpen deformed flat art; the candidate agent
    called monster "lateral" (false), and orchestrator verification only
