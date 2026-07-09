@@ -19,6 +19,7 @@ Mission: **research/docs/PROJECT_SPEC.md** · Work: **research/docs/BACKLOG.md**
 - ⚠ CULPRIT PROTOCOL: every eye verdict that sees ours < recraft must PAUSE and name (a) the concrete defect, (b) the suspected pipeline stage (staged-diagnosis strips when unsure), (c) ledger/BACKLOG entry. See "How better is judged".
 - BEST-SO-FAR: it21 runs 34-35 — color-guarded joining (USER idea; over-join welds gone, ledger #5) + junction cusp descent (heart notch FULL depth, #4) + straight-chain lock (pizza verticals straight, #2 CLOSED). Atop segment-0 wins (tangles, ZZA, thin-line lock, teeth). Gauge: chopchop .871, elephant .981.
 - ⚠ ITERATIONS ARE WORKTREE-PARALLEL — if `research/autoresearch.iteration.json` phase≠idle, RESUME that in-flight iteration (see "Worktree-parallel iterations"); the SessionStart hook surfaces it.
+- ⚠ ITERATION LIFECYCLE (USER mandate 2026-07-09, see "Iteration lifecycle"): research→test→validate→document→version-if-better→/clear→continue. `models/staged` symlinks the live tree so the USER can test in-flight work (`run_model.py -m staged`).
 - OPEN (it22 queue): #6 small-detail fitter dual (buttons hooks + fox dash chain); NEW pizza upper-band cell separators lost (label chain, eye-loud); #7 refined re-tint (eroded masks, skip ink); crystals hue drift; pizza crossing nubs → GAP_LEDGER.md.
 
 ## The metric is NOT the arbiter here (the key adaptation)
@@ -158,6 +159,39 @@ and `autoresearch.sh` both read `autoresearch.focus`.
 - **`data/targets/*.svg`** — the Recraft north-star references.
 - If one genuinely needs a fix, do it as a deliberate, separately-noted
   re-baseline step (worklog + RESEARCH_LOG), never as a routine experiment.
+
+## Iteration lifecycle (USER mandate 2026-07-09 — follow EXACTLY, every iteration)
+1. **Research if needed** — mine `research/docs/VECTORIZATION_PAPERS.md`
+   (USER-compiled) + web for the defect class before inventing; note what was
+   consulted.
+2. **Test things** — candidates per the worktree protocol below (or inline
+   when agents are unavailable/the change is small).
+3. **Validate the tests** — orchestrator re-verification by EYE from
+   artifacts. ⚠ HARDENED after the run-37 monster-mouth miss (agent labeled a
+   focus-target regression "lateral"; orchestrator only re-eyed hero+claimed
+   spots; USER caught it): the orchestrator must ALWAYS re-eye, minimum, (a)
+   the FOCUS target full-grid, (b) every target the USER has ever flagged
+   (monster mouth, rabbit heart/hand, chopchop, pizza straights, app-asset),
+   (c) the candidate's claimed wins AND claimed laterals on those targets.
+   A sub-agent "lateral" on a user-flagged target is a claim like any other.
+4. **Document** — what was tested, what improved, what didn't, negative
+   results: RESEARCH_LOG + worklog + jsonl + dashboard + GAP_LEDGER, every
+   iteration, before anything else ends.
+5. **Version if better** — a structural milestone ships as a new
+   `models/vN/` (git archive snapshot + entry.py + examples via
+   `run_model.py` + MANIFEST + README matrices) and the loop repoints to it;
+   `models/staged` symlink ALWAYS points at the live tree (repoint on bump:
+   `ln -sfn v<N> models/staged`) so the USER can test work-in-progress and
+   give feedback mid-loop.
+6. **Run /clear and keep going** — after ALL state is on disk (step 4/5 +
+   iteration.json next_action rewritten), the iteration boundary is the
+   /clear point: context resets, the SessionStart hook + iteration.json
+   rehydrate, the loop continues fresh. Never carry a stale context across
+   iterations; never stop the loop at a boundary — clear and continue.
+   (The orchestrator cannot invoke the CLI /clear itself; it MUST end the
+   close-out turn with state fully disk-rehydratable and mark
+   "ITERATION BOUNDARY — safe to /clear" in next_action, so a clear at any
+   moment loses nothing.)
 
 ## Worktree-parallel iterations (spec §8.3-4 — the iteration architecture)
 

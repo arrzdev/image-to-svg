@@ -14,6 +14,33 @@
 
 ## OPEN (ranked by user priority + eye-loudness)
 
+0h. **ANTI-ALIAS SEAMS / thin white pixel borders between colors (USER
+   2026-07-09):** boundaries between adjacent fills show hairline light
+   borders at all zooms — adjacent paths share an edge but each AA-blends
+   against the (white) background instead of each other → sub-pixel seam.
+   Matches the old "deep-zoom hairlines on shield/pizza/logo_badge
+   shared-boundary emissions" bug (BACKLOG "Bugs to chase") — now USER-visible
+   generally. Fix directions: slight overlap of lower layers under upper
+   (paint-order-aware dilation of underpaint), or seam-covering boundary
+   strokes. Needs a dedicated diagnosis pass on the emission layer. [it24]
+0i. ~~**Monster mouth mangled**~~ — REGRESSION (run 37) FIXED run 38.
+   POSTMORTEM (process): the sharpen deformed flat art; the candidate agent
+   called monster "lateral" (false), and orchestrator verification only
+   re-eyed hero + claimed-regression spots — the focus target was never
+   re-eyed. USER caught it from the output. Protocol hardened ("Iteration
+   lifecycle" step 3): focus target + all user-flagged targets get
+   orchestrator full-grid re-eyes on EVERY integration. Fix itself:
+   imgstats flat-art skip, byte-verified both directions.
+0j. **Boundary separation losses (USER 2026-07-09, rabbit evidence):** lines
+   that exist in the original are dropped or merged with neighbors so object
+   boundaries vanish — e.g. the bunny's hand not separated from the
+   vegetables it holds (left side); outline lines simply not rendered. Same
+   family as 0a (heart/string weld) + 0b (parallel pinstripe drop): the
+   engine destroys drawn boundaries between adjacent same-ink or similar-color
+   objects. Needs the staged-diagnosis pass that 0a/0b are queued for —
+   treat 0a/0b/0j as ONE it24 diagnosis campaign on "boundary integrity".
+
+
 0f. **GRADIENT BACKGROUNDS must FLATTEN to solid (USER evidence 2026-07-09,
    app-asset ours-vs-recraft pair):** our engine quantizes smooth radial/linear
    gradients into 2-3 labels whose boundaries render as RAGGED BLOB RINGS

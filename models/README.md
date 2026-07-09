@@ -14,7 +14,9 @@ git history:
   comparison PNGs.
 - `MANIFEST.md` — what changed, eye verdicts, negative results.
 
-The newest version (currently **v9**) is the LIVE tree the research loop edits;
+The newest version (currently **v9**) is the LIVE tree the research loop edits
+(`models/staged` always symlinks it — `run_model.py -m staged` tests in-flight
+work mid-loop);
 v3–v8 are frozen. Each version carries `data`/`outputs`/`frontend` symlinks so
 its code finds the shared cache; the research harness (`research/autoresearch.sh`)
 runs the live version's `src/ar_eval.py` (→ `src/testbed.py`). At each

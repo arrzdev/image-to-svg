@@ -72,7 +72,8 @@ one exists in `data/targets/`. No knobs; each run goes through the same
 ```
 run_model.py       CLI — route any image through any version
 run.sh / server.py browser tester
-models/            v3–v9: entry.py + src/ + examples/ (v9 = live; see above)
+models/            v3–v9 + staged→live symlink: entry.py + src/ + examples/
+                   (`-m staged` runs the loop's current work-in-progress)
 data/inputs/       test images   · data/targets/  Recraft references (locked)
 data/outputs/      run artifacts (gitignored)
 frontend/          the minimal tester UI
