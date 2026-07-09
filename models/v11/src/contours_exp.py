@@ -2212,9 +2212,14 @@ def _fill_svg_corner_pinned(labels: np.ndarray, centers: np.ndarray,
                                     tail_anchored, stats, labels=labels,
                                     pair=(e["left"], e["right"]))
         fitted[i] = cubics
-    svg, _plan = boundary._emit_regions(labels, centers, loops_by_region,
-                                        fitted)
-    return svg
+    # Per-shape layered emission + underpaint seal (audit24 E8 / ledger 0h,
+    # it25 C-layeremit): one single-subpath path per shape in painter's
+    # order, nested seams sealed by the hole drop, sibling seams by
+    # paint-order seal strokes. Fit logic above is untouched — this only
+    # changes how the fitted chains are assembled into paths.
+    from boundary_split import emit_regions_layered
+    return emit_regions_layered(labels, centers, loops_by_region, fitted,
+                                edges)
 
 
 def _stroke_elements(strokes: List[dict]) -> str:

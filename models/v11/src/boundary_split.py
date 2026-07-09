@@ -170,6 +170,112 @@ def _emit_regions_split(labels, centers, loops_by_region, fitted, edges) -> str:
             f'viewBox="0 0 {W} {H}">\n' + "\n".join(body) + "\n</svg>\n")
 
 
+def _emit_seal(eids, fitted, color: str, width: float) -> str:
+    """One stroked path covering the given edges' fitted chains — the
+    underpaint seal for sibling boundaries (see emit_regions_layered)."""
+    parts: List[str] = []
+    for eid in eids:
+        first = True
+        for c in fitted.get(eid) or []:
+            if first:
+                parts.append(f"M {c[0]:.2f} {c[1]:.2f}")
+                first = False
+            parts.append(f"C {c[2]:.2f} {c[3]:.2f} {c[4]:.2f} {c[5]:.2f} "
+                         f"{c[6]:.2f} {c[7]:.2f}")
+    if not parts:
+        return ""
+    return (f'<path d="{" ".join(parts)}" fill="none" stroke="{color}" '
+            f'stroke-width="{width:.2f}" stroke-linecap="butt" '
+            f'stroke-linejoin="round"/>')
+
+
+def emit_regions_layered(labels: np.ndarray, centers: np.ndarray,
+                         loops_by_region, fitted, edges,
+                         seal_width: float = 1.0) -> str:
+    """Per-shape layered emission with paint-order underpaint sealing
+    (audit24 E8 + GAP_LEDGER 0h; VISION blueprint item 7).
+
+    Structure: ONE path per shape, SINGLE subpath (the shape's outer loop —
+    holes are dropped), painter's order = descending outer-loop footprint
+    area, so the full-canvas background is path 1 and details stack on top
+    (Recraft/LIVE layer order). Correctness of the hole drop: the label map
+    tiles the plane, and every shape nested inside another has a strictly
+    smaller footprint, so whatever used to show through a hole is repainted
+    later, on top — same silhouettes, same visible colors.
+
+    Seam sealing (the 0h white hairlines: coincident AA edges each blending
+    against the exposed background):
+      * nested boundaries (a shape against the shape that footprint-contains
+        it) are sealed BY the hole drop itself — the underpaint now extends
+        beneath the child, so the child's AA blends ink-on-ink;
+      * sibling boundaries (an edge that is an OUTER-loop edge of both
+        adjacent shapes — neither contains the other) get an explicit seal:
+        the edge's fitted chain stroked seal_width wide in the LOWER
+        (earlier-painted) shape's color, placed immediately after the lower
+        shape's fill. The stroke's inner half lies over the lower fill (same
+        color, invisible); its outer half is covered by the upper fill —
+        only the hidden side grows, so visible widths do not change.
+    Canvas-frame edges (virtual label -1) are never sealed: the frame must
+    stay exact.
+    """
+    from collections import defaultdict
+
+    H, W = labels.shape
+    reg_area = np.bincount(labels.ravel(), minlength=len(centers))
+    rank = {int(r): i for i, r in enumerate(np.argsort(reg_area)[::-1])}
+
+    shapes = []
+    for r in sorted(loops_by_region):
+        if r < 0 or r >= len(centers):
+            continue
+        loops = loops_by_region[r]
+        for gi, grp in enumerate(_group_loops(loops, edges)):
+            poly = _loop_polyline(loops[grp[0]], edges)
+            if len(poly) >= 4:
+                x, y = poly[:, 0], poly[:, 1]
+                area = abs(float(np.sum(x[:-1] * y[1:] - x[1:] * y[:-1])) / 2.0)
+            else:
+                area = 0.0
+            shapes.append({"r": r, "grp": grp, "loops": loops,
+                           "area": area, "gi": gi})
+    shapes.sort(key=lambda s: (-s["area"], rank.get(s["r"], 1 << 30), s["gi"]))
+
+    # (edge, region) -> (paint position, edge is on that shape's OUTER loop)
+    side = {}
+    for si, sh in enumerate(shapes):
+        for k, li in enumerate(sh["grp"]):
+            for eid, _rev in sh["loops"][li]:
+                side[(eid, sh["r"])] = (si, k == 0)
+
+    seals = defaultdict(list)      # lower-shape paint position -> [edge ids]
+    if seal_width > 0:
+        for eid, e in enumerate(edges):
+            a, b = e["left"], e["right"]
+            if a < 0 or b < 0:
+                continue           # canvas frame: never seal
+            sa, sb = side.get((eid, a)), side.get((eid, b))
+            if sa is None or sb is None:
+                continue
+            if not (sa[1] and sb[1]):
+                continue           # nested pair: sealed by the hole drop
+            seals[min(sa[0], sb[0])].append(eid)
+
+    body = []
+    for si, sh in enumerate(shapes):
+        d = _emit_loop(sh["loops"][sh["grp"][0]], fitted)
+        if not d:
+            continue
+        cr, cg, cb = centers[sh["r"]]
+        fill = f"#{cr:02x}{cg:02x}{cb:02x}"
+        body.append(f'<path d="{d}" fill="{fill}"/>')
+        if si in seals:
+            s = _emit_seal(seals[si], fitted, fill, seal_width)
+            if s:
+                body.append(s)
+    return (f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" '
+            f'viewBox="0 0 {W} {H}">\n' + "\n".join(body) + "\n</svg>\n")
+
+
 def loops_to_svg_split(labels: np.ndarray, centers: np.ndarray, edges,
                        loops_by_region, tol: float = 1.5,
                        corner_deg: float = 60.0, smooth_win: int = 0) -> str:
