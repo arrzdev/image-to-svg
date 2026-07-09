@@ -33,10 +33,12 @@
    original/Recraft; concave-cusp handling in the fitter rounds it. Culprit:
    fill fit (concave cusps unpinned — it18 corner-pin is convex-only in
    effect). [it20 A-linefit]
-5. **Over-joining lines that shouldn't connect** — bridge/chord/extension chain
-   (runs 3,4,15,20) joins across color/region breaks. USER fix idea:
-   color-guarded joining (refuse a join when color breaks across the chord).
-   Culprit: bridging gates lack a color-consistency test. [queued it21]
+5. ~~**Over-joining lines**~~ — CLOSED run 34 (it21 B-colorguard, the USER's
+   color-guard idea verbatim): RGB dist<=30 gate at all 4 join sites; good
+   joins label-identical (0) vs over-joins 51-125. chopchop knot-hole weld,
+   leaf detours, fox chin worm, rabbit spur/sleeve welds all gone; protected
+   closures intact. New culprit notes: chopchop smile barb = skeleton-fork
+   family (not a weld); fox haunch dash chain -> #6.
 6. **Small drawn details wiped** — paw fingers back (run 25); rabbit buttons
    ring still opens into hooks (fitter renders solid dark dots as 'u' — it19
    A-darkguard finding); audit remaining sub-3px casualties per target.

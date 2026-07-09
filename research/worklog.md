@@ -668,3 +668,14 @@ See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
   boundary/AA pixels), skip ink labels; expect the fill wins without the ink
   cost. Crystals may need per-facet means.
 - SEGMENT 0 COMPLETE: 30 result lines. The Stop hook pauses here.
+
+### Run 34 (segment 1): B-colorguard integrated — color-guarded joining (KEEP) — USER idea lands
+- Timestamp: 2026-07-09 01:15
+- _join_color_ok (RGB dist<=30) at all 4 join sites. Good joins are
+  label-identical (dist 0); over-joins span 51-125. Margin >=21.
+- Orch-verified: chopchop knot-hole weld -> clean ring, leaf brown-detours
+  gone (106->83 joins); fox chin worm gone; rabbit back-spur/sleeve welds
+  gone; heart/tuft/trunk still fire; 4 byte-identical; full grids clean.
+- Ledger #5 (over-joining) CLOSED. B's culprit notes: chopchop smile barb
+  is NOT a weld (persists with all cross-color snaps blocked) -> skeleton
+  fork family, A-linefit scope; fox haunch dash chain -> ledger #6.
