@@ -14,6 +14,28 @@
 
 ## OPEN (ranked by user priority + eye-loudness)
 
+0f. **GRADIENT BACKGROUNDS must FLATTEN to solid (USER evidence 2026-07-09,
+   app-asset ours-vs-recraft pair):** our engine quantizes smooth radial/linear
+   gradients into 2-3 labels whose boundaries render as RAGGED BLOB RINGS
+   (app-asset bg ring around the phone — v9-confirmed; same root as the
+   mountain/shield banding trade and much of ledger 0c noise). Recraft
+   AVERAGES the gradient region into ONE flat solid — correct for SVG
+   (gradients are anti-vector unless thousands of paths). Fix direction:
+   detect large smooth-gradient REGIONS (region-wise — the failed run-37
+   per-image gate stats DO separate regions) and pre-flatten to mean color
+   before quantize. Papers: LIVE's layer thinking; Diffusion Curves/Gradient
+   Meshes exist for true gradient fills but are out of scope vs flat-solid.
+   Evidence: it23_appasset_full.png. [it23-A]
+0g. **Small-shape geometric fidelity (USER 2026-07-09):** app icons (rounded
+   squares) get OVER-ROUNDED into distorted blobs; the mail icon loses its
+   envelope glyph; "Share" still renders "Sha e" in v9 (run-37 restore claim
+   only partial — honest correction). Straight edges of small shapes must
+   stay straight (recraft does); glyph parts must survive. Culprit suspects:
+   parsimony fit on short edges (straight-piece prior has len>=20px floor —
+   icon edges are shorter), despeckle floors eating glyph parts, corner
+   detector k=6 too coarse at icon scale. [it23-B]
+
+
 0a. **REOPENED — heart/string OVER-MERGE (user re-verdict 2026-07-09):** at
    1024 viewing scale the heart still reads blob-ish: the run-35 cusp descent
    deepened the notch only at extreme zoom, and the STRING + heart-top
