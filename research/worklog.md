@@ -718,3 +718,12 @@ See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
 - JUDGMENT CALL (stated in commit): default ON; shield rim-blob trade
   accepted vs 9 wins on the user's benchmark/defect list; presharpen=0
   escape hatch. it22 COMPLETE (runs 36+37). Cutting v9 milestone next.
+
+### Runs 39-40: it23 complete — gradient flatten (USER-style recraft) + glyph rescue
+- Run 39 B-icongeom: chromatic-mark rescue; Share + envelope restored;
+  over-rounding exonerated; 0g closed; 0c discriminator measured (ab-shift).
+- Run 40 A-gradientflat: bg gradients -> ONE solid like recraft; app-asset
+  rings ALL gone; 0f closed. Verification hardened protocol followed: focus
+  + all user-flagged targets re-eyed/byte-checked on the COMBINED build;
+  baseline-gap script bug caught before misjudging (16-changed false alarm).
+- it23: 2 dispatched, 2 shipped + run-38 hotfix inline. ITERATION BOUNDARY.

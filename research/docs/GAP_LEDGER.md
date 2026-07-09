@@ -41,7 +41,7 @@
    treat 0a/0b/0j as ONE it24 diagnosis campaign on "boundary integrity".
 
 
-0f. **GRADIENT BACKGROUNDS must FLATTEN to solid (USER evidence 2026-07-09,
+0f. ~~**GRADIENT BACKGROUNDS must FLATTEN to solid**~~ — CLOSED run 40 (see commit; residual leads: sub-4%-area drop-shadows, mountain hillside fragmentation, faint flatten-seam on shield). Original entry: (USER evidence 2026-07-09,
    app-asset ours-vs-recraft pair):** our engine quantizes smooth radial/linear
    gradients into 2-3 labels whose boundaries render as RAGGED BLOB RINGS
    (app-asset bg ring around the phone — v9-confirmed; same root as the
@@ -53,7 +53,7 @@
    before quantize. Papers: LIVE's layer thinking; Diffusion Curves/Gradient
    Meshes exist for true gradient fills but are out of scope vs flat-solid.
    Evidence: it23_appasset_full.png. [it23-A]
-0g. **Small-shape geometric fidelity (USER 2026-07-09):** app icons (rounded
+0g. ~~**Small-shape geometric fidelity**~~ — CLOSED run 39 (chromatic-mark rescue; over-rounding exonerated — was glyph loss + 0f raggedness; leads: straight-run pinning needs circle-fit gate; 'e'-shadow weld pre-existing). Original entry: (USER 2026-07-09):** app icons (rounded
    squares) get OVER-ROUNDED into distorted blobs; the mail icon loses its
    envelope glyph; "Share" still renders "Sha e" in v9 (run-37 restore claim
    only partial — honest correction). Straight edges of small shapes must
