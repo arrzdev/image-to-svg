@@ -214,6 +214,140 @@ _MARK_DARK_OWN_C = 27.0       # a DARKER-than-field mark must carry its own hue
                               # must live). Lighter marks skip this test (white
                               # text C 6.1 is a legit highlight/glyph).
 
+# Transition-ownership constants (audit24 E1, it24 A-transown; populations
+# measured 2026-07-09 on app-asset/fox/chopchop/rabbit (true: ramp shrapnel
+# that must dissolve) vs crystals/monster/rabbit-brows (false: drawn thin
+# marks that must live) — see research/it24/candidates/A-transown/REPORT.md):
+_TRANS_MIN_LUM = 50.0     # never touch true ink (measured ink lum 9-49 run 25;
+                          # every true shrapnel label >= 61.7)
+_TRANS_MAX_THIN = 3.0     # mean half-width gate; true shrapnel <= 2.9
+                          # (app-asset icon moat bands 3.4-4.0 stay — E2's job)
+_TRANS_MIN_SHARE2 = 0.85  # ring two-sidedness: top-2 neighbors' ring share
+_TRANS_MIN_SHAREB = 0.15  # ... with the minority side substantial
+_TRANS_MAX_SEGD = 4.0     # Lab distance to the A<->B segment: true ramps
+                          # <= 3.5; crystals drawn facet slivers >= 5.0
+_TRANS_T_LO, _TRANS_T_HI = 0.12, 0.88  # interpolation parameter along A->B
+_TRANS_MAX_ABLEN = 36.0   # the bounding pair must be color-CLOSE (a shading-
+                          # class pair, cf. Depixelizing Pixel Art's two-tier
+                          # edge classes): true pairs <= 35.6; crystals
+                          # contour-class pairs >= 44.2 (facet vs facet)
+_TRANS_SMALLTHIN_PX = 300  # a bound label doesn't count as a bounding REGION
+                           # if its whole component is small+thin (a stroke):
+                           # protects nested drawn strokes (rabbit brows —
+                           # the second "bound" is just the sibling stroke)
+
+
+def _own_transitions(labels: np.ndarray, centers: np.ndarray) -> np.ndarray:
+    """Transition-ownership quantize (audit24 root cause E1).
+
+    Every soft transition (AA, JPEG blur, focus falloff) between two color
+    regions quantizes into thin mid-tone labels along the edge that render as
+    torn dash/speck shrapnel (app-asset bezel, fox shading rims) — the #1
+    'looks traced, not drawn' defect. Recraft's rule (VISION.md #2): a ramp
+    pixel belongs to one of its two bounding regions; a 2-region transition
+    never spawns a third label.
+
+    Mechanism (constants above, all population-measured): mark every thin
+    non-ink component whose own color lies ON the Lab segment between its two
+    dominant ring labels AND whose bounding pair is itself color-close (a
+    shading-family pair — drawn lines between far-apart colors are contour-
+    class and sacred). Group marked pixels into 8-connected STACKS (multi-band
+    ramps form adjacent bands), take each stack's outer ring excluding other
+    marked pixels and excluding small+thin stroke components (not regions):
+    if the ring is dominated by exactly two region-grade labels, every marked
+    label in the stack is absorbed into the Lab-nearer of the two bounds.
+    One-sided or mixed rings keep their pixels (drawn detail on a field —
+    rabbit brow strokes; junction zones).
+    """
+    n = len(centers)
+    if n <= 2:
+        return labels
+    from skimage.color import rgb2lab
+    lab = rgb2lab(centers.reshape(1, -1, 3) / 255.0)[0]
+    lum = np.array([_luminance(c) for c in centers])
+    k3 = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
+    h, w = labels.shape
+    marked = np.zeros(labels.shape, bool)
+    smallthin = np.zeros(labels.shape, bool)
+    for ci in range(n):
+        mask = (labels == ci).astype(np.uint8)
+        if not mask.any():
+            continue
+        ncomp, comp, stats, _ = cv2.connectedComponentsWithStats(mask, 8)
+        for k in range(1, ncomp):
+            area = int(stats[k, cv2.CC_STAT_AREA])
+            x0 = max(0, stats[k, cv2.CC_STAT_LEFT] - 1)
+            y0 = max(0, stats[k, cv2.CC_STAT_TOP] - 1)
+            x1 = min(w, stats[k, cv2.CC_STAT_LEFT] + stats[k, cv2.CC_STAT_WIDTH] + 1)
+            y1 = min(h, stats[k, cv2.CC_STAT_TOP] + stats[k, cv2.CC_STAT_HEIGHT] + 1)
+            sub = (comp[y0:y1, x0:x1] == k).astype(np.uint8)
+            per = float(cv2.countNonZero(sub - cv2.erode(sub, k3)))
+            thin = area / max(per, 1.0)
+            if area <= _TRANS_SMALLTHIN_PX and thin <= _TRANS_MAX_THIN:
+                smallthin[y0:y1, x0:x1] |= sub.astype(bool)
+            if lum[ci] < _TRANS_MIN_LUM or area < 4 or thin > _TRANS_MAX_THIN:
+                continue
+            ring = cv2.dilate(sub, k3).astype(bool) & (sub == 0)
+            neigh = labels[y0:y1, x0:x1][ring]
+            if neigh.size == 0:
+                continue
+            cnts = np.bincount(neigh, minlength=n)
+            cnts[ci] = 0
+            order = np.argsort(cnts)[::-1]
+            if len(order) < 2 or cnts[order[1]] == 0:
+                continue
+            a_, b_ = int(order[0]), int(order[1])
+            tot = float(cnts.sum())
+            if (cnts[a_] + cnts[b_]) / tot < _TRANS_MIN_SHARE2 \
+                    or cnts[b_] / tot < _TRANS_MIN_SHAREB:
+                continue
+            ca, cb, cc = lab[a_], lab[b_], lab[ci]
+            ab = cb - ca
+            L2 = float(ab @ ab)
+            if L2 < 1e-9 or L2 > _TRANS_MAX_ABLEN ** 2:
+                continue
+            t = float((cc - ca) @ ab / L2)
+            if not (_TRANS_T_LO <= t <= _TRANS_T_HI):
+                continue
+            if float(np.linalg.norm(cc - (ca + t * ab))) > _TRANS_MAX_SEGD:
+                continue
+            marked[y0:y1, x0:x1] |= sub.astype(bool)
+    if not marked.any():
+        return labels
+    out = labels.copy()
+    nst, comp, stats, _ = cv2.connectedComponentsWithStats(marked.astype(np.uint8), 8)
+    for k in range(1, nst):
+        x0 = max(0, stats[k, cv2.CC_STAT_LEFT] - 1)
+        y0 = max(0, stats[k, cv2.CC_STAT_TOP] - 1)
+        x1 = min(w, stats[k, cv2.CC_STAT_LEFT] + stats[k, cv2.CC_STAT_WIDTH] + 1)
+        y1 = min(h, stats[k, cv2.CC_STAT_TOP] + stats[k, cv2.CC_STAT_HEIGHT] + 1)
+        sub = comp[y0:y1, x0:x1] == k
+        ring = cv2.dilate(sub.astype(np.uint8), k3).astype(bool) & ~sub \
+            & ~marked[y0:y1, x0:x1] & ~smallthin[y0:y1, x0:x1]
+        neigh = labels[y0:y1, x0:x1][ring]
+        if neigh.size == 0:
+            continue  # no region-grade bound in sight: keep (stroke island)
+        cnts = np.bincount(neigh, minlength=n)
+        order = np.argsort(cnts)[::-1]
+        if len(order) < 2:
+            continue
+        a_, b_ = int(order[0]), int(order[1])
+        tot = float(cnts.sum())
+        if (cnts[a_] + cnts[b_]) / tot < _TRANS_MIN_SHARE2 \
+                or cnts[b_] / tot < _TRANS_MIN_SHAREB:
+            continue  # one-sided (drawn detail on a field) or mixed junction
+        ca, cb = lab[a_], lab[b_]
+        ab = cb - ca
+        L2 = float(ab @ ab)
+        wlab = out[y0:y1, x0:x1]
+        for ci in np.unique(labels[y0:y1, x0:x1][sub]):
+            tci = float((lab[ci] - ca) @ ab / L2) if L2 > 1e-9 else 0.0
+            owner = a_ if tci < 0.5 else b_
+            m = sub & (labels[y0:y1, x0:x1] == ci)
+            wlab[m] = owner
+    return out
+
+
 # Spike-tip guard constants (monster teeth fix, see _despeckle_labels):
 # a sharp spike's tip tapers below pixel width, so the raster anti-aliases it
 # into midtones and quantization SEVERS the tip from its parent region

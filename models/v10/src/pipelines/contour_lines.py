@@ -24,6 +24,7 @@ from .quantize_contours import (
     _despeckle_labels,
     _dissolve_speckle,
     _merge_shadow_tones,
+    _own_transitions,
     _quantize,
     _smooth_labels,
 )
@@ -300,6 +301,12 @@ class ContourLinesPipeline(Pipeline):
                 for m, mean in _regions:
                     li = int(((cf - mean[None, :]) ** 2).sum(1).argmin())
                     labels[m] = li
+            # Transition-ownership (audit24 E1, it24 A-transown): thin mid-
+            # tone labels sandwiched between two color-close region fills are
+            # quantized AA/blur ramps, not drawing — absorb each into the
+            # nearer bounding region BEFORE the lock/despeckle chain, so ramp
+            # shrapnel neither gets ink privileges nor survives as dashes.
+            labels = _own_transitions(labels, centers)
             lock = _thin_dark_line_lock(labels, centers)
             labels0 = labels.copy()
             labels = _despeckle_labels(labels, max(p["min_area"], 16), centers)
