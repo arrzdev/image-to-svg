@@ -1033,3 +1033,15 @@ See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
   (snap radii, color guard, B's anchor machinery is load-bearing).
 - Orchestrator prep queue is now fully drained: it25 verification is the
   only remaining work and it gates on candidate artifacts.
+
+### Run 61 (verify-interim): C's first drops — seams dead, eye smudge fixed; white-detail shrinkage watch-item fed back (DISCARD-by-convention)
+- Timestamp: 2026-07-10 09:30
+- My renders confirm C's stats: seam 77/30/33 -> 0 on monster/rabbit/
+  shield, integrity 1.0, monster eye smudge GONE (the run-45 PoC target),
+  shield ring cleaner. Teeth widths unchanged.
+- Watch-item (fed back with quantitative check): monster left eye + shield
+  knob highlight slightly smaller at deep zoom -> light-on-dark details may
+  sit BELOW dark neighbors in the paint order, so underpaint dilation eats
+  their edges. LIVE area-ordering (small=later=on top) is the fix shape.
+- Interesting: monster output SHRANK (431->233 points) under per-shape
+  emission; rabbit/shield +33% KB (expected E8 trade).
