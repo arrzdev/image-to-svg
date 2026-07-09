@@ -14,6 +14,44 @@
 
 ## OPEN (ranked by user priority + eye-loudness)
 
+0a. **REOPENED — heart/string OVER-MERGE (user re-verdict 2026-07-09):** at
+   1024 viewing scale the heart still reads blob-ish: the run-35 cusp descent
+   deepened the notch only at extreme zoom, and the STRING + heart-top
+   outlines still weld into one thick mass. User's diagnosis stands: two
+   near-parallel line edges at a stiff angle are being merged/smoothed when
+   they must stay separate. The run-34 color guard can't help (same ink
+   color) — this is GEOMETRIC over-merge in the stroke network (junction
+   pooling / absorb / smoothing at the strap-heart meeting). Evidence:
+   models/v5/outputs/user_heart_check.png.
+0b. **Thin PARALLEL lines merged or dropped (user 2026-07-09):** chopchop
+   chair strut has a red-brown pinstripe running parallel to the black edge
+   with clear spacing — OURS DROPS IT ENTIRELY; Recraft keeps it. Same
+   family: closely-spaced parallel thin lines get absorbed into one stroke
+   or routed to fill and dissolved. Culprit suspects: label chain merging
+   the thin colored stripe into the neighboring label (palette merge dE-12?
+   despeckle?), or stroke extractor absorbing it. Staged strip needed.
+   Evidence: models/v5/outputs/user_parallel_chop.png.
+0c. **Detail-vs-noise INVERSION (user 2026-07-09):** meaningful details
+   (pinstripe, hole ring) get deleted while BLUR-NOISE SHADES from the
+   source (gray daubs on the strut, jagged halo fringes at body edges) get
+   rendered. The despeckle/dissolve floor is size-based, not intent-based —
+   drawn details are often SMALLER than noise patches. Needs an
+   intent-vs-noise discriminator (contrast? edge sharpness? hue distance?).
+0d. **PERFORMANCE regression v5→v8 (user 2026-07-09):** rabbit 10.2→31.4s
+   (3.1×), chopchop 27.3→298.5s (10.9×!). Suspects: run-35 straight-chain
+   lock / cusp descent (per-branch SVD + skeleton passes), run-34 join gate
+   bookkeeping, run-25 lock (distance transforms). Profile per stage; the
+   visual output must stay byte-identical (or eye-verified neutral) while
+   the time comes down to ~v5 levels.
+0e. **VALIDATED LEAD — sharpen prepass (user idea, tested 2026-07-09):**
+   upscale 3× → unsharp (amount 1.6, r≈3) → downscale, then vectorize.
+   Kills the strut noise daubs + flattens the heart fill (highlight rim
+   appears, matching original). Does NOT restore dropped details. Needs:
+   productionize as a pipeline pre-stage, tune (amount/radius/up), broaden
+   across all 16 targets for regressions (thin details could sharpen into
+   stroke-ified artifacts). Evidence: user_sharpen_{heart,chop}.png.
+
+
 1. **chopchop junction tangles — LARGELY CURED run 27** (culprit CORRECTED:
    the tangles were mid-dark BROWN TEXTURE LABELS (lum 64-81, spread 60-82)
    being stroke-ified into squiggle loops, not junction geometry; the chroma
