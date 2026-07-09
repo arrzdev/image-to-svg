@@ -41,9 +41,13 @@
    ring still opens into hooks (fitter renders solid dark dots as 'u' — it19
    A-darkguard finding); audit remaining sub-3px casualties per target.
    Culprit: split between label cleanup (fixed) and small-blob fitting.
-7. **Color accuracy to ORIGINAL** — we should match the source's colors, not
-   Recraft's palette; rabbit rΔE 4.18 is the worst color gap. Culprit:
-   quantize centroid drift + shadow-tone merges. [it20 B-localcolor, re-scoped]
+7. **Color accuracy to ORIGINAL** — MEASURED run 32 (vs ORIGINAL, the user's
+   rule): rabbit dE 1.90 = FINE (its gauge rdE 4.16 is Recraft deviating from
+   the original — do NOT chase it); CRYSTALS dE 3.82 = the real offender,
+   centroids drift blue/pink (pink facets R-9/B+14, teal B+12 — the magenta
+   shift eyed run 31). Culprit suspect: k-means centroid pull across facet
+   shades / shadow merge. Fix idea: anchor final region colors to the
+   ORIGINAL region mean (post-assignment re-tint). [next segment]
 
 ## CLOSED
 

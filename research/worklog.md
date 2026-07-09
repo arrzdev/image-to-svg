@@ -647,3 +647,14 @@ See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
   hooks + heart cusp depth (A-linefit surgical), color-guarded joining
   (ledger #5), buttons fitter dual (#6), color-to-original (#7, rabbit
   dE 4.16), crystals re-eye.
+
+### Runs 31-32 (segment tail): crystals dip refuted; color measured vs ORIGINAL
+- Run 31 (verify): crystals -.006 dip re-eyed at worst tiles — new==prev
+  geometrically; low tiles = COLOR shift, not geometry. Logged as discard
+  (nothing shipped).
+- Run 32 (measure, ledger #7): dE vs ORIGINAL — rabbit 1.90 (FINE; its rdE
+  4.16 vs recraft is RECRAFT's own deviation from the original — per the
+  user's match-the-original rule, do not chase); crystals 3.82 = real hue
+  drift (blue/pink centroid pull). Fix idea queued: post-assignment re-tint
+  of region colors to the ORIGINAL region mean. Gauge caveat added: rdE
+  compares to recraft, cross-check vs original before acting on color.
