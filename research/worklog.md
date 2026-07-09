@@ -741,3 +741,21 @@ See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
 - Keep bar this segment: beats v10 by eye at ZOOM; ledger close = ~Recraft
   absolute. Paper-mining agents (LIVE digest landed; 2nd batch pending) ->
   PAPER_NOTES.md when they report.
+
+### Run 41 (measure): segment-2 re-baseline + recraft_gap harness fix — quality=0.8974 monster (DISCARD-by-convention, nothing shipped pipeline-side)
+- Timestamp: 2026-07-10 00:55
+- HARNESS FIX (deliberate, locked-harness protocol): recraft_gap.py pinned
+  sys.path to models/v5/src — full-table runs with svg_ours=None rendered
+  STALE v5 code ever since the live tree moved past v5 (~run 33). Now points
+  at models/staged/src (symlink tracks live). Numbers in ledger's run-24
+  table were v5-era-consistent; anything later from the full table is suspect.
+- Also: v10 cut was missing the data/frontend/outputs symlinks (testbed
+  import failed) — added, matching v9's layout.
+- v10 LIVE baseline (10 recraft targets): app-asset .924/1.54 · chopchop
+  .870/2.80 · crystals .886/3.64 · elephant .982/0.92 · fox .902/3.27 ·
+  logo-geometric .985/0.62 · monster .987/0.32 · mountain .958/2.12 ·
+  rabbit .950/4.11 · shield .937/2.28. These are the segment-2 alarm floors.
+- PAPER_NOTES.md created with the full LIVE digest (UDF boundary-band color
+  fitting -> E7/E1; component-init layer order -> E8; Xing validity check).
+- it24 A-transown + B-lineintent still running in worktrees.
+- Next: verify candidates on arrival (iteration.json next_action).
