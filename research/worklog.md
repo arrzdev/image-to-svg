@@ -936,3 +936,12 @@ See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
   not boundary.py — the run-49 "which layer is the hand hairline" question
   answered; scope extension was legitimate per brief (layer-split proof).
 - B uncommitted; integration step 2 waits for its commit + REPORT.
+
+### Run 54: it24 A-transown SHIPPED (KEEP) — first pipeline keep of segment 2
+- Timestamp: 2026-07-10 06:10
+- Broaden 18/18 clean (10 byte-identical incl all landmines; 8 changed all
+  eye-verified: 5 wins + 3 lateral+). Shipped to main 8ea46c9. Ledger 0l
+  CLOSED (app-asset .988 / mountain 1.000 integrity, eye-verified).
+  Gauges up: rssim app-asset .925, degsuite .951. Honest negative ->
+  BACKLOG (high-contrast subclass needs geometry/E8).
+- B next: verification pre-passed (runs 51/53); awaiting its commit.

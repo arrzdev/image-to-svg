@@ -890,3 +890,27 @@ worklog; highlights):
 Segment-2 baselines (v10): recraft_gap full table in worklog run 41;
 degsuite in run 46; integrity in run 45. Next: verify/integrate it24
 candidates, then it25 dispatch.
+
+## 2026-07-10 · Run 54 — it24 A-transown SHIPPED (E1 transition-ownership)
+
+One rule in the label chain (pipelines/quantize_contours.py `_own_transitions`,
+wired pre-lock/despeckle): thin (half-width ≤3) non-ink (lum ≥50) components
+whose color lies ON the Lab segment between their two dominant ring labels
+(segd ≤4.0, t∈[.12,.88], ablen ≤36 = shading-class edge per Depixelizing's
+two-tier idea) absorb into the Lab-nearer bound; stroke-components never
+count as bounds (saves rabbit brow strokes). All thresholds population-
+measured with margin (drawn slivers segd ≥5.0 / ablen ≥44.2).
+
+Broaden 18/18: 10 byte-identical (all landmines: monster, crystals,
+elephant, logos, pizza, shield); 8 changed, every one eye-verified at zoom.
+Wins: app-asset (bezel shrapnel + invented white blob GONE, integrity
+.412→.988), mountain (SURPRISE win — A's byte-identical claim was wrong
+there; stain fragments absorbed, integrity .488→1.000 — always re-check
+candidate byte-claims on the integrated build), fox (in-ink pale debris
+gone), rabbit (ear spur/tears reduced), chopchop (outline daubs reduced).
+Ledger 0l CLOSED. Honest negative banked to BACKLOG: high-contrast
+shrapnel subclass not color-separable — geometry signal or E8 next.
+Process: interim orchestrator verification (runs 50-53) caught B's
+over-straightening AND completed A's checklist mid-flight — candidates got
+course corrections while cheap. B (line-intent, stroke layer) still
+finalizing; ships separately atop this.

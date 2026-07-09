@@ -52,7 +52,14 @@
    (audit24/grids/seam_poc_monster.png), but shifts thin-feature widths →
    ship-grade fix = underpaint dilation in paint order, i.e. E8 layered
    emission. 0h and E8 are ONE candidate. [it25]
-0l. **Open GAPS = E1 shrapnel slivers (culprit CORRECTED run 47):** app-asset
+0l. ~~**Open GAPS = E1 shrapnel slivers**~~ — CLOSED run 54 (it24 A-transown
+   transition-ownership: app-asset integrity .412→.988, mountain .488→1.000,
+   both eye-verified incl the mountain surprise win). Residual: A's honest
+   negative — the HIGH-CONTRAST shrapnel subclass (pizza gray dashes, fox
+   in-ink pale debris, shield boss flecks = accent-guard false rescues) is
+   NOT color-separable (populations overlap rabbit cheek fluff); needs a
+   geometry signal (inside-ribbon vs along-ribbon) or E8 layering. → BACKLOG.
+   Original entry: (culprit CORRECTED run 47):** app-asset
    integrity 0.412, mountain 0.488 — TRUE open gaps, but the flatten
    hypothesis was REFUTED by toggle (gradflat=0: app-asset only .412→.484,
    mountain byte-identical — flatten never fired there). Gap pixels

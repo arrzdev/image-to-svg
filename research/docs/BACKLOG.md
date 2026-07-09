@@ -338,3 +338,9 @@ at the affected spots.
   lens + cracked seam. Fix: thickness-aware smoothing clamp or post-fit
   crossing check. (Parsimony fitting sidesteps it — no smoothing.)
 - VectorArk-style degradation regression suite: render data/targets/*.svg small+blurred+jpeg, run engine, diff output geometry vs the clean target SVG — automated idealization QA (paper notes idea #5, run 44).
+- E1 high-contrast shrapnel subclass (from it24-A honest negative, run 54):
+  pizza gray dashes / fox in-ink pale debris / shield boss flecks are
+  accent-guard false rescues in _despeckle_labels; NOT color-separable
+  (measured: rabbit cheek fluff t=.84/segd=3.0 overlaps pizza must-die
+  t=.81-.87/segd=1.1-1.3). Needs geometry signal (inside-ribbon vs
+  along-ribbon position) or E8 per-shape layering. Do NOT retry color gates.
