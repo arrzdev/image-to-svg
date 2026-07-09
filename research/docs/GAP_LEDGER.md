@@ -37,12 +37,11 @@
    rendered. The despeckle/dissolve floor is size-based, not intent-based —
    drawn details are often SMALLER than noise patches. Needs an
    intent-vs-noise discriminator (contrast? edge sharpness? hue distance?).
-0d. **PERFORMANCE regression v5→v8 (user 2026-07-09):** rabbit 10.2→31.4s
-   (3.1×), chopchop 27.3→298.5s (10.9×!). Suspects: run-35 straight-chain
-   lock / cusp descent (per-branch SVD + skeleton passes), run-34 join gate
-   bookkeeping, run-25 lock (distance transforms). Profile per stage; the
-   visual output must stay byte-identical (or eye-verified neutral) while
-   the time comes down to ~v5 levels.
+0d. ~~**PERFORMANCE regression v5→v8**~~ — CLOSED run 36 (same day): 88% was
+   r35 cusp-descent's argwhere rescan (275s of 311s), NOT the listed
+   suspects (join scans measured <1s). Caching + padded-bbox locality;
+   output byte-identical 18/18. chopchop 298→7.4s, rabbit 31→3.5s — v8 now
+   FASTER than v5. Residual lead: files-pile 18.3s (different cost shape).
 0e. **VALIDATED LEAD — sharpen prepass (user idea, tested 2026-07-09):**
    upscale 3× → unsharp (amount 1.6, r≈3) → downscale, then vectorize.
    Kills the strut noise daubs + flattens the heart fill (highlight rim

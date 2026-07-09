@@ -693,3 +693,14 @@ See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
   #2 residual CLOSED, #5 CLOSED (run 34). New leads: pizza crossing nubs +
   upper-band cell separators lost (label chain, pre-existing, eye-loud);
   chopchop smile barb = skeleton fork; fox haunch dash chain (#6).
+
+### Run 36: B-perf integrated — 40x chopchop, byte-identical (KEEP)
+- Timestamp: 2026-07-09 17:10
+- cProfile found 88% of the v5->v8 regression in r35 _junction_cusp_exts
+  (argwhere rescan per node x pocket, 275s of 311s); rest = full-frame
+  medial_axis/EDT/dilation per component. Fixes: caching + padded-bbox
+  locality; all byte-verified (18/18 worktree, 7/7 on main post-transplant).
+- chopchop 298.5->7.4s, rabbit 31.4->3.5s: v8 now FASTER than v5. USER
+  perf complaint resolved same-day. Ledger 0d closed (suspects corrected).
+- Lead: files-pile now slowest (18.3s, different cost structure); vendored
+  medial_axis LUT could save ~1.8s more on chopchop.
