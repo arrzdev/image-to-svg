@@ -1060,3 +1060,11 @@ See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
   but its exact statistic was fragile; target-wide re-measurement by the
   implementing candidate caught it BEFORE any threshold shipped. This is the
   population-first discipline working end-to-end.
+
+### Run 62 (prep): full-18 v11 baselines + seam table (DISCARD-by-convention)
+- Timestamp: 2026-07-10 10:40
+- research/baselines/v11/*.svg (fresh main renders) + seam/integrity table.
+  it24 wins held everywhere (app-asset .988, mountain 1.000); game-assets
+  .944 = only integrity residual (pre-existing). Seams 28-87 px/kb on 17/18
+  targets (logo-lineart 0 = all-stroke output) — C's improvement surface.
+  C/D broaden byte-compares now use baselines/v11, NOT audit24/svg (v10-era).
