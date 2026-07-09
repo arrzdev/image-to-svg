@@ -281,8 +281,15 @@ def extract_contour_strokes(labels: np.ndarray, centers: np.ndarray,
     """
     from skimage.morphology import medial_axis
 
+    # Stroke candidates: truly dark labels (lum<60) may be colored ink (rabbit
+    # navy spread 62), but MID-dark labels (60..dark_lum) must be near-neutral
+    # — a saturated mid-dark is a colored GLYPH FILL (pizza letterforms lum~76
+    # spread 151, crystals gem fills spread 118-164); stroke-ifying one
+    # centerline-loops its sharp corners (run 26 culprit: the "ZZA" squiggles).
     dark = [li for li in range(len(centers))
-            if _luminance(centers[li]) < dark_lum]
+            if _luminance(centers[li]) < dark_lum
+            and (_luminance(centers[li]) < 60
+                 or (int(max(centers[li])) - int(min(centers[li]))) <= 45)]
 
     # ---- adjacency-based fleck recolor (stroke-layer only).  A dark-brown
     # label leaves tiny fragments hugging the black serrated line network;
