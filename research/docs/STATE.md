@@ -1,6 +1,10 @@
 # Engine state
 
-_Last updated: 2026-07-07 (v4). PAUSED — see docs/RESUME.md to restart._
+_Last updated: 2026-07-09 (post-audit-24). **Start here:**
+`docs/VISION.md` (USER's blueprint + absolute judging bar) and
+`research/audit24/FINDINGS.md` (root causes E1-E8 / process failures P1-P4 /
+campaign skeleton). The sections below this header are older (v4-era) and
+kept for architecture reference; LIVE tree = models/v9/src at run 40._
 
 **Current best output = `contour_lines` pipeline** (v4): width-constant
 centerline strokes + parsimony-fitted flat shading. Reached Recraft's quality
