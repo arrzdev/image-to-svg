@@ -827,3 +827,20 @@ See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
 - NEW ledger 0l: app-asset/mountain open gaps = run-40 flatten boundary
   mismatch (geometry-level; strokes don't fix). Pairs naturally with
   A-transown's domain -> assess after A lands.
+
+### Run 46 (tool): degradation suite built + v10 baseline — E3/E4/E5 proven engine-side (KEEP, tool+docs only)
+- Timestamp: 2026-07-10 02:55
+- research/tools/degradation_suite.py (VectorArk idea, run-44 backlog):
+  clean recraft render -> degrade (0.45x bicubic + JPEG78 + upsample) ->
+  live engine -> dSSIM/ddE vs CLEAN render. Ground-truth-clean idealization
+  gauge, zero recraft-interpretation confound. Secondary signal only.
+- v10 baseline: crystals .873/3.56, chopchop .877/2.93, fox .907, shield
+  .924, rabbit .944, app-asset .949, mountain .960, elephant .978, monster
+  .989, logo-geometric .990. Ranking == audit24 eye ranking (validates both).
+- LOAD-BEARING eye finding (grids/degsuite_crystals.png): from a CLEAN
+  flat-color degraded render the engine STILL deletes thin facet ridge
+  lines, melts straight facet edges painterly, deforms highlights, varies
+  ink weight. E3/E4/E5 are engine behavior, full stop — no source-noise
+  alibi. B-lineintent's mechanism has a clean regression test waiting.
+- Per-keep convention addition: record dssim_crystals + dssim_chopchop in
+  jsonl metrics from now on (started this run).
