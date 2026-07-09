@@ -1045,3 +1045,18 @@ See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
   their edges. LIVE area-ordering (small=later=on top) is the fix shape.
 - Interesting: monster output SHRANK (431->233 points) under per-shape
   emission; rabbit/shield +33% KB (expected E8 trade).
+
+### Run-43 correction (from D-shadowideal's interim census, 2026-07-10)
+- D's target-wide census v2 AMENDS run 43: (1) the raw ramp-p50 measure does
+  NOT reproduce on rabbit's true shadow against JPEG noise (needs
+  band-neighborhood sampling + smoothed profiles — use D's shadow_census2
+  form, not audit24/shadow_census.py, for future gates); (2) app-asset icon
+  "moats" are LIGHTER bg-gradient glow remnants, not dark shadows — recraft
+  DROPS them (drop-only path, not offset-shape); (3) new measured landmine:
+  glyph wedges inside icons are statistically shadow-like — separator =
+  field >= 6% of frame; (4) hue-similarity gates unusable (rabbit designed
+  mauve, ab-shift 30) — softness stays load-bearing, as briefed.
+- Lesson: my 7-ROI census was directionally right (class separation exists)
+  but its exact statistic was fragile; target-wide re-measurement by the
+  implementing candidate caught it BEFORE any threshold shipped. This is the
+  population-first discipline working end-to-end.
