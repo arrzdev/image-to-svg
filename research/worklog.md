@@ -885,3 +885,26 @@ See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
 - Pending: A REPORT.md (mechanism/populations), crystals+monster landmine
   evidence, mountain integrity, full broaden. B iterating on run-49
   feedback.
+
+### Run 51 (verify-interim): B-v2 hand FIXED at zoom; A complete w/ report; mountain discrepancy reconciled (DISCARD-by-convention)
+- Timestamp: 2026-07-10 04:40
+- B-v2 (post run-49 feedback): hand hairline = straight segments + sharp
+  corner ~= recraft structure (verifyB2_hand.png) - 0k hand defect fixed
+  pending landmines; eye crisper than PREV; crystals long facet edges
+  straighter, no regression; dome TOP facet residue remains (hardest
+  low-curvature case); teeth unchanged. Checklist sent (dome trade
+  quantification ok, teeth layer attribution, REPORT + landmines).
+- A COMPLETE: report consistent with my independent run-50 checks;
+  mechanism = _own_transitions (thin non-ink Lab-segment components absorb
+  into nearer bound; stroke-components never count as bounds = rabbit brow
+  save); every gate population-measured; monster/crystals/shield/pizza/
+  elephant/mountain byte-identical. HONEST NEGATIVE banked: high-contrast
+  E1 subclass (pizza dashes, fox in-ink debris, shield flecks) NOT
+  color-separable - needs geometry signal or E8 layering; do not retry
+  color gates blind.
+- Mountain integrity reconciled: main fresh render == audit24 svg bytes,
+  0.488 reproduces; A's 1.0 was worktree-side - recheck on integrated
+  build; mountain gaps NOT fixed by A (byte-identical) -> 0l mountain half
+  stays open, likely A's "3-label blend" subclass.
+- Next: B's REPORT -> then integration (A first, then B), broaden 18,
+  keep decision.
