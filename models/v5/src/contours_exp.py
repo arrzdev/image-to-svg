@@ -252,6 +252,23 @@ def _merge_continuations(branches: List[dict], max_turn_deg: float = 50.0
 
 # --------------------------------------------------------------- extraction
 
+def _join_color_ok(ca, cb) -> bool:
+    """Color-guarded joining (GAP_LEDGER #5, USER idea): two stroke ends may
+    weld only when their source label colors agree — a join whose color
+    BREAKS is connecting two DIFFERENT drawn lines (smile end onto a teal
+    lens stroke, ink outline onto a mauve shadow stroke) and must not fire.
+
+    Measured populations (chopchop + fox + rabbit + crystals, run it21-B):
+    every eye-good join is label-identical (RGB distance 0 — the ΔE-12
+    palette merge already collapsed same-ink twins); every eye-confirmed
+    over-join pairs distinct families (distance 51-125: black↔brown 51,
+    teal↔black 89, ink↔purple 74, dark↔gray 105, ink↔mauve 125).
+    Threshold 30 sits between with wide margin while still allowing
+    near-twin dark labels (ΔE just above the merge) to weld."""
+    return (float(ca[0] - cb[0]) ** 2 + float(ca[1] - cb[1]) ** 2
+            + float(ca[2] - cb[2]) ** 2) <= 30.0 ** 2
+
+
 def extract_contour_strokes(labels: np.ndarray, centers: np.ndarray,
                             dark_lum: float = 96.0,
                             stroke_tol: float = 2.5,
@@ -674,6 +691,13 @@ def extract_contour_strokes(labels: np.ndarray, centers: np.ndarray,
             d = np.linalg.norm(ob["pts"] - end, axis=1)
             j = int(np.argmin(d))
             if 1e-6 < d[j] < (best[0] if best else snap_r):
+                # color guard: never weld onto a differently-colored line
+                if not _join_color_ok(pend[pi]["color"], ob["color"]):
+                    info.setdefault("color_blocked", []).append(
+                        ("snap", float(ob["pts"][j][0]),
+                         float(ob["pts"][j][1]),
+                         pend[pi]["color"], ob["color"]))
+                    continue
                 best = (float(d[j]), pj, ob["pts"][j].copy(), j, len(ob["pts"]))
         if best is None:
             continue
@@ -695,6 +719,9 @@ def extract_contour_strokes(labels: np.ndarray, centers: np.ndarray,
             pb["pts"][-1] = target
             pb["tail_free"] = False
         info["bridged_ends"] = info.get("bridged_ends", 0) + 1
+        info.setdefault("join_events", []).append(
+            ("snap", float(target[0]), float(target[1]),
+             pend[pi]["color"], pend[best[1]]["color"]))
 
     # ---- source-ink-continuity extension.  Bridging only spans gaps
     # <= 1.2w; LONGER runs of drawn line lost by despeckle/smoothing (rabbit's
@@ -770,7 +797,15 @@ def extract_contour_strokes(labels: np.ndarray, centers: np.ndarray,
                         d2 = ((ob["pts"] - p) ** 2).sum(axis=1)
                         j = int(np.argmin(d2))
                         if d2[j] < snap_r2:
+                            # color guard (GAP_LEDGER #5)
+                            if not _join_color_ok(pb["color"], ob["color"]):
+                                info.setdefault("color_blocked", []).append(
+                                    ("ink", float(ob["pts"][j][0]),
+                                     float(ob["pts"][j][1]),
+                                     pb["color"], ob["color"]))
+                                continue
                             snapped = ob["pts"][j].copy()
+                            snapped_pj = pj
                             break
                     if snapped is not None:
                         break
@@ -778,6 +813,9 @@ def extract_contour_strokes(labels: np.ndarray, centers: np.ndarray,
                     continue
                 if snapped is not None:
                     trail.append(snapped)
+                    info.setdefault("join_events", []).append(
+                        ("ink", float(snapped[0]), float(snapped[1]),
+                         pb["color"], pend[snapped_pj]["color"]))
                 ext = np.asarray(trail)
                 wext = np.full(len(ext), pb["widths"][0 if side == "head"
                                                       else -1], float)
@@ -861,6 +899,16 @@ def extract_contour_strokes(labels: np.ndarray, centers: np.ndarray,
                     mx = max(mx, run)
                 if mx > 4:          # 2 samples/px: >2px of clear ground
                     continue
+                # color guard (GAP_LEDGER #5): the ink gates test darkness,
+                # not identity — a chord from an ink line to a mauve shadow
+                # stroke passes them; the color break says two different
+                # drawn lines.
+                if not _join_color_ok(pend[pi_]["color"], pend[pj_]["color"]):
+                    info.setdefault("color_blocked", []).append(
+                        ("chord", float((a[0] + b[0]) / 2),
+                         float((a[1] + b[1]) / 2),
+                         pend[pi_]["color"], pend[pj_]["color"]))
+                    continue
                 cand.append((dch, i, j))
         cand.sort(key=lambda c: c[0])
         used: set = set()
@@ -885,6 +933,9 @@ def extract_contour_strokes(labels: np.ndarray, centers: np.ndarray,
             info["long_bridges"] = info.get("long_bridges", 0) + 1
             info.setdefault("long_bridge_at", []).append(
                 (float(mid[0]), float(mid[1]), float(dch)))
+            info.setdefault("join_events", []).append(
+                ("chord", float(mid[0]), float(mid[1]),
+                 pend[pi_]["color"], pend[pj_]["color"]))
 
         # ---- arc-aware endpoint bridging (run-17 B).  The free-free chord
         # bridge above cannot close the rabbit heart's top gap: the notch
@@ -993,6 +1044,13 @@ def extract_contour_strokes(labels: np.ndarray, centers: np.ndarray,
                 if (mean_ >= need_mean or f160 < 0.6 or mx_ > 4
                         or ridge2 < 0.5):
                     continue
+                # color guard (GAP_LEDGER #5)
+                if not _join_color_ok(pend[pi_]["color"], pend[pj_]["color"]):
+                    info.setdefault("color_blocked", []).append(
+                        (kind, float((A[0] + B[0]) / 2),
+                         float((A[1] + B[1]) / 2),
+                         pend[pi_]["color"], pend[pj_]["color"]))
+                    continue
                 cand3.append((L, i, j, kind, P))
         cand3.sort(key=lambda c: c[0])
         used_ends: set = set()
@@ -1049,6 +1107,9 @@ def extract_contour_strokes(labels: np.ndarray, centers: np.ndarray,
             info.setdefault("arc_bridge_at", []).append(
                 (float((A[0] + B[0]) / 2), float((A[1] + B[1]) / 2),
                  float(L), kind))
+            info.setdefault("join_events", []).append(
+                (kind, float((A[0] + B[0]) / 2), float((A[1] + B[1]) / 2),
+                 pend[pi_]["color"], pend[pj_]["color"]))
 
     _DEBUG.clear()
     _DEBUG.update({"pend": pend, "gw": gw})
