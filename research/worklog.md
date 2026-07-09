@@ -969,3 +969,17 @@ See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
   the eye did all gating). New true baseline on v11: quality 0.8981.
 - Memory (repo-layout) updated with the complete cut recipe including both
   staged-pointer fixes and the symlink footgun.
+
+### it25 DISPATCHED: C-layeremit (E8+0h) + D-shadowideal (E2)
+- Timestamp: 2026-07-10 07:45
+- Both worktree candidates launched off b6c94e0 (v11 live) with full
+  briefs: C = per-shape layered emission + underpaint dilation seal
+  (run-45 PoC + recraft overlap-sealed evidence; acceptance = seams ~0 on
+  flat targets with NO thin-feature width change, monster mouth/eye
+  hairlines gone by eye); D = shadow idealizer on run-43 measured gates
+  (acceptance = app-asset moats -> one clean offset shape or dropped,
+  rabbit ground -> crisp shape, controls untouched, monster byte-identical
+  expected). Both must pass degradation-suite non-regression.
+- Orchestrator protocol per it24 lessons: interim verification on first
+  artifact drops; byte-claims re-checked on integrated builds; C
+  integrates first (emission downstream of D's labels).
