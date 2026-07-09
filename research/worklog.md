@@ -923,3 +923,16 @@ See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
   the integrated build ALWAYS (this one was wrong in the lucky direction).
 - Holding ship one cycle for B's REPORT (hand fix verified run 51); then
   apply B to the same worktree, re-eye, broaden all 18, keep/ship.
+
+### Run 53 (verify-interim): B landmines pre-cleared at my zooms (DISCARD-by-convention)
+- Timestamp: 2026-07-10 05:40
+- verifyB2_{logo,pizza,eleph,chopface}.png: logo circles round + apex sharp
+  (the critical straightener landmine PASSES); elephant/chopchop curves
+  smooth, no faceting; pizza lateral+. Combined with run-51 (hand FIXED,
+  eye crisper, crystals facets straighter): B verifies on everything I can
+  render. Known blemish: dome-top facet residue (quantified trade pending
+  in its REPORT).
+- Layer attribution confirmed: B's diff = contours_exp.py (STROKE layer),
+  not boundary.py — the run-49 "which layer is the hand hairline" question
+  answered; scope extension was legitimate per brief (layer-split proof).
+- B uncommitted; integration step 2 waits for its commit + REPORT.
