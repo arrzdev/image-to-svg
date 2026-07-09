@@ -110,6 +110,76 @@ def _corner_indices(pts: np.ndarray, w: float,
     return sorted(idx)
 
 
+def _straight_chain_lock(seg: np.ndarray, head_free: bool, tail_free: bool,
+                         min_chord: float = 16.0, min_n: int = 12,
+                         rms_thr: float = 0.75, max_thr: float = 2.5,
+                         bow_thr: float = 0.4,
+                         end_dev_cap: float = 5.0) -> Optional[np.ndarray]:
+    """RULER-STRAIGHT centerline lock (GAP_LEDGER #2 residual, stroke layer).
+
+    Pizza's checker verticals are dead straight in label space (interior TLS
+    rms 0.36-0.40 / max <=1.7 over ~100pt chains) yet render with an S-bow up
+    to 2.75px: fit_open's tol=2.5 band lets a long straight outline drift,
+    and the eye reads any bow on a ruler line instantly. Mirror of the run-29
+    FILL straight-piece prior, applied to the raw stroke chain: if the
+    interior (6-pt end windows trimmed — junction anchors and label-noise
+    end-dips live there) is TLS-straight AND shows no net arc, project the
+    chain onto the line so the fitter cannot bow it.
+
+    The decisive gate is the BOW statistic (mean signed residual of the
+    middle third minus the outer thirds = sagitta estimate): staircase noise
+    on a true straight is unbiased, a gentle drawn arc is one-signed.
+    Population-measured (run it21, 5 targets): every pizza grid line /
+    box edge bows <= 0.26 (one short-chain outlier 0.53); the gentlest
+    curves that must stay round (rabbit cheek/ear arcs 1.10-1.55, heart
+    cord 0.68, chopchop limbs >= 0.52) all sit above 0.5. bow 0.4 splits
+    the gap; rms 0.75 / max 2.5 only bound the staircase envelope.
+
+    Ends: a FREE end is projected fully (its 2-4px label-noise dip — the
+    'junction-adjacent hook' — is exactly what this kills); an ANCHORED /
+    bridged end keeps its exact endpoint (connectivity contract) with the
+    correction ramped to zero across the trim window. A free-end window
+    deviating more than end_dev_cap from the line is a deliberate curl
+    (flick tails measure >= 7px; true hooks <= 4px) — bail, lock nothing."""
+    n = len(seg)
+    if n < min_n:
+        return None
+    t = min(6, n // 6)
+    interior = seg[t:n - t]
+    if len(interior) < 8:
+        return None
+    c = interior.mean(0)
+    _, _, vt = np.linalg.svd(interior - c, full_matrices=False)
+    v = vt[0]
+    sr = np.cross(v, interior - c)
+    resid = np.abs(sr)
+    if (float(np.sqrt((resid ** 2).mean())) > rms_thr
+            or float(resid.max()) > max_thr):
+        return None
+    s = (interior - c) @ v
+    if float(s.max() - s.min()) < min_chord:
+        return None
+    order = np.argsort(s)
+    so = sr[order]
+    k = len(so) // 3
+    if k >= 2 and abs(float(so[k:2 * k].mean())
+                      - float(np.r_[so[:k], so[2 * k:]].mean())) > bow_thr:
+        return None                      # net arc: a drawn curve, keep round
+    dev = np.abs(np.cross(v, seg - c))
+    if (head_free and float(dev[:t].max(initial=0.0)) > end_dev_cap) or \
+            (tail_free and float(dev[n - t:].max(initial=0.0)) > end_dev_cap):
+        return None                      # deliberate end curl: keep as-is
+    proj = c + ((seg - c) @ v)[:, None] * v
+    out = proj.copy()
+    if not head_free:                    # pinned end: keep endpoint, ramp
+        w = np.linspace(1.0, 0.0, t + 1)[:t, None]
+        out[:t] = proj[:t] + (seg[:t] - proj[:t]) * w
+    if not tail_free:
+        w = np.linspace(0.0, 1.0, t + 1)[1:, None]
+        out[n - t:] = proj[n - t:] + (seg[n - t:] - proj[n - t:]) * w
+    return out
+
+
 def _smooth_open_corners(pts: np.ndarray, win: int,
                          corners: List[int]) -> np.ndarray:
     """Moving-average smooth with CORNERS PINNED: each inter-corner segment
@@ -123,6 +193,150 @@ def _smooth_open_corners(pts: np.ndarray, win: int,
         seg = _smooth_open(pts[a:b + 1], win)
         out.append(seg if a == 0 else seg[1:])
     return np.vstack(out)
+
+
+def _junction_cusp_exts(branches: List[dict], cent: dict, mask: np.ndarray,
+                        med_w: float, width_scale: float,
+                        debug: Optional[list] = None) -> dict:
+    """Concave-cusp descent targets at skeleton junctions (GAP_LEDGER #4).
+
+    The rabbit heart's notch is a downward INK WEDGE between the two lobes:
+    the lobes' outline ink and the cord ink merge, the medial-axis junction
+    sits at the TOP of the wedge, and the wedge's descending tip has no
+    skeleton branch (pruned/never formed). Rendered, no stroke descends into
+    the V — the notch reads shallow (run 25 residual).
+
+    Detection: rasterize the component's branch centerlines, take the ink
+    pixels FARTHER from every centerline than the rendered stroke half-width
+    (cover_r = med_w*width_scale/2 + 0.75 — what the emitted strokes will
+    actually paint), and keep connected pockets that (a) touch a junction
+    node and (b) run DEEP: max centerline distance >= cover_r + 0.45*med_w
+    and tip at least 1.0*med_w from the node. Junction ink POOLING also
+    leaves thin uncovered crescents, but they hug the centerlines (measured
+    populations, run it21: pools' depth-beyond-cover <= 0.30*med_w; true
+    cusp wedges >= 0.75*med_w) — the depth gate separates them.
+
+    The wedge is then drawn by extending the ONE incident branch whose end
+    tangent best continues toward the wedge tip (dot >= 0.3): a straight
+    chain of pixels from the branch end to the tip, appended after junction
+    anchoring. Returns {(branch_index, end_index): chain_yx float array}."""
+    if not branches or len(cent) <= 1:
+        return {}
+    ys, xs = np.nonzero(mask)
+    if len(ys) == 0:
+        return {}
+    m = 3
+    y0, y1 = max(int(ys.min()) - m, 0), min(int(ys.max()) + m + 1,
+                                            mask.shape[0])
+    x0, x1 = max(int(xs.min()) - m, 0), min(int(xs.max()) + m + 1,
+                                            mask.shape[1])
+    sub = mask[y0:y1, x0:x1]
+    brmask = np.zeros(sub.shape, bool)
+    for br in branches:
+        pix = np.asarray(br["pix"], int)
+        brmask[np.clip(pix[:, 0] - y0, 0, sub.shape[0] - 1),
+               np.clip(pix[:, 1] - x0, 0, sub.shape[1] - 1)] = True
+    if not brmask.any():
+        return {}
+    dbr = ndimage.distance_transform_edt(~brmask)
+    cover_r = 0.5 * med_w * width_scale + 0.75
+    uncov = sub & (dbr > cover_r)
+    if not uncov.any():
+        return {}
+    pk, npk = ndimage.label(uncov, structure=_STRUCT8)
+    exts: dict = {}
+    used_pockets: set = set()
+    for nid, cyx in cent.items():
+        if not nid or cyx is None:
+            continue
+        node = np.asarray(cyx, float) - (y0, x0)
+        if not (0 <= node[0] < sub.shape[0] and 0 <= node[1] < sub.shape[1]):
+            continue
+        best_pocket = None
+        for p in range(1, npk + 1):
+            if p in used_pockets:
+                continue
+            pyx = np.argwhere(pk == p)
+            if len(pyx) < 6:
+                continue
+            dnode = np.hypot(pyx[:, 0] - node[0], pyx[:, 1] - node[1])
+            if float(dnode.min()) > 1.2 * med_w:
+                continue                          # not this node's pocket
+            depth = float(dbr[tuple(pyx.T)].max()) - cover_r
+            extent = float(dnode.max())
+            if debug is not None:
+                tp = pyx[int(np.argmax(dnode))] + (y0, x0)
+                debug.append({"node": (float(cyx[0]), float(cyx[1])),
+                              "area": int(len(pyx)),
+                              "depth_bc": depth, "depth_bc_w": depth / med_w,
+                              "extent_w": extent / med_w,
+                              "tip": (int(tp[0]), int(tp[1]))})
+            # wedge gates (population-measured, run it21, 5 targets):
+            # a true concave-cusp wedge is SMALL and just-beyond-cover
+            # (heart notch: depth_bc 0.64w, extent 1.19w, area 10). The
+            # false pockets are glyph/fill ink masses near junctions and
+            # run DEEP and LARGE (depth_bc >= 1.75w, extent >= 2.36w,
+            # area >= 25) — ceiling gates, with the floor separating
+            # junction-pool crescents (depth_bc <= 0.30w).
+            if not (0.45 * med_w <= depth <= 1.2 * med_w
+                    and 1.0 * med_w <= extent <= 2.0 * med_w
+                    and len(pyx) <= 24):
+                continue
+            if best_pocket is None or depth > best_pocket[0]:
+                tip = pyx[int(np.argmax(dnode))].astype(float)
+                best_pocket = (depth, p, tip)
+        if best_pocket is None:
+            continue
+        _, p, tip = best_pocket
+        tip_g = tip + (y0, x0)
+        u = tip - node
+        nu = float(np.hypot(*u))
+        if nu < 1e-6:
+            continue
+        u = u / nu
+        best_end = None
+        for bi, br in enumerate(branches):
+            if br["closed"]:
+                continue
+            pix = np.asarray(br["pix"], float)
+            if len(pix) < 4:
+                continue
+            k = min(6, len(pix) - 1)
+            for end, e_nid, kk in ((0, br["a"], k), (-1, br["b"], -1 - k)):
+                if e_nid != nid:
+                    continue
+                t = pix[end] - pix[kk]
+                nt = float(np.hypot(*t))
+                if nt < 1e-6:
+                    continue
+                dot = float(np.dot(t / nt, u))
+                if dot >= 0.3 and (best_end is None or dot > best_end[0]):
+                    best_end = (dot, bi, end)
+        if best_end is None:
+            if debug is not None:
+                debug.append({"node": (float(cyx[0]), float(cyx[1])),
+                              "skipped": "no aligned branch end"})
+            continue
+        _, bi, end = best_end
+        start = np.asarray(branches[bi]["pix"][end], float)
+        L = float(np.hypot(*(tip_g - start)))
+        if L > 2.5 * med_w:
+            continue                      # a cusp descent is short by nature
+        nseg = max(int(np.ceil(L)), 2)
+        chain = start[None] + (tip_g - start)[None] * \
+            np.linspace(0.0, 1.0, nseg + 1)[1:, None]
+        # ink support: the descent must run THROUGH source ink, never air
+        ci = np.clip(chain.astype(int), (0, 0),
+                     (mask.shape[0] - 1, mask.shape[1] - 1))
+        if float(mask[ci[:, 0], ci[:, 1]].mean()) < 0.9:
+            continue
+        if debug is not None:
+            debug.append({"node": (float(cyx[0]), float(cyx[1])),
+                          "fired_tip": (float(tip_g[0]), float(tip_g[1])),
+                          "dot": best_end[0]})
+        exts[(bi, end)] = chain
+        used_pockets.add(p)
+    return exts
 
 
 # ------------------------------------------------------------- texture gate
@@ -297,6 +511,8 @@ def extract_contour_strokes(labels: np.ndarray, centers: np.ndarray,
     info: {"widths": per-branch medians, "global_width", "spread", ...}
     """
     from skimage.morphology import medial_axis
+
+    _DEBUG.pop("cusp", None)      # fresh diagnostics per call
 
     # Stroke candidates: truly dark labels (lum<60) may be colored ink (rabbit
     # navy spread 62), but MID-dark labels (60..dark_lum) must be near-neutral
@@ -603,7 +819,13 @@ def extract_contour_strokes(labels: np.ndarray, centers: np.ndarray,
             # (all strokes share w_body). Falls back to the centroid when no
             # other branch passes nearby (true endpoint clusters).
             med_w_a = float(np.median(dist[skel] * 2.0))
-            for br in branches:
+            # concave-cusp ink-wedge descent (GAP_LEDGER #4): junction-
+            # adjacent ink pockets deeper than what the emitted strokes
+            # cover get ONE branch extended into their tip (heart notch V).
+            cusp_exts = ({} if is_band else _junction_cusp_exts(
+                branches, cent, mask, med_w_a, width_scale,
+                debug=_DEBUG.setdefault("cusp", [])))
+            for bi, br in enumerate(branches):
                 pix = np.asarray(br["pix"], float)
                 widths = dist[tuple(pix.astype(int).T)] * 2.0
                 junc_d = (jdist[tuple(pix.astype(int).T)]
@@ -628,6 +850,29 @@ def extract_contour_strokes(labels: np.ndarray, centers: np.ndarray,
                                 best_d2 = float(d2[j])
                                 target = op[j]
                         pix[end] = target
+                # apply cusp-wedge extensions AFTER anchoring (the anchor
+                # snap only moves the end point; the wedge chain continues
+                # beyond it into the uncovered ink tip). Junction ends stay
+                # non-free, so no taper/bridge logic sees the new tail.
+                for end, key in ((0, (bi, 0)), (-1, (bi, -1))):
+                    chain = cusp_exts.get(key)
+                    if chain is None:
+                        continue
+                    ci = np.clip(chain.astype(int),
+                                 (0, 0), (dist.shape[0] - 1,
+                                          dist.shape[1] - 1))
+                    cw = dist[ci[:, 0], ci[:, 1]] * 2.0
+                    cj = (jdist[ci[:, 0], ci[:, 1]] if jdist is not None
+                          else np.full(len(chain), 1e9))
+                    if end == 0:
+                        pix = np.vstack([chain[::-1], pix])
+                        widths = np.r_[cw[::-1], widths]
+                        junc_d = np.r_[cj[::-1], junc_d]
+                    else:
+                        pix = np.vstack([pix, chain])
+                        widths = np.r_[widths, cw]
+                        junc_d = np.r_[junc_d, cj]
+                    info["cusp_exts"] = info.get("cusp_exts", 0) + 1
                 pts = pix[:, ::-1] + 0.5      # (y,x) -> (x,y) pixel centers
                 head_free = (not br["closed"]
                              and (br["a"] == 0 or deg.get(br["a"], 0) <= 1))
@@ -1111,8 +1356,9 @@ def extract_contour_strokes(labels: np.ndarray, centers: np.ndarray,
                 (kind, float((A[0] + B[0]) / 2), float((A[1] + B[1]) / 2),
                  pend[pi_]["color"], pend[pj_]["color"]))
 
+    cusp_dbg = _DEBUG.get("cusp", [])
     _DEBUG.clear()
-    _DEBUG.update({"pend": pend, "gw": gw})
+    _DEBUG.update({"pend": pend, "gw": gw, "cusp": cusp_dbg})
 
     for pb in pend:
         base = gw if width_mode == "global" else pb["w_med"]
@@ -1123,6 +1369,18 @@ def extract_contour_strokes(labels: np.ndarray, centers: np.ndarray,
         if (pb["head_free"] and pb["tail_free"]
                 and len(seg) < stub_factor * w_body):
             continue
+        # ---- straight-chain lock: TLS-straight raw chains render as exact
+        # lines (fit-tol bows + end-dips erased; swell suppressed below —
+        # a drawn ruler line is uniform weight, its mid-span EDT bulges are
+        # crossing-ink artifacts). See _straight_chain_lock.
+        locked = False
+        if not pb["closed"] and not pb.get("band"):
+            seg2 = _straight_chain_lock(seg, pb["head_free"],
+                                        pb["tail_free"])
+            if seg2 is not None:
+                seg = seg2
+                locked = True
+                info["straight_locks"] = info.get("straight_locks", 0) + 1
         # ---- serration BANDS: corner-aware CONSTANT-width stroke (run-7
         # design). Detect V-notch corners on the RAW chain (smoothing erases
         # them), smooth segments with corners pinned, fit with a corner
@@ -1164,7 +1422,7 @@ def extract_contour_strokes(labels: np.ndarray, centers: np.ndarray,
             # simply overlap. Following the pooled EDT there fattens every
             # converging branch into one black blob (palm-frond centers).
             jd = pb.get("junc_d")
-            if jd is not None and len(jd) == len(swell):
+            if not locked and jd is not None and len(jd) == len(swell):
                 swell &= np.asarray(jd, float) > 2.5 * w_body
                 prof[swell] = sm_w[swell]
                 varying = True
