@@ -1786,7 +1786,7 @@ def _light_line_capsules(labels: np.ndarray, centers: np.ndarray,
             # whole-carried slivers are amputated from the light shape they
             # emerge from by the tophat/label cut — tuck the cap back into it
             path = _extend_into_light(path, src, lum, bg)
-        d = _fit_branch(path, 2.5, 75.0, 11, False)
+        d = _li_capsule_d(path, 2.5, 75.0, 11)
         if not d:
             continue
         if light_ids:
@@ -1882,19 +1882,304 @@ def _fill_edge_corners(pts: np.ndarray, k: int = 6,
     return sorted(idx)
 
 
+# --- Line-intent stage 1 (it24 B-lineintent, GAP_LEDGER 0k / audit24 E4-E5) --
+# Populations measured on the live label lattices (diag it24):
+#   monster teeth pieces (corner-bounded): chord 5.8-8.6, dmax<=1.41,
+#     |mean signed|<=0.58 — the run-29 prior (chord>=20, n>=12) misses ALL;
+#   true ruler runs (wrist hairline, claws, checker): dev<=1.0, |sag|<=0.35
+#     (run-35 stroke populations: straights bow <=0.26, gentle curves >=0.5);
+#   anchor turns at REAL sub-80deg kinks (crystal facets, ridges, claws):
+#     raw k=6 turn >= 26.6; SPURIOUS fitter kinks on smooth raw <= 18.4
+#     (monster head flat-cut 11.3, elephant 18.4) — anchor gate 25 splits;
+#   G1-repair gate 20 (below the real-kink floor with margin) — the parsimony
+#     fitter mints corners at polygon vertices even on smooth raw (head-left
+#     kink brk 16.8 @ rawturn 11.3, same at every opttol), so smoothness is
+#     decided from the RASTER polyline, never from the fit.
+_LI_ANCHOR_DEG = 25.0    # raw k-chord turn that marks a drawing-intent kink
+_LI_G1_RAW_DEG = 20.0    # raw turn below which a fitted kink is spurious
+_LI_G1_BRK_MAX = 45.0    # never G1-repair breaks larger than this
+_LI_SHORT_CHORD = 4.0    # corner-bounded short-piece prior (teeth)
+_LI_SHORT_DMAX = 1.6     # teeth measured <=1.41
+_LI_SHORT_SAG = 0.65     # teeth measured <=0.58; R~5 rounded arcs >=0.8
+_LI_SHORT_MAX_CHORD = 12.0   # above this the tight long-span caps apply
+_LI_SPAN_DEV = 1.1       # anchored long span (hand-top 1.01, knuckle 1.07;
+_LI_SPAN_SAG = 0.35      #  rabbit cheek pieces 1.18+ stay out)
+_LI_CORR_THIN = 3.0      # neighbor-region local thickness = drawn hairline
+_LI_CORR_DEV = 1.8       # corridor spans: wrist 1.42/0.50 + 1.41/0.48 in;
+_LI_CORR_SAG = 0.85      #  chopchop curved corridor 3.37/2.23, rabbit
+                         #  outline 2.95/1.37, monster eye tip 1.94/0.91 out
+_LI_CAP_DEV = 1.35       # capsule skeleton spans (8-connected, noisier):
+_LI_CAP_SAG = 0.6        #  wrist hairline 0.99-1.06/<=0.54 + body lines
+_LI_CAP_CHORD = 8.0      #  1.19-1.22/<=0.56 in; curved seams >=1.7 out
+
+
+def _li_raw_turn(seg: np.ndarray, idx: int, k: int = 6) -> float:
+    """Turn angle (deg) at seg[idx] between k-chords before/after."""
+    n = len(seg)
+    i0, i1 = max(0, idx - k), min(n - 1, idx + k)
+    v1 = seg[idx] - seg[i0]
+    v2 = seg[i1] - seg[idx]
+    n1, n2 = float(np.hypot(*v1)), float(np.hypot(*v2))
+    if n1 < 1e-9 or n2 < 1e-9:
+        return 0.0
+    c = float(v1 @ v2) / (n1 * n2)
+    return float(np.degrees(np.arccos(np.clip(c, -1.0, 1.0))))
+
+
+def _li_run_stats(seg: np.ndarray, i: int, j: int):
+    """(chord_len, max|perp|, |mean signed perp|) of seg[i..j] vs its chord."""
+    q0, q1 = seg[i], seg[j]
+    v = q1 - q0
+    L = float(np.hypot(*v))
+    if L < 1e-9:
+        return L, 1e9, 1e9
+    nrm = np.array([-v[1], v[0]]) / L
+    d = (seg[i:j + 1] - q0) @ nrm
+    return L, float(np.abs(d).max()), float(abs(d.mean()))
+
+
+def _li_line_cubic(q0, q1) -> Tuple[float, ...]:
+    third = (q1 - q0) / 3.0
+    p1c = q0 + third
+    p2c = q0 + 2 * third
+    return (q0[0], q0[1], p1c[0], p1c[1], p2c[0], p2c[1], q1[0], q1[1])
+
+
+def _li_g1_repair(cubics: List[Tuple[float, ...]],
+                  seg: np.ndarray) -> List[Tuple[float, ...]]:
+    """Kill fitter-minted kinks on smooth raster: at each interior cubic
+    join whose RAW polyline turn is below _LI_G1_RAW_DEG, rotate both
+    handles to the bisector tangent (G1). True kinks (raw turn high) and
+    piece endpoints are never touched — smoothness is decided from the
+    raster, not the fit (audit24: head-left flat-cut, elephant mouth kink)."""
+    if len(cubics) < 2:
+        return cubics
+    out = [list(c) for c in cubics]
+    for ci in range(len(out) - 1):
+        c1, c2 = out[ci], out[ci + 1]
+        t_in = np.array([c1[6] - c1[4], c1[7] - c1[5]])
+        t_out = np.array([c2[2] - c2[0], c2[3] - c2[1]])
+        if float(np.hypot(*t_in)) < 1e-9:
+            t_in = np.array([c1[6] - c1[0], c1[7] - c1[1]])
+        if float(np.hypot(*t_out)) < 1e-9:
+            t_out = np.array([c2[6] - c2[0], c2[7] - c2[1]])
+        n1, n2 = float(np.hypot(*t_in)), float(np.hypot(*t_out))
+        if n1 < 1e-9 or n2 < 1e-9:
+            continue
+        cosb = float(t_in @ t_out) / (n1 * n2)
+        brk = float(np.degrees(np.arccos(np.clip(cosb, -1.0, 1.0))))
+        if brk < 1.0 or brk > _LI_G1_BRK_MAX:
+            continue
+        jp = np.array([c1[6], c1[7]])
+        idx = int(np.linalg.norm(seg - jp, axis=1).argmin())
+        if _li_raw_turn(seg, idx) > _LI_G1_RAW_DEG:
+            continue                      # real drawn kink: keep sharp
+        b = t_in / n1 + t_out / n2
+        nb = float(np.hypot(*b))
+        if nb < 1e-9:
+            continue
+        b /= nb
+        l_in = float(np.hypot(c1[6] - c1[4], c1[7] - c1[5]))
+        l_out = float(np.hypot(c2[2] - c2[0], c2[3] - c2[1]))
+        c1[4] = c1[6] - b[0] * l_in
+        c1[5] = c1[7] - b[1] * l_in
+        c2[2] = c2[0] + b[0] * l_out
+        c2[3] = c2[1] + b[1] * l_out
+    return [tuple(c) for c in out]
+
+
+def _li_anchors(seg: np.ndarray, head_anchored: bool,
+                tail_anchored: bool) -> List[int]:
+    """Drawing-intent kink vertices inside a piece: k-chord turn >=
+    _LI_ANCHOR_DEG that passes the TWO-SCALE LOCALIZATION test (turn
+    survives at half chord => true kink; lattice noise and smooth arcs
+    read up to ~27deg at k=6 but do NOT localize — without this test,
+    noise anchors partition gentle silhouettes into facetable spans and
+    the dome grows flat cuts). Piece endpoints are anchors iff they are
+    real corners/junctions (not a closed loop's arbitrary seam)."""
+    n = len(seg)
+    idx = _fill_edge_corners(seg, k=6, min_turn_deg=_LI_ANCHOR_DEG,
+                             loc_ratio=0.7, closed=False)
+    out: List[int] = ([0] if head_anchored else []) \
+        + [i for i in idx if 0 < i < n - 1] \
+        + ([n - 1] if tail_anchored else [])
+    return sorted(set(out))
+
+
+def _li_thin_side(labels: Optional[np.ndarray], seg: np.ndarray, i: int,
+                  j: int, pair: Tuple[int, int]) -> float:
+    """Min local thickness (px) of either neighbor region along span
+    midpoints — <=3 means the span bounds a drawn hairline corridor whose
+    lattice wobble is quantize noise, not geometry."""
+    if labels is None:
+        return 99.0
+    H, W = labels.shape
+    q0, q1 = seg[i], seg[j]
+    v = q1 - q0
+    L = float(np.hypot(*v))
+    if L < 1e-9:
+        return 99.0
+    nrm = np.array([-v[1], v[0]]) / L
+    # Probe from POLYLINE points (never the chord: on a sagged arc the chord
+    # sits inside one region and the walk exits instantly — a bowed dome apex
+    # then reads "thin" and gets flattened; measured bug, it24). Each walk:
+    # thickness of whatever region sits 1.5px off the boundary, until its
+    # label changes. The boundary wobbles +-1.4px inside a hairline corridor,
+    # so some walks start on the wrong side and read deep — a corridor is
+    # called when >=2 of the 6 walks read thin (dome/eye read 0 of 6).
+    thin_walks = 0
+    for kk in (0.25, 0.5, 0.75):
+        p = seg[i + int(round(kk * (j - i)))]
+        for sgn in (1.0, -1.0):
+            q = p + nrm * sgn * 1.5
+            xi, yi = int(round(q[0] - 0.5)), int(round(q[1] - 0.5))
+            if not (0 <= xi < W and 0 <= yi < H):
+                continue
+            lab = labels[yi, xi]
+            if lab not in pair:
+                continue
+            d = 8
+            for step in range(2, 8):
+                q2 = p + nrm * sgn * (0.5 + step)
+                x2, y2 = int(round(q2[0] - 0.5)), int(round(q2[1] - 0.5))
+                if not (0 <= x2 < W and 0 <= y2 < H) \
+                        or labels[y2, x2] != lab:
+                    d = step
+                    break
+            if d <= _LI_CORR_THIN:
+                thin_walks += 1
+    return 2.0 if thin_walks >= 2 else 99.0
+
+
+def _li_span_is_line(seg: np.ndarray, a: int, b: int,
+                     labels: Optional[np.ndarray],
+                     pair: Tuple[int, int]) -> bool:
+    """Is the anchor-to-anchor span a drawn ruler line? Tiered caps
+    (population-measured, see block comment above)."""
+    L, dmax, smean = _li_run_stats(seg, a, b)
+    if L < _LI_SHORT_CHORD:
+        return False
+    if L <= _LI_SHORT_MAX_CHORD:
+        return dmax <= _LI_SHORT_DMAX and smean <= _LI_SHORT_SAG
+    if dmax <= _LI_SPAN_DEV and smean <= _LI_SPAN_SAG:
+        return True
+    if dmax <= _LI_CORR_DEV and smean <= _LI_CORR_SAG \
+            and _li_thin_side(labels, seg, a, b, pair) <= _LI_CORR_THIN:
+        return True
+    return False
+
+
+def _li_fit_piece(seg: np.ndarray, parsimony: float, head_anchored: bool,
+                  tail_anchored: bool, stats: Optional[dict] = None,
+                  labels: Optional[np.ndarray] = None,
+                  pair: Tuple[int, int] = (-1, -1)
+                  ) -> List[Tuple[float, ...]]:
+    """Line-intent fit of one inter-corner piece: partition at drawing-
+    intent anchors (kinks), emit exact chords for anchor-to-anchor spans
+    that measure ruler-straight (kinks between spans stay pinned), fit the
+    curved remainder with parsimony cubics + raster-gated G1 repair."""
+    import svgcore
+
+    npts = len(seg)
+    q0, q1 = seg[0], seg[-1]
+    plen = float(np.hypot(*(q1 - q0)))
+    # Straight-piece prior (run 29, GAP_LEDGER #2), kept verbatim: pizza's
+    # black grid is ALL fill-layer; parsimony bows its ruler-straight
+    # boundaries. RMS<=0.9px / max<=2.8px over >=20px = straight.
+    if plen >= 20.0 and npts >= 12:
+        c0 = seg.mean(0)
+        _, _, vt = np.linalg.svd(seg - c0, full_matrices=False)
+        resid = np.abs(np.cross(vt[0], seg - c0))
+        if (float(np.sqrt((resid ** 2).mean())) <= 0.9
+                and float(resid.max()) <= 2.8):
+            if stats is not None:
+                stats["li_run29"] = stats.get("li_run29", 0) + 1
+            return [_li_line_cubic(q0, q1)]
+
+    anchors = _li_anchors(seg, head_anchored, tail_anchored)
+    # classify each consecutive anchor span; merge non-line stretches
+    line_spans: List[Tuple[int, int]] = []
+    for a, b in zip(anchors[:-1], anchors[1:]):
+        if b - a >= 4 and _li_span_is_line(seg, a, b, labels, pair):
+            line_spans.append((a, b))
+    if not line_spans:
+        # no ruler evidence: whole piece = parsimony + G1 (unchanged path)
+        flat = [float(v) for xy in seg for v in xy]
+        cs = svgcore.fit_open_parsimony(flat, 1.0, parsimony)
+        chain = [tuple(cs[k:k + 8]) for k in range(0, len(cs), 8)]
+        return _li_g1_repair(chain, seg)
+
+    cubics: List[Tuple[float, ...]] = []
+    pos = 0
+    for (i, j) in line_spans + [(npts - 1, None)]:
+        if pos < i:                      # curved stretch before the line
+            gap = seg[pos:i + 1]
+            if len(gap) >= 2:
+                flat = [float(v) for xy in gap for v in xy]
+                cs = svgcore.fit_open_parsimony(flat, 1.0, parsimony)
+                chain = [tuple(cs[k:k + 8]) for k in range(0, len(cs), 8)]
+                cubics += _li_g1_repair(chain, gap)
+        if j is None:
+            break
+        if stats is not None:
+            stats["li_lines"] = stats.get("li_lines", 0) + 1
+        cubics.append(_li_line_cubic(seg[i], seg[j]))
+        pos = j
+    return cubics
+
+
+def _li_capsule_d(path, tol: float = 2.5, corner_deg: float = 75.0,
+                  smooth_win: int = 11) -> str:
+    """Line-intent centerline fit for light-line capsules (the monster
+    hand/body hairlines are capsule STROKES painted last — a straight fill
+    boundary underneath cannot fix a wavy capsule over it). Decompose the
+    skeleton path at localized kinks (two-scale 25deg test: wrist kinks
+    34/43deg localize, staircase noise does not); ruler spans emit as exact
+    L segments with the kink pinned, curved spans keep the smoothed
+    Schneider fit. Paths with no ruler span are fitted exactly as before."""
+    p = np.asarray(path, float)
+    if len(p) < 5:
+        return _fit_branch(p, tol, corner_deg, smooth_win, False)
+    corners = _fill_edge_corners(p, k=6, min_turn_deg=_LI_ANCHOR_DEG,
+                                 loc_ratio=0.7, closed=False)
+    anchors = [0] + [c for c in corners if 0 < c < len(p) - 1] + [len(p) - 1]
+    spans = []
+    any_line = False
+    for a, b in zip(anchors[:-1], anchors[1:]):
+        if b - a < 2:
+            continue
+        L, dmax, smean = _li_run_stats(p, a, b)
+        is_line = (L >= _LI_CAP_CHORD and dmax <= _LI_CAP_DEV
+                   and smean <= _LI_CAP_SAG)
+        any_line |= is_line
+        spans.append((a, b, is_line))
+    if not any_line:
+        return _fit_branch(p, tol, corner_deg, smooth_win, False)
+    parts = [f"M {p[0][0]:.2f} {p[0][1]:.2f}"]
+    for a, b, is_line in spans:
+        if is_line:
+            parts.append(f"L {p[b][0]:.2f} {p[b][1]:.2f}")
+        else:
+            d = _fit_branch(p[a:b + 1], tol, corner_deg, smooth_win, False)
+            body = d.split(" ", 3)[3] if d.startswith("M ") else d
+            parts.append(body)
+    return " ".join(parts)
+
+
 def _fill_svg_corner_pinned(labels: np.ndarray, centers: np.ndarray,
                             edges, loops_by_region,
-                            parsimony: float) -> str:
+                            parsimony: float,
+                            stats: Optional[dict] = None) -> str:
     """Parsimony fill emission with serration corners pinned as fit
     breakpoints (drop-in for boundary.loops_to_svg_curves, parsimony>0).
 
     Each edge polyline is split at _fill_edge_corners; every piece is fitted
-    independently with svgcore.fit_open_parsimony (endpoints exact), so the
-    corner survives as a hard vertex the merge pass cannot round away. A
-    closed loop with corners is rotated to start at its first corner first,
-    so ALL its corners become pinned endpoints. Edges without corners fit
-    byte-identically to the un-pinned path."""
-    import svgcore
+    independently (endpoints exact), so the corner survives as a hard vertex
+    the merge pass cannot round away. A closed loop with corners is rotated
+    to start at its first corner first, so ALL its corners become pinned
+    endpoints. Per-piece fitting is line-intent aware (_li_fit_piece):
+    ruler-straight runs anchored at real kinks emit as exact chords, the
+    curved remainder is parsimony-fitted with raster-gated G1 repair."""
     import boundary
 
     fitted = {}
@@ -1914,32 +2199,18 @@ def _fill_svg_corner_pinned(labels: np.ndarray, centers: np.ndarray,
         cubics: List[Tuple[float, ...]] = []
         bounds = [0] + [c for c in corners if 0 < c < len(pts) - 1] \
             + [len(pts) - 1]
-        for a, b in zip(bounds[:-1], bounds[1:]):
+        # piece ends anchored = real corner or junction node; a closed loop
+        # WITHOUT corners has an arbitrary seam at 0 — never an anchor.
+        seam_free = closed and not corners
+        for pi, (a, b) in enumerate(zip(bounds[:-1], bounds[1:])):
             seg = pts[a:b + 1]
             if len(seg) < 2:
                 continue
-            # Straight-piece prior (run 29, GAP_LEDGER #2): pizza's black grid
-            # is ALL fill-layer (zero stroke geometry); parsimony bows its
-            # ruler-straight boundaries. A piece whose TLS line explains it at
-            # RMS<=0.9px / max<=2.8px over >=20px IS straight — one cubic on
-            # the endpoint chord (degenerate line; keeps the cubic plumbing).
-            q0, q1 = seg[0], seg[-1]
-            plen = float(np.hypot(*(q1 - q0)))
-            if plen >= 20.0 and len(seg) >= 12:
-                c0 = seg.mean(0)
-                _, _, vt = np.linalg.svd(seg - c0, full_matrices=False)
-                resid = np.abs(np.cross(vt[0], seg - c0))
-                if (float(np.sqrt((resid ** 2).mean())) <= 0.9
-                        and float(resid.max()) <= 2.8):
-                    third = (q1 - q0) / 3.0
-                    p1c = q0 + third
-                    p2c = q0 + 2 * third
-                    cubics.append((q0[0], q0[1], p1c[0], p1c[1],
-                                   p2c[0], p2c[1], q1[0], q1[1]))
-                    continue
-            flat = [float(v) for xy in seg for v in xy]
-            cs = svgcore.fit_open_parsimony(flat, 1.0, parsimony)
-            cubics += [tuple(cs[j:j + 8]) for j in range(0, len(cs), 8)]
+            head_anchored = not (seam_free and pi == 0)
+            tail_anchored = not (seam_free and pi == len(bounds) - 2)
+            cubics += _li_fit_piece(seg, parsimony, head_anchored,
+                                    tail_anchored, stats, labels=labels,
+                                    pair=(e["left"], e["right"]))
         fitted[i] = cubics
     svg, _plan = boundary._emit_regions(labels, centers, loops_by_region,
                                         fitted)
@@ -1987,7 +2258,7 @@ def contour_svg(labels: np.ndarray, centers: np.ndarray,
         # corner-pinned parsimony fills: serration V-notches (monster teeth)
         # survive as hard vertices instead of rounding into scallops
         svg = _fill_svg_corner_pinned(new_labels, centers, edges, loops,
-                                      parsimony=fill_parsimony)
+                                      parsimony=fill_parsimony, stats=info)
     else:
         svg = boundary.loops_to_svg_curves(new_labels, centers, edges, loops,
                                            tol=fill_tol,
