@@ -14,19 +14,20 @@
 
 ## OPEN (ranked by user priority + eye-loudness)
 
-1. **chopchop junction tangles / squiggle knots** — frond/trunk crown, chair
-   lattice, table edges render as tangled doubled-stroke glyphs; Recraft is one
-   clean confident line. Culprit: stroke extraction/network at complex junctions
-   (NOT palette: measured bleed is only 347px total, run 26). Worst tiles
-   (1,3),(2,3),(1,2). THE benchmark blocker.
+1. **chopchop junction tangles — LARGELY CURED run 27** (culprit CORRECTED:
+   the tangles were mid-dark BROWN TEXTURE LABELS (lum 64-81, spread 60-82)
+   being stroke-ified into squiggle loops, not junction geometry; the chroma
+   gate sends them to fills). Residual: verify remaining tangle scope at the
+   crown/lattice before staging more junction work; worst tiles now
+   (2,3),(1,3),(1,1) at rSSIM .873.
 2. **Straight-line waver residual (fitter share)** — pizza-box edges improved by
    run 25 (label-chain share fixed) but the fitter still has no straightness
    prior; long straights need line fits, not bezier chains. Culprit: fill/stroke
    fit (contours_exp.py smooth+Schneider / parsimony path). [it20 A-linefit]
-3. **PIZZA "ZZ" letterforms mangled** — the word's Z strokes are broken/warped
-   vs the crisp original. Suspect: thin-stroke extraction + corner handling on
-   letterforms (relates to 2; verify after A-linefit ships). ADDED from user
-   report; needs its own diff-located grid + culprit pass.
+3. ~~**PIZZA "ZZ" letterforms mangled**~~ — CLOSED run 27: letters (lum~76,
+   spread 151) passed dark_lum<96 and were stroke-ified; the two-tier chroma
+   gate (lum<60 OR spread<=45) keeps them as fills — ZZA now crisp, ~original.
+   (Checker-grid line bows remain = item 2, fitter.)
 4. **Heart notch depth** — notch restored (run 25) but shallower than
    original/Recraft; concave-cusp handling in the fitter rounds it. Culprit:
    fill fit (concave cusps unpinned — it18 corner-pin is convex-only in

@@ -580,3 +580,20 @@ See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
   must name WHY ours < recraft and the suspected pipeline stage; (3) framing:
   REACH recraft first, then surpass; (4) improve the harness itself.
   Implemented: autoresearch.md edits, GAP_LEDGER.md, recraft_gap --spots.
+
+### Run 27: two-tier chroma gate on stroke candidates (KEEP) — ZZA + junction tangles
+- Timestamp: 2026-07-08 07:30
+- Culprit protocol first live use: diag'd ledger #3 (PIZZA ZZA squiggles) —
+  letterforms lum~76/spread151 passed dark_lum<96 and got stroke-ified;
+  fitter looped the Z corners. Measured 6 targets: ink = lum<60 (may be
+  colored: rabbit navy spread 62) OR near-neutral spread<=45; saturated
+  mid-darks are glyph/gem FILLS. Gate accordingly.
+- Eye: ZZA crisp (~original); chopchop junction tangles LARGELY CURED
+  (ledger #1 — the tangles were stroke-ified brown texture labels, not the
+  stroke network's geometry at all); crystals drips gone; rabbit/monster/
+  shield byte-identical. Flat <=45 gate REFUTED first (would de-ink rabbit).
+- Gauge: chopchop rSSIM .868->.873, dE 2.81->2.66 — first eye+gauge
+  agreement on a structural change. Ledger updated (items 1,3).
+- Next: ledger #2 fitter straightness (checker bows remain); heart notch
+  depth; A-linefit dispatch brief now sharper (bows+overshoots at crossings
+  documented in diag26 grids).
