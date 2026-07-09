@@ -568,3 +568,15 @@ See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
   are pixel-quiet; the gauge tracks big structure, eye stays the gate.
 - Remaining (it20 A/B when limit resets): heart notch shallower than
   recraft (fitter depth); over-joining color guard; chopchop color bleed.
+
+### Run 26 (measure): chopchop brown-bleed diagnosis + PROTOCOL UPGRADE (user steer)
+- Timestamp: 2026-07-08 06:40
+- Measured: green->brown bleed is only 347px total (one 291px cluster at
+  (720,299)@1024). The page-1 "brown in fronds" impression = dark squiggle
+  TANGLES at frond/trunk junctions + coconut mess, not wide palette bleed.
+  B-localcolor re-scoped: junction cleanliness >> palette merge for chopchop.
+- USER STEER (full steering granted): (1) bake recraft_gap into validation
+  (never replacing eye); (2) culprit-pause protocol — every grid verdict
+  must name WHY ours < recraft and the suspected pipeline stage; (3) framing:
+  REACH recraft first, then surpass; (4) improve the harness itself.
+  Implemented: autoresearch.md edits, GAP_LEDGER.md, recraft_gap --spots.

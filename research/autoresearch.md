@@ -9,13 +9,16 @@ Mission: **research/docs/PROJECT_SPEC.md** · Work: **research/docs/BACKLOG.md**
 - ⚠ **KEEP/DISCARD IS BY EYE, NOT THE METRIC** (spec §4): render `tb.crops` and
   look. `quality`/`ssim` are a regression sanity check only — they reward
   copying source noise and penalize the idealization we want.
-- GOAL: an *idealized* vector reconstruction (clean confident lines, solid flat
-  regions, source noise removed) that **beats OUR LAST VERSION by EYE**, Recraft
-  (`data/targets/`) in frame as the north-star. NOT pixel fidelity.
-- CURRENT VERSION: **v5 `contour_lines`** (git `c61755e`); focus **monster-flat-line** (`./research/autoresearch.focus`).
-- BEST-SO-FAR: it17 = runs 17–20 all kept — medial_axis rng-pin (renders BYTE-DETERMINISTIC: byte-identical = legit skip), A-apexsnap (corridor-sliver absorption, apex nub gone), B-arcsupport (rabbit heart CLOSED via any-endpoint tangent-arc bridging + ridge2 gate, chopchop trunk×2, 0 welds). 14 keeps / 4 discards.
+- GOAL (USER framing 2026-07-08): **REACH Recraft's state FIRST, then surpass it.**
+  Work the defect scoreboard `research/docs/GAP_LEDGER.md` — close items with
+  before/after grids. chopchop is THE benchmark target. Idealized vector look
+  (clean confident lines, flat regions, noise removed), NOT pixel fidelity.
+- CURRENT VERSION: **v5 `contour_lines`** (git `5ad6d14`); focus **chopchop** (`./research/autoresearch.focus`).
+- Numeric direction gauge: `research/tools/recraft_gap.py [target] --spots` (ours-vs-RECRAFT render rSSIM/rΔE + worst tiles → mandatory eye-spots). Spot-finder + per-keep secondary; NEVER the gate.
+- ⚠ CULPRIT PROTOCOL: every eye verdict that sees ours < recraft must PAUSE and name (a) the concrete defect, (b) the suspected pipeline stage (staged-diagnosis strips when unsure), (c) ledger/BACKLOG entry. See "How better is judged".
+- BEST-SO-FAR: run 25 — thin-dark-line lock (heart notch + paw fingers + pizza straights restored); atop it19 round caps, it18 teeth compound (tall+sharp), it17 determinism+bridging. 19 keeps.
 - ⚠ ITERATIONS ARE WORKTREE-PARALLEL — if `research/autoresearch.iteration.json` phase≠idle, RESUME that in-flight iteration (see "Worktree-parallel iterations"); the SessionStart hook surfaces it.
-- OPEN: it18 = monster TEETH serration (brief pre-staged `research/it18/brief.md`, A/B pair: label-side spike guard + fitter-side corner fit); then mouth-corner hook, donor stump, fill-fitter tip-curl family, corner-aware capsule fit, rabbit buttons/tiny-ring closed-loop loss, heart-lobe flattening → research/docs/BACKLOG.md.
+- OPEN: GAP_LEDGER items 1–7 (chopchop junction tangles = #1; fitter straightness/cusp depth [it20-A]; PIZZA "ZZ" letterforms; color-guarded joining [it21]; buttons-ring fitter dual; color-to-ORIGINAL [it20-B re-scoped]) → details in GAP_LEDGER.md + BACKLOG.md.
 
 ## The metric is NOT the arbiter here (the key adaptation)
 The stock autoresearch loop treats a bare number as the keep/discard gate. **This
@@ -59,11 +62,47 @@ grid = tb.crops({"new": new, "prev": prev, "recraft": tb.target()},
   random locations. Stage caching makes single-knob re-renders take seconds.
 - If `tb.target()` is `None` for a target, drop the `recraft` key (don't pass None).
 
+### ⚠ Culprit protocol (USER mandate 2026-07-08) — the pause behind every verdict
+Verdicting "better/worse/lateral" is NOT enough. **Whenever a grid shows ours
+worse than Recraft — even in a crop you rendered for a different reason — STOP
+and think for a moment about WHY, then write it down:**
+1. **Name the defect concretely** ("the PIZZA 'ZZ' strokes break and warp",
+   "heart notch shallower", "frond/trunk junction is a tangled double-stroke
+   knot") — never just "worse" or "messy".
+2. **Name the suspected culprit stage** — pre-blur / quantize / palette merge /
+   despeckle-smooth (label cleanup) / stroke extraction / bridging-joining /
+   centerline+fill FIT / emission. If unsure, run a **staged-diagnosis strip**
+   (dump the artifact at each stage exactly like diag20_heart_stages.png — the
+   run-25 pattern: it found despeckle guilty when everyone suspected the
+   fitter). The smoking gun is usually one stage; find it, don't guess.
+3. **Record it** in `research/docs/GAP_LEDGER.md` (new item or evidence on an
+   existing one) so the defect enters the priority queue with its diagnosis
+   attached. An eye-pass that produces only verdicts and no culprits on visible
+   gaps is an incomplete pass.
+This is how "reach Recraft first" becomes mechanism: the ledger accumulates
+root-caused, ranked gaps; iterations close them with evidence.
+
+### recraft_gap — the numeric direction gauge (alongside, never instead)
+`research/tools/recraft_gap.py [targets] --spots` renders ours vs RECRAFT'S SVG
+(render-to-render, never vs original pixels — that rewards noise-copying) and
+reports rSSIM + rΔE + the worst 4×4 tiles, `--spots` emitting them as
+`tb.crops` (y,x)@4096 coordinates. Standing usage:
+- **Per keep**: record `rssim_<focus>` (+ rΔE if color-relevant) in the jsonl
+  `metrics` and re-run the full-table occasionally; a falling rSSIM on an
+  UNTOUCHED target is a spot-finder alarm.
+- **Per verification**: the worst tiles of the touched target(s) are MANDATORY
+  eye-spots in the crop grid, in addition to the defect-under-study spots.
+- Thin-line changes are pixel-quiet (run 25 measured: eye-loud wins moved rSSIM
+  <0.001) — a flat number NEVER means "no visual change", and a number never
+  gates a keep. Direction gauge + tile-ranker only.
+
 ## Testing progression (spec §6) — one focus target, then broaden
 Every experiment follows this order; **do not commit before step 4**:
 1. **Focus target first.** Make ONE atomic pipeline change. Render `new` vs
-   `prev` vs `recraft` on the focus target (`./research/autoresearch.focus`). Eye-verdict.
-   Iterate here until `new` beats `prev` on this single target.
+   `prev` vs `recraft` on the focus target (`./research/autoresearch.focus`). Eye-verdict
+   — including the recraft_gap worst-tile spots and the CULPRIT pause on any
+   ours-vs-recraft gap seen ("How better is judged"). Iterate here until `new`
+   beats `prev` on this single target.
 2. **Broaden to all 8 targets — render and LOOK at every target the change can
    touch.** Eye-check that the change generalizes across the style spread
    (characters, gradients, flat-line, logo) **without regressing any**. A win on
@@ -161,9 +200,17 @@ what ships** — including whether to combine multiple winners into one version.
      (in the MAIN repo — the one path a sub-agent may write outside its
      worktree): write the final `new.svg`, the baseline `prev.svg`, and any
      key intermediates there;
+   - the CULPRIT PROTOCOL instruction (see "How better is judged"): any grid
+     where ours < recraft must yield named-defect + suspected-stage notes
+     (staged-diagnosis strip when unsure), reported back for the ledger;
+   - recraft_gap usage where the target has a Recraft reference: run
+     `research/tools/recraft_gap.py <target> --spots`, include the worst
+     tiles as eye-spots, report before/after rSSIM/rΔE (secondary signal —
+     the eye stays the gate);
    - the report format: files changed + mechanism, the artifact dir path,
      crop paths, eye verdict (labelled as a claim), side observations,
-     lead-grade notes, **and its worktree path (`pwd`)**.
+     culprit notes for the GAP_LEDGER, lead-grade notes, **and its worktree
+     path (`pwd`)**.
 4. **Model & effort policy (every dispatch, no exceptions):**
    - **Model: never set explicitly.** Leave it to inherit so sub-agents always
      run whatever model the orchestrator session is on.

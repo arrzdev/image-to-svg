@@ -5,7 +5,11 @@ Ranked by expected visual impact (per the vision-first goal — mission in
 top priorities.** This is the **single idea queue** — the autoresearch loop
 draws its next experiment from here.
 
-## ⚠⚠ USER EYE-VERDICT 2026-07-08 — TOP PRIORITY (see [[user-visual-priorities]] memory)
+## ⚠⚠ USER EYE-VERDICT 2026-07-08 — TOP PRIORITY
+**The ranked defect scoreboard now lives in `research/docs/GAP_LEDGER.md`** (reach
+Recraft first, then surpass; culprit protocol per autoresearch.md). Items below are
+the original steer + seeds; the ledger is the working queue. NEW from user: the
+PIZZA "ZZ" letterform strokes are broken/warped (ledger item 3).
 The user reviewed v5 output directly. These outrank everything below. chopchop is
 THE benchmark ("get close to Recraft on chopchop = amazing"); compare our chopchop
 vs Recraft per zoomed grid square.

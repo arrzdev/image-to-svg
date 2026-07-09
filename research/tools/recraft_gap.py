@@ -49,8 +49,17 @@ def gap(name, svg_ours=None):
     tiles.sort()
     return s_all, de_all, tiles
 
+def worst_spots(tiles, k=3):
+    """Worst-k tiles as (y,x)@4096 crop spots for Testbed.crops (tile centers)."""
+    t4 = 4096 // GRID
+    return [(max(0, gy * t4 + t4 // 2 - 210), max(0, gx * t4 + t4 // 2 - 210))
+            for _, gx, gy in tiles[:k]]
+
+
 if __name__ == '__main__':
-    names = sys.argv[1:] or sorted(p.stem for p in pathlib.Path('data/targets').glob('*.svg'))
+    args = [a for a in sys.argv[1:] if a != '--spots']
+    show_spots = '--spots' in sys.argv[1:]
+    names = args or sorted(p.stem for p in pathlib.Path('data/targets').glob('*.svg'))
     print(f"{'target':20s} {'rSSIM':>6s} {'rdE':>6s}  worst tiles (gx,gy@4x4: ssim)")
     for n in names:
         r = gap(n)
@@ -59,3 +68,5 @@ if __name__ == '__main__':
         s, de, tiles = r
         worst = '  '.join(f'({gx},{gy}):{ts:.2f}' for ts, gx, gy in tiles[:3])
         print(f'{n:20s} {s:6.3f} {de:6.2f}  {worst}')
+        if show_spots:
+            print(f'{"":20s} crop spots (y,x)@4096: {worst_spots(tiles)}')
