@@ -945,3 +945,16 @@ See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
   Gauges up: rssim app-asset .925, degsuite .951. Honest negative ->
   BACKLOG (high-contrast subclass needs geometry/E8).
 - B next: verification pre-passed (runs 51/53); awaiting its commit.
+
+### Run 55 + it24 close-out: B SHIPPED; v11 milestone cut — ITERATION BOUNDARY
+- Timestamp: 2026-07-10 07:00
+- B shipped 8315d66 (0k hand CLOSED; teeth residual -> E5; seam curls ->
+  0h). A+B interaction set eye-verified neutral-to-positive. Main render ==
+  B artifact bytes; gauges pixel-quiet (documented thin-line behavior).
+- v11 CUT (transition ownership + line-intent stage 1; first audit-24
+  campaign milestone); v10 re-frozen to 0c86ca9; staged->v11; loop docs
+  repointed. Worktrees cleaned (main only remains).
+- it24 COMPLETE: 2 dispatched, 2 shipped. Segment 2: runs 41-55, 4 keeps
+  (2 pipeline, 2 research/tooling), 11 measurement/verify discards - every
+  one with banked leads.
+- NEXT: it25 dispatch (C-layeremit E8+0h, D-shadowideal E2) per BRIEFS.md.

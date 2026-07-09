@@ -106,4 +106,15 @@ version vs the previous **and vs Recraft**.
   turns the app-asset bg into ONE solid, ragged rings gone (ledger 0f).
   **vs Recraft:** audit24 (research/audit24/FINDINGS.md) sets the absolute
   bar: flat clean inputs ≈ parity; soft-shaded/AA classes remain 50–70% —
-  root causes E1–E8 drive the it24+ campaign. _(Live tree — next bump = v11.)_
+  root causes E1–E8 drive the it24+ campaign.
+- **v11** (git `8315d66`, cut 2026-07-10; code in `v11/src`): transition
+  ownership + line-intent stage 1 (it24, runs 54–55) — the first audit-24
+  campaign milestone. **vs v10:** E1 AA-ramp shrapnel absorbed into owning
+  regions (app-asset integrity .412→.988, mountain 1.000, ledger 0l closed);
+  drawing-intent anchors + tiered exact-chord emission + G1 kink repair
+  (monster hand hairlines straight with sharp kinks ≈ recraft — ledger 0k
+  hand closed; teeth crisp, residual = label lattice; crystals/mountain
+  edges straighter; circles stay round). **vs Recraft:** the two loudest
+  structural root causes (E1, E4) now have shipped mechanisms; remaining
+  gap concentrates in E2 shadows, 0h seams/E8 emission, E5 lattice
+  regularity, E7 color. _(Live tree — next bump = v12.)_
