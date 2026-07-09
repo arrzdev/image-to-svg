@@ -772,3 +772,19 @@ See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
   confirms the flat-art floor exists; the census direction is right, the
   coordinate frame was wrong.
 - No pipeline change; candidates A/B still in flight.
+
+### Run 43 (measure): E2 shadow census at working res — separation found (DISCARD-by-convention, measurement only)
+- Timestamp: 2026-07-10 01:45
+- research/audit24/shadow_census.py (fixed run-42 flaw: working res, ROI-scoped,
+  pipeline label map via tb.labels()). Results (ramp p50 px @1024 / sig labels):
+  DRAWN-FLAT controls: monster hand-lines 0.0/sat0/2, elephant ground 1.0/5.
+  SOFT class: app-asset red-icon shadow 7.0/7, arrow 20.0/5, chopchop
+  stool-under 9.0/7. rabbit ground 15.0/6 -> RECLASSIFIED soft: recraft
+  IDEALIZES it into a crisp ellipse (class boundary = raster softness, not
+  apparent intent). app-asset music ROI missed (-1, bad bbox) - redo in brief.
+- E2 idealizer gate candidate (for it25 dispatch): region ramp p50 >= ~5px at
+  1024 + low-sat + darker-than-parent + attached -> replace with ONE flat
+  offset/dilated shape (or drop if lumDrop small, e.g. arrow shadow lumDrop 11).
+  Fragmentation to undo: 5-7 labels per shadow today.
+- Candidates A/B still in flight; A got a path correction (label chain is
+  pipelines/quantize_contours.py).
