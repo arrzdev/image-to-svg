@@ -704,3 +704,17 @@ See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
   perf complaint resolved same-day. Ledger 0d closed (suspects corrected).
 - Lead: files-pile now slowest (18.3s, different cost structure); vendored
   medial_axis LUT could save ~1.8s more on chopchop.
+
+### Run 37: A-sharpen integrated (KEEP, judgment call) + 3 negative results
+- Timestamp: 2026-07-09 19:00
+- USER's sharpen recipe productionized (agent added anti-ringing clamp
+  after the flat-art landmine FIRED as predicted: logo halo rims — clamp
+  kills all). 9 wins / 7 lateral / 2 soft-gradient trades.
+- NEGATIVE RESULTS (3 gate attempts, all measured): per-pixel smoothness
+  blend prints zigzag SEAMS at the weight ramp (new artifact class);
+  per-image ramp-fraction overlaps wins (mountain .239 vs chopchop .259);
+  smooth-area label-flip overlaps too (app-asset's WIN is a big flip).
+  The soft-gradient banding trade is not separable by cheap global stats.
+- JUDGMENT CALL (stated in commit): default ON; shield rim-blob trade
+  accepted vs 9 wins on the user's benchmark/defect list; presharpen=0
+  escape hatch. it22 COMPLETE (runs 36+37). Cutting v9 milestone next.
