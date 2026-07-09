@@ -837,3 +837,56 @@ next (now top of BACKLOG + detailed in RESUME.md):
 All three are stroke-layer issues in contours_exp.py / strokes.py. After them:
 palette idealization (Recraft's softer shading tints) is the last quality gap.
 State snapshot: v4 (git c463914), docs/RESUME.md is the single start-here doc.
+
+---
+
+## 2026-07-10 · Segment 2 armed (runs 41-48): audit-24 reframe, v10 cut, it24 dispatched, diagnosis sweep
+
+USER re-armed the loop: "push past Recraft, beating our own last shipped
+version every iteration." Boundary work: audit24 (full-set zoomed eye audit
+at HEAD) produced VISION.md (USER blueprint + ABSOLUTE close-out bar) and
+audit24/FINDINGS.md (root causes E1-E8, process failures P1-P4 — the
+plateau mechanism was relative close-outs + low-zoom verdicts + local gates
+on structural causes). v10 cut at 01e80e0 (runs 38-40); v9 re-frozen;
+staged→v10.
+
+it24 dispatched (worktree candidates): A-transown (E1 transition-ownership
+in the label chain; app-asset primary) + B-lineintent (E4/E5 corner-pinned
+ruler-straightness in geometry/fit; monster primary — ledger 0k). Both
+briefed with paper mechanisms mid-flight (Potrace alphamax + straightness
+certificate → B; Depixelizing two-tier shading/contour edges + T-junction
+rule → A).
+
+Orchestrator diagnosis sweep while candidates ran (all logged in jsonl +
+worklog; highlights):
+- **Run 41**: recraft_gap harness had been rendering STALE v5 code since
+  ~run 33 (hardcoded sys.path) — fixed to models/staged/src; full v10
+  re-baseline taken. v10 cut was missing data/frontend/outputs symlinks.
+- **Run 42**: native-res ramp census NEGATIVE (resolution confound) —
+  corrected coordinate frame identified (working-res, label-boundary,
+  width-normalized).
+- **Run 43**: E2 shadow census at working res — clean separation: drawn
+  flat 0-1px ramp p50 vs soft shadows 7-20px + 5-7 labels each; rabbit
+  ground reclassified SOFT (recraft idealizes it). E2 gates now measured.
+- **Run 44**: batch-1 paper digests → PAPER_NOTES.md (8 PDFs; Potrace
+  corner semantics, VectorArk degradation model + rounded polygons,
+  Depixelizing edge classes, topology-on-simplified). Extracts forwarded
+  to in-flight candidates.
+- **Run 45**: 0h DIAGNOSED — recraft is overlap-sealed (seam=0 on 7/10);
+  seal-stroke PoC kills our seam class (84→0.7) + fixes monster eye smudge
+  by eye; ship fix = underpaint dilation ⇒ 0h+E8 = one it25 candidate.
+  Recraft's own chopchop scores 0.072 at deep zoom (their bar is
+  normal-zoom — calibrates ours).
+- **Run 46**: degradation suite BUILT (clean-truth idealization gauge):
+  v10 baseline dSSIM crystals .873 / chopchop .877 (== audit's eye
+  ranking). Load-bearing: facet melt/ridge loss reproduce from CLEAN
+  flat-color input — E3/E4/E5 are engine behavior, no source-noise alibi.
+- **Run 47**: 0l culprit CORRECTED — flatten exonerated by toggle; open
+  gaps = E1 shrapnel slivers (2-3 interior clusters); A-transown gains an
+  objective acceptance check (app-asset/mountain integrity → ~1.0).
+- **Run 48**: it25 briefs pre-written (C-layeremit 0h+E8, D-shadowideal E2
+  with run-43 gates); this consolidated entry.
+
+Segment-2 baselines (v10): recraft_gap full table in worklog run 41;
+degsuite in run 46; integrity in run 45. Next: verify/integrate it24
+candidates, then it25 dispatch.
