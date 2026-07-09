@@ -534,3 +534,37 @@ See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
   MEANINGFUL small details (rabbit paw fingers). Color match should target
   ORIGINAL not recraft. chopchop is THE benchmark. it20 re-orients to this;
   see [[user-visual-priorities]] memory + BACKLOG top.
+
+### Run 24: recraft_gap.py tool (MEASURE) — it20 suspended on weekly API limit
+- Timestamp: 2026-07-08 05:30
+- USER asked: is ours-vs-Recraft SVG comparison a trustworthy speed-up
+  signal? YES with caveats (direction gauge to the north-star, not a gate;
+  can't detect passing Recraft; eye still decides). Built
+  research/tools/recraft_gap.py: render-vs-render SSIM/deltaE + worst-tile
+  ranking (mechanizes the per-grid-square review the user does by hand).
+- Baseline at a8d728d CONFIRMS the user's eye: chopchop 0.868 = worst
+  (their benchmark call), rabbit worst COLOR (dE 4.18), monster 0.989 best.
+  Worst chopchop tiles (1,3),(2,3) = chair-lattice zone.
+- it20 A-linefit/B-localcolor: both agents died pre-code on the weekly API
+  limit (resets 4am Asia/Dubai). Re-dispatch both after reset — briefs
+  preserved in iteration.json + BACKLOG top. Track recraft_gap as a
+  secondary metric from run 25 on.
+
+### Run 25: thin-dark-line lock (KEEP) — commit 5ad6d14 — 3 USER defects hit
+- Timestamp: 2026-07-08 06:10
+- Staged diagnosis first (diag20_heart_stages.png): heart outline+notch
+  INTACT through rawquant/consolidate/mergeshadow, ERASED by despeckle+
+  smooth (mode filter kills sub-3px lines); bridging closes survivors into
+  the blob the user flagged. NOT the fitter.
+- Fix: _thin_dark_line_lock in contour_lines.py — re-stamp pre-cleanup
+  labels on true-ink thin elongated pixels after despeckle/smooth/dissolve.
+  Ink-only (lum<60) is load-bearing: first attempt at lum<96 locked
+  AA-fringe midtones -> phantom scratch dashes (run-25a, discarded inline).
+- Eye wins: rabbit heart NOTCH restored + paw toe-hooks back; pizza-box
+  straight edges continuous+straight (part of the user's straight-line
+  defect was label-chain erasure, not only the fitter!); chopchop palm-crown
+  tangle REDUCED + leg X-crack gone; shield seams continue. 10 targets
+  byte-identical; monster teeth untouched. recraft_gap flat — thin lines
+  are pixel-quiet; the gauge tracks big structure, eye stays the gate.
+- Remaining (it20 A/B when limit resets): heart notch shallower than
+  recraft (fitter depth); over-joining color guard; chopchop color bleed.
