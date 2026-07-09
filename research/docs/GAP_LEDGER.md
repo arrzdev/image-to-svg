@@ -126,14 +126,19 @@
    color) — this is GEOMETRIC over-merge in the stroke network (junction
    pooling / absorb / smoothing at the strap-heart meeting). Evidence:
    models/v5/outputs/user_heart_check.png.
-0b. **Thin PARALLEL lines merged or dropped (user 2026-07-09):** chopchop
-   chair strut has a red-brown pinstripe running parallel to the black edge
-   with clear spacing — OURS DROPS IT ENTIRELY; Recraft keeps it. Same
-   family: closely-spaced parallel thin lines get absorbed into one stroke
-   or routed to fill and dissolved. Culprit suspects: label chain merging
-   the thin colored stripe into the neighboring label (palette merge dE-12?
-   despeckle?), or stroke extractor absorbing it. Staged strip needed.
-   Evidence: models/v5/outputs/user_parallel_chop.png.
+0b. **Thin PARALLEL lines merged or dropped — LABEL CHAIN EXONERATED
+   (staged probe run 58):** chopchop's maroon strut pinstripe keeps its own
+   dark-maroon label (centroid 51,33,16) at 100% share through the ENTIRE
+   chain (quantize→consolidate→own_transitions→despeckle→smooth→dissolve;
+   research/audit24/stripe_probe.py). Culprit narrowed to STROKE
+   ROUTING/EXTRACTION: centroid lum≈36 < 60 → ink-class (two-tier gate) →
+   stroke-ified, then absorbed by the parallel heavy black edge in the
+   stroke network (skeleton/junction pooling or ribbon overlap — the run-34
+   color-guard only guards JOIN sites; RGB dist maroon↔black ≈60 would
+   refuse a weld, so absorption happens earlier: skeleton or coverage).
+   it26 first step: stroke-layer-only strip at the strut to see whether a
+   maroon stroke exists pre-network-merge. Original evidence:
+   models/v5/outputs/user_parallel_chop.png (recraft keeps the stripe).
 0c. **Detail-vs-noise INVERSION (user 2026-07-09):** meaningful details
    (pinstripe, hole ring) get deleted while BLUR-NOISE SHADES from the
    source (gray daubs on the strut, jagged halo fringes at body edges) get

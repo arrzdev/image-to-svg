@@ -996,3 +996,16 @@ See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
   depth ~18px-class, spacing CV <=~0.3 — PLUS the eye at deep zoom.
 - Detector needed 2 debug fixes (wrong edge, wrong bbox — eye smudge mask
   caught it); logged within the 3-attempt cap.
+
+### Run 58 (measure): 0b pinstripe staged probe — label chain exonerated; culprit = stroke routing/absorption (DISCARD-by-convention)
+- Timestamp: 2026-07-10 08:30
+- stripe_probe.py: the maroon pinstripe keeps its own label (51,33,16,
+  100% share) through quantize/consolidate/own_transitions/despeckle/
+  smooth/dissolve. NOT a label-chain kill. Centroid lum~36 < 60 = ink-class
+  by the two-tier gate -> routed to strokes -> absorbed by the parallel
+  heavy black edge (skeleton pooling or ribbon coverage; run-34 join guard
+  can't fire pre-join). it26 first step: stroke-layer-only strip at the
+  strut. Note: 56 core px @1024 - the stripe is sub-2px and mostly blended;
+  Recraft re-draws it at full strength (amplify, like the teeth run 57).
+- Pattern echo: 0b joins runs 28/47 as "the plausible suspect was innocent"
+  - three staged probes, three exonerations. Measure-first keeps winning.
