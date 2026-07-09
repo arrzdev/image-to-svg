@@ -15,7 +15,7 @@ git history:
 - `MANIFEST.md` — what changed, eye verdicts, negative results.
 
 The newest version (currently **v9**) is the LIVE tree the research loop edits;
-v3–v7 are frozen. Each version carries `data`/`outputs`/`frontend` symlinks so
+v3–v8 are frozen. Each version carries `data`/`outputs`/`frontend` symlinks so
 its code finds the shared cache; the research harness (`research/autoresearch.sh`)
 runs the live version's `src/ar_eval.py` (→ `src/testbed.py`). At each
 **structural** milestone the loop snapshots the live tree into the next `vN/`
@@ -80,7 +80,7 @@ version vs the previous **and vs Recraft**.
   horizontals ruler-straight. **vs Recraft:** chopchop gap narrows (recraft_gap
   0.868→0.871); the benchmark moves.
 - **v8** (git `5d1a9d6`, 2026-07-09 12:06; code in `v8/src`): color-guarded
-  joins + deep cusps + ruler-straight grids (runs 34–35). **CURRENT / LIVE.**
+  joins + deep cusps + ruler-straight grids (runs 34–35).
   **vs v7:** color-guarded joining (USER idea — refuse a weld across a color
   break) removes chopchop knot/leaf welds, fox chin-worm, rabbit spur welds
   while keeping the heart/trunk closures; junction cusp descent renders the
@@ -89,7 +89,7 @@ version vs the previous **and vs Recraft**.
   **vs Recraft:** the user-reported defects (over-rounding/straights,
   over-joining, the heart, ZZA, junction tangles, paw fingers) are closed by
   eye. 
-- **v9** (git `d216bce`, 2026-07-09 16:15; code in `v9/src`): sharpen prepass + 40× perf
+- **v9** (git `18797ae`, 2026-07-09 16:15; code in `v9/src`): sharpen prepass + 40× perf
   (runs 36–37). **vs v8:** byte-identical-output perf rewrite (chopchop
   298→7.4s — faster than v5); USER's sharpen prepass default-ON with
   anti-ringing clamp (chopchop strut noise daubs gone, rabbit heart flat +

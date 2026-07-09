@@ -47,8 +47,7 @@ models/<v>/MANIFEST.md  # what changed, eye-verdicts, negative results
 | v6      | 2026-07-08 05:01          | `a8d728d` | **yes**  | serration sharpness (runs 21–23): monster teeth tall AND sharp (corner-pinned fills + spike-tip rescue), corpus-wide corner sharpness, round-capped ribbon ends |
 | v7      | 2026-07-09 07:45          | `8431d34` | **yes**  | straight lines + letterforms (runs 25–29): thin-dark-line lock (heart notch + paw fingers back), two-tier chroma gate (ZZA letters + chopchop junction tangles fixed), straight-piece priors (pizza checkers ruler-straight) |
 | v8      | 2026-07-09 12:06          | `5d1a9d6` | **yes**  | color-guarded joins + deep cusps (runs 34–35): refuse welds across a color break (over-joins gone), junction cusp descent (heart notch full depth), straight-chain lock (pizza verticals straight through crossings) |
-
-| v9      | 2026-07-09 16:15          | `d216bce` | **yes (LIVE)** | 40x performance (byte-identical output) + sharpen prepass default-ON (USER idea: blur-noise melted pre-quantize; heart flat+rim, strut daubs gone, dropped letter restored) |
+| v9      | 2026-07-09 16:15          | `18797ae` | **yes (LIVE)** | 40x performance (byte-identical output) + sharpen prepass default-ON (USER idea: blur-noise melted pre-quantize; heart flat+rim, strut daubs gone, dropped letter restored) |
 
 All runnable versions expose the same pipeline (`contour_lines`, each at its
 own vintage) through `entry.py`; v3's `examples/` additionally keeps its
