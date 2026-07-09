@@ -20,19 +20,25 @@
    gate sends them to fills). Residual: verify remaining tangle scope at the
    crown/lattice before staging more junction work; worst tiles now
    (2,3),(1,3),(1,1) at rSSIM .873.
-2. **Straight-line waver — MOSTLY CLOSED runs 25+28+29** (label-chain lock;
-   chord-straight stroke emit; fill straight-piece prior — pizza's grid was
-   100% FILL-layer, instrumented). Checker horizontals now ruler-straight.
-   Residual: junction-adjacent HOOKS on verticals (fill-edge corner zones)
-   — fold into A-linefit with #4. [surgical scope]
+2. ~~**Straight-line waver**~~ — CLOSED runs 25+28+29+35. Final piece (run
+   35 straight-chain lock): verticals ruler-straight through crossings; the
+   fit's -2.75px tol-band S-bow measured and killed (sagitta bow<=0.4 lock,
+   grid lines <=0.26 vs true curves >=0.52). NOTE: run-29's "grid is 100%
+   fill-layer" was a flawed probe (missed direct _ribbon import) — the grid
+   is 45 ribbon STROKES; run-35 attribution stands. Residual (new item):
+   small crossing nubs + one unlocked short horizontal + upper-band cell
+   separators lost (label chain, pre-existing).
 3. ~~**PIZZA "ZZ" letterforms mangled**~~ — CLOSED run 27: letters (lum~76,
    spread 151) passed dark_lum<96 and were stroke-ified; the two-tier chroma
    gate (lum<60 OR spread<=45) keeps them as fills — ZZA now crisp, ~original.
    (Checker-grid line bows remain = item 2, fitter.)
-4. **Heart notch depth** — notch restored (run 25) but shallower than
-   original/Recraft; concave-cusp handling in the fitter rounds it. Culprit:
-   fill fit (concave cusps unpinned — it18 corner-pin is convex-only in
-   effect). [it20 A-linefit]
+4. ~~**Heart notch depth**~~ — CLOSED run 35 (junction cusp descent).
+   Culprit CORRECTED: not the fill fitter — absorb_mask folds the notch ink
+   into the fill (raw fill edge is FLAT); the visible notch is 100%
+   stroke-layer and its medial-axis junction sat at the wedge TOP with no
+   descending branch. One tangent-aligned extension into the ink pocket
+   (gates measured: true cusp .64w vs false pockets >=1.21w) renders the
+   deep V ~= original/Recraft.
 5. ~~**Over-joining lines**~~ — CLOSED run 34 (it21 B-colorguard, the USER's
    color-guard idea verbatim): RGB dist<=30 gate at all 4 join sites; good
    joins label-identical (0) vs over-joins 51-125. chopchop knot-hole weld,

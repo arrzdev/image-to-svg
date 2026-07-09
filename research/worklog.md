@@ -679,3 +679,17 @@ See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
 - Ledger #5 (over-joining) CLOSED. B's culprit notes: chopchop smile barb
   is NOT a weld (persists with all cross-color snaps blocked) -> skeleton
   fork family, A-linefit scope; fox haunch dash chain -> ledger #6.
+
+### Run 35: A-cusp integrated — heart notch FULL depth + pizza verticals straight (KEEP)
+- Timestamp: 2026-07-09 02:40
+- Both briefed defects proved STROKE-layer (layer-split proofs; run-29
+  "all fill-layer" probe was flawed — patched strokes._ribbon missed the
+  direct import; pizza grid = 45 ribbon strokes). M1 junction cusp descent
+  -> heart notch deep-V ~= original/recraft, lobes/cheeks round. M2
+  straight-chain lock (sagitta bow<=0.4; fit drift measured -2.75px) ->
+  pizza verticals ruler-straight through crossings, ZZA intact.
+- A+B interaction verified on integrated build; monster byte-identical.
+- it21 COMPLETE: 2 dispatched, 2 shipped (runs 34-35). Ledger: #4 CLOSED,
+  #2 residual CLOSED, #5 CLOSED (run 34). New leads: pizza crossing nubs +
+  upper-band cell separators lost (label chain, pre-existing, eye-loud);
+  chopchop smile barb = skeleton fork; fox haunch dash chain (#6).

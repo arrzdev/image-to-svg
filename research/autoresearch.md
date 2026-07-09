@@ -13,12 +13,12 @@ Mission: **research/docs/PROJECT_SPEC.md** · Work: **research/docs/BACKLOG.md**
   Work the defect scoreboard `research/docs/GAP_LEDGER.md` — close items with
   before/after grids. chopchop is THE benchmark target. Idealized vector look
   (clean confident lines, flat regions, noise removed), NOT pixel fidelity.
-- CURRENT VERSION: **v5 `contour_lines`** (git `8431d34`); focus **chopchop** (`./research/autoresearch.focus`). SEGMENT 0 COMPLETE (30/30) — re-arm to continue.
+- CURRENT VERSION: **v5 `contour_lines`** (git `5d1a9d6`); focus **chopchop** (`./research/autoresearch.focus`). Segment 1 live (2/30).
 - Numeric direction gauge: `research/tools/recraft_gap.py [target] --spots` (ours-vs-RECRAFT render rSSIM/rΔE + worst tiles → mandatory eye-spots). Spot-finder + per-keep secondary; NEVER the gate.
 - ⚠ CULPRIT PROTOCOL: every eye verdict that sees ours < recraft must PAUSE and name (a) the concrete defect, (b) the suspected pipeline stage (staged-diagnosis strips when unsure), (c) ledger/BACKLOG entry. See "How better is judged".
-- BEST-SO-FAR: runs 25-29 inline series — thin-dark-line lock, two-tier chroma gate (ZZA letterforms + chopchop junction tangles CURED), fill straight-piece prior (pizza checkers ruler-straight). Ledger #1,#2,#3 closed/mostly. 23 keeps. Gauge: chopchop .871, elephant .981.
+- BEST-SO-FAR: it21 runs 34-35 — color-guarded joining (USER idea; over-join welds gone, ledger #5) + junction cusp descent (heart notch FULL depth, #4) + straight-chain lock (pizza verticals straight, #2 CLOSED). Atop segment-0 wins (tangles, ZZA, thin-line lock, teeth). Gauge: chopchop .871, elephant .981.
 - ⚠ ITERATIONS ARE WORKTREE-PARALLEL — if `research/autoresearch.iteration.json` phase≠idle, RESUME that in-flight iteration (see "Worktree-parallel iterations"); the SessionStart hook surfaces it.
-- OPEN (next segment): junction-adjacent hooks + heart cusp depth (A-linefit surgical); color-guarded joining (#5); buttons-ring fitter dual (#6); color-to-ORIGINAL (#7, rabbit dE 4.16); crystals re-eye → GAP_LEDGER.md.
+- OPEN (it22 queue): #6 small-detail fitter dual (buttons hooks + fox dash chain); NEW pizza upper-band cell separators lost (label chain, eye-loud); #7 refined re-tint (eroded masks, skip ink); crystals hue drift; pizza crossing nubs → GAP_LEDGER.md.
 
 ## The metric is NOT the arbiter here (the key adaptation)
 The stock autoresearch loop treats a bare number as the keep/discard gate. **This
