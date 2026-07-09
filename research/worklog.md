@@ -597,3 +597,14 @@ See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
 - Next: ledger #2 fitter straightness (checker bows remain); heart notch
   depth; A-linefit dispatch brief now sharper (bows+overshoots at crossings
   documented in diag26 grids).
+
+### Run 28: chord-straight branch fit (KEEP, modest) + ledger-#2 negative finding
+- Timestamp: 2026-07-08 08:00
+- Raw-chord-straight branches (dev<=1.2px, len>=30px) emit L segments.
+  Elephant: brow closer to original, ear corner crisper, -20% size. Fox
+  neutral. pizza/rabbit/monster/chopchop byte-identical.
+- LOAD-BEARING NEGATIVE: pizza checker bows unchanged — the bow is in the
+  CENTERLINE (medial axis of the wobbly quantized band deviates >1.2px),
+  NOT the fit. A-linefit brief updated: regularize/straighten the
+  centerline polyline (or fit with line candidates at laxer tolerance);
+  the fit call was the wrong lever.
