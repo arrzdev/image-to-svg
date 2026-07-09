@@ -983,3 +983,16 @@ See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
 - Orchestrator protocol per it24 lessons: interim verification on first
   artifact drops; byte-claims re-checked on integrated builds; C
   integrates first (emission downstream of D's labels).
+
+### Run 57 (measure): E5 teeth census — recraft AMPLIFIES the repeat; ours drops tips below prominence (DISCARD-by-convention)
+- Timestamp: 2026-07-10 08:05
+- teeth_census.py (mouth top-edge zigzag profile @2048; caveats: one
+  window, 4px prominence): ORIGINAL 7 tips / spacing CV .09 / depth 11.4px;
+  RECRAFT 5 tips / CV .32 / depth 18.2px (fewer, BIGGER, DEEPER = amplify+
+  simplify the repeat — sharpens VISION item 6); OURS 3 detectable tips /
+  CV .69 / depth 10.5 (most tips blunted below prominence; matches B's
+  lattice attribution).
+- it26 E5 acceptance (quantified): >=5 detectable teeth in this window,
+  depth ~18px-class, spacing CV <=~0.3 — PLUS the eye at deep zoom.
+- Detector needed 2 debug fixes (wrong edge, wrong bbox — eye smudge mask
+  caught it); logged within the 3-attempt cap.
