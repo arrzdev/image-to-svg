@@ -658,3 +658,13 @@ See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
   drift (blue/pink centroid pull). Fix idea queued: post-assignment re-tint
   of region colors to the ORIGINAL region mean. Gauge caveat added: rdE
   compares to recraft, cross-check vs original before acting on color.
+
+### Run 33 (segment-final): re-tint-to-original — DISCARD with a strong lead
+- Naive region re-tint (mean of source pixels, cap 12): helps midtone fills
+  (mountain -0.51, elephant -0.27, rabbit -0.15, fox -0.16 dE-vs-original)
+  but pulls INK toward AA gray (monster +0.21, pizza +0.16) and misses
+  crystals (means themselves drift-polluted). Reverted.
+- LEAD (next segment, ledger #7): re-tint from ERODED region masks (exclude
+  boundary/AA pixels), skip ink labels; expect the fill wins without the ink
+  cost. Crystals may need per-facet means.
+- SEGMENT 0 COMPLETE: 30 result lines. The Stop hook pauses here.
