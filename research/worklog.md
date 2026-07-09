@@ -1024,3 +1024,12 @@ See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
 - it26 brief shape firming up: ONE stroke-network candidate covering 0b
   absorption + 0j junction mangling + E5 teeth amplification (all
   stroke/geometry-stage, all with measured acceptance).
+
+### Run 60 (docs): it26 brief written — E-stroke consolidates 0b+0j+E5 (KEEP, docs-only)
+- Timestamp: 2026-07-10 09:05
+- research/it26/BRIEFS.md: one stroke-network candidate for the whole
+  downstream family the diagnosis sweep isolated (runs 57-59), with
+  measured acceptance per sub-defect and the historical landmines
+  (snap radii, color guard, B's anchor machinery is load-bearing).
+- Orchestrator prep queue is now fully drained: it25 verification is the
+  only remaining work and it gates on candidate artifacts.
