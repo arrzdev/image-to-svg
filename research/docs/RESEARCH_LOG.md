@@ -941,3 +941,25 @@ additions that earned their keep: interim orchestrator verification (caught
 B's over-straightening + completed A's checklist mid-flight), objective
 side-checks (integrity), candidate byte-claims re-checked on integrated
 builds (caught A's wrong mountain claim — in the lucky direction this time).
+
+## 2026-07-10 · Run 63 — it25 C-layeremit SHIPPED (E8+0h); iteration closed by USER budget stop
+
+emit_regions_layered()+_emit_seal() in boundary_split.py, one assembly hunk
+in contours_exp. One path per shape, painter's order by descending
+footprint (recraft/LIVE), holes dropped (nested content repaints on top —
+nested seams sealed for free), sibling seams sealed by w=1.0 lattice-px
+underpaint stroke after the lower fill (only the hidden side grows).
+Ledger 0h CLOSED: seams 0 on 18/18, hairlines increased nowhere
+(game-assets pinholes fixed), degradation gauge IMPROVES on 3 targets,
+width landmines byte-identical (the run-61 "reads smaller" was prev's 25%
+seam bleed vanishing), monster right eye +28px white toward recraft.
+Verification: orchestrator interim (runs 61) + C's 18-target broaden +
+byte-equal integrated renders = verdicts transfer. E8's structural half
+(per-shape layers) also shipped — VISION item 7 now engine behavior.
+
+**it25 half-closed by USER budget stop:** D-shadowideal handed off as WIP
+(census with corrections committed in its worktree; mechanism written,
+unplumbed) — resume from worktree agent-aa041c47114afff8f or re-dispatch
+with its REPORT. Segment 2 final: runs 41-63, 6 keeps (3 pipeline: A/B/C
+= v11+, 2 research/tooling, 1 harness), it24 shipped as v11, it26 brief
+ready. Loop OFF (.autoresearch-off) per USER.

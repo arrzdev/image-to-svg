@@ -1080,3 +1080,12 @@ See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
   it25 C at final verification (seams->0 everywhere, degsuite IMPROVED),
   D mid-build. it26 brief ready (E-stroke: 0b+0j+E5).
 - Resume path documented in iteration.json next_action.
+
+### Run 63: it25 C SHIPPED — ledger 0h CLOSED; loop stopping (USER)
+- Timestamp: 2026-07-10 (final run of the session)
+- C integrated + shipped at ff05495 (byte-transfer verification: integrated
+  monster+shield == C artifacts, seam 0, integrity 1.0). 0h closed on all
+  18 targets. New culprit notes filed (E1 residual eye label, 0g rivet).
+- D = WIP handoff (worktree commit + REPORT requested; resume next session).
+- Loop OFF. Next session: D resume/re-dispatch -> it26 (E-stroke brief
+  ready) -> E7. v12 cut decision next session (A+B+C = clearly structural).

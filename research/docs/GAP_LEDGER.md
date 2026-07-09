@@ -60,6 +60,12 @@
    (audit24/grids/seam_poc_monster.png), but shifts thin-feature widths →
    ship-grade fix = underpaint dilation in paint order, i.e. E8 layered
    emission. 0h and E8 are ONE candidate. [it25]
+   **CLOSED run 63 (it25 C-layeremit):** per-shape single-subpath paths in
+   painter's order (holes dropped = nested seams sealed by repaint) +
+   sibling-seam underpaint strokes. Seams 28-87→0 on ALL 18 targets;
+   width landmines byte-identical; degsuite improves. Residual culprit
+   notes: monster right-eye gray AA label escapes _own_transitions (E1
+   residual, quantize); shield rivet red ball renders tan (0g family).
 0l. ~~**Open GAPS = E1 shrapnel slivers**~~ — CLOSED run 54 (it24 A-transown
    transition-ownership: app-asset integrity .412→.988, mountain .488→1.000,
    both eye-verified incl the mountain surprise win). Residual: A's honest
