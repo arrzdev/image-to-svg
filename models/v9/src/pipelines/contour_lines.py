@@ -135,7 +135,15 @@ class ContourLinesPipeline(Pipeline):
             raise RuntimeError(f"Could not read image: {image_path}")
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         if p["presharpen"] > 0:
-            img = _sharpen_prepass(img, p["presharpen"])
+            # Flat-art skip (run 38): sharpening pure flat art has no blur
+            # noise to melt and DEFORMS it — run 37 mangled the monster mouth
+            # (agent mislabeled it "lateral"; USER caught it). imgstats kind
+            # separates cleanly: flat = monster + 4 logos (all revert to the
+            # pre-sharpen output byte-identically), lineart = all 9 win
+            # targets. Same signal entry.py uses to gate upscaling.
+            from imgstats import analyze
+            if analyze(img)["kind"] != "flat":
+                img = _sharpen_prepass(img, p["presharpen"])
         if p["blur"] > 0:
             img = cv2.medianBlur(img, p["blur"] * 2 + 1)
 
