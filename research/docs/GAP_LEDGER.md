@@ -25,8 +25,16 @@
 
 ## OPEN (ranked by user priority + eye-loudness)
 
-0k. **REOPENED — monster teeth + straight-line intent (USER 2026-07-09,
-   audit 24):** HEAD teeth blunt/uneven/wavy-baseline vs Recraft's crisp
+0k. **monster teeth + straight-line intent — HAND+KINK CLOSED run 55, TEETH
+   residual reattributed:** it24 B-lineintent (anchor-span ruler pinning +
+   raster-gated G1 repair, capsule + fill layers): hand/body hairlines now
+   straight with sharp kinks ≈ recraft (orchestrator-verified,
+   verifyB2_hand.png); fitter-minted head kink killed; teeth now crisp
+   zigzag vs scallops BUT residual unevenness is the LABEL LATTICE (E5/
+   quantize — staged-strip evidence in B's REPORT), not geometry; mouth-seam
+   white curls = capsule rescue gates on lip AA → 0h family. Remaining for
+   full close: teeth lattice regularity (E5) + mouth seam (0h/it25).
+   Original entry (USER 2026-07-09, audit 24):** HEAD teeth blunt/uneven/wavy-baseline vs Recraft's crisp
    regular zigzag (runs 21-22 closed on a relative bar — postmortem P1); the
    straight hand/body separation lines are rendered as wavy S-curves; head
    silhouette has a flat-cut kink; mouth/head hairline seam (0h family).

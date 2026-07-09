@@ -914,3 +914,30 @@ Process: interim orchestrator verification (runs 50-53) caught B's
 over-straightening AND completed A's checklist mid-flight — candidates got
 course corrections while cheap. B (line-intent, stroke layer) still
 finalizing; ships separately atop this.
+
+## 2026-07-10 · Run 55 — it24 B-lineintent SHIPPED (E4/E5 line-intent stage 1)
+
+contours_exp.py only. Layer attribution PROVED first (the run-49 question):
+monster defects split across fills (corner-pinned fill fit) and CAPSULE
+STROKES (the wavy hand hairlines were white _light_line_capsules painted
+last — invisible in white-bg layer splits, which is why attribution was
+missed historically). Head flat-cut kink was minted by fit_open_parsimony
+itself. Mechanism: drawing-intent anchors (25° turn + two-scale
+localization; raw-turn-only anchors faceted the dome and were DISCARDED —
+the run-49 orchestrator catch), anchor-to-anchor exact chords under tiered
+population-measured caps (short/long/corridor), raster-gated G1 repair
+(raw-turn ≤20° vs real-kink floor 26.6°), same intent applied to capsule
+centerlines. Eye: hand hairlines straight+kinked ≈ recraft (0k hand
+CLOSED); teeth crisp zigzag, residual = label lattice (E5, strip-proven);
+crystals/mountain straighter; all 5 landmines clear. A+B interaction set
+(chopchop/app-asset/mountain/rabbit/fox) eye-verified neutral-to-positive
+(mountain ridges + chair struts compound). Culprits filed: mouth-seam
+curls = capsule rescue on lip AA (0h); teeth lattice (E5); crystals gap
+now dominated by E6/E7. Gauges pixel-quiet (documented thin-line
+behavior); main render == B artifact bytes.
+
+**it24 COMPLETE: 2 dispatched, 2 shipped (runs 54-55).** Segment-2 protocol
+additions that earned their keep: interim orchestrator verification (caught
+B's over-straightening + completed A's checklist mid-flight), objective
+side-checks (integrity), candidate byte-claims re-checked on integrated
+builds (caught A's wrong mountain claim — in the lucky direction this time).
