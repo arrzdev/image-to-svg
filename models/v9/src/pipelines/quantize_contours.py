@@ -187,33 +187,6 @@ _ACCENT_INK_RING_FRAC = 0.6   # non-small ring must be this dominated by ink
 _ACCENT_INK_LUM_GAP = 80.0    # component must be this much lighter than the ink
 _ACCENT_MIN_PX = 10           # below this it's a stray fleck -- dissolve as usual
 
-# Chromatic-mark guard constants (app-asset icon-glyph fix, it23 B-icongeom;
-# GAP_LEDGER 0g + the 0c intent-vs-noise discriminator, measured):
-# a small drawn GLYPH PART — the 'r' of "Share", the mail icon's envelope
-# fold creases, a letter counter-hole — sits INSIDE one flat field and is
-# HUE-SHIFTED from it (white-on-purple, purple-on-white: ab-plane shift
-# 48-62). Noise is not: shading daubs / fur fragments are same-hue luminance
-# shifts (ab-shift 4.6-6.2 measured on chopchop planks + fox), and AA fringes
-# lie BETWEEN two labels (ring split, majority share < 0.85, or their color
-# sandwiched between the neighbors'). Populations measured 2026-07-09 on
-# app-asset (must-live: 4 glyph parts) vs chopchop/fox/monster (must-die:
-# 0 false fires at these thresholds; nearest miss gap 49.7 / ab 36.8 is a
-# chopchop leaf-edge highlight, benign either way):
-_MARK_MIN_PX = 15             # smallest must-live ('a' counter-hole) = 19
-_MARK_FIELD_SHARE = 0.85      # must-live ring majority >= 0.88; AA rings split
-_MARK_LUM_GAP = 50.0          # must-live |lum - field| >= 66.2; false <= 49.7
-_MARK_CHROMA_AB = 20.0        # must-live CIELAB ab-shift >= 48.3; noise <= 6.2,
-                              # AA-on-white fringes <= 18.2
-_MARK_DARK_OWN_C = 27.0       # a DARKER-than-field mark must carry its own hue
-                              # (CIELAB chroma >= this): shadow shades are
-                              # desaturated versions of their field (pizza-box
-                              # lid-seam gray C 13.9 on tan, game-assets purple
-                              # cast shadows C 21.9 on gray — both must die) vs
-                              # drawn dark marks (envelope creases C 52.5,
-                              # 'a' counter-hole C 66.2, chest studs C 32.1 —
-                              # must live). Lighter marks skip this test (white
-                              # text C 6.1 is a legit highlight/glyph).
-
 # Spike-tip guard constants (monster teeth fix, see _despeckle_labels):
 # a sharp spike's tip tapers below pixel width, so the raster anti-aliases it
 # into midtones and quantization SEVERS the tip from its parent region
@@ -271,12 +244,10 @@ def _despeckle_labels(labels: np.ndarray, min_component_px: int,
     eye: the bridge reassigns to the dark surround and the tip renders as a
     floating fleck. Unweldable candidates dissolve as usual.
     """
-    lum = dark = lab_ab = None
+    lum = dark = None
     if centers is not None:
         lum = np.array([_luminance(c) for c in centers])
         dark = lum < DARK_LINE_LUM
-        from skimage.color import rgb2lab
-        lab_ab = rgb2lab(centers.reshape(1, -1, 3) / 255.0)[0][:, 1:]
     kernel = np.ones((3, 3), np.uint8)
     h, w = labels.shape
     # pass 1: mark every sub-floor component (per-label floors)
@@ -324,34 +295,6 @@ def _despeckle_labels(labels: np.ndarray, min_component_px: int,
                     # drawn accent between ink edges: exempt from despeckle.
                     if (ink.mean() >= _ACCENT_INK_RING_FRAC
                             and lum[ci] >= lum[neigh[ink]].min() + _ACCENT_INK_LUM_GAP):
-                        continue
-            if (dark is not None and not dark[ci]
-                    and stats[k, cv2.CC_STAT_AREA] >= _MARK_MIN_PX):
-                # chromatic-mark rescue (it23 B-icongeom, constants above):
-                # a small drawn glyph part — letter, envelope fold crease,
-                # counter-hole — sits INSIDE one flat non-ink field
-                # (ring majority >= 0.85) and is BOTH luminance-contrasting
-                # and HUE-SHIFTED from it. Same-hue shading daubs and
-                # ring-split AA fringes fail; drawn marks survive.
-                x0 = max(0, stats[k, cv2.CC_STAT_LEFT] - 1)
-                y0 = max(0, stats[k, cv2.CC_STAT_TOP] - 1)
-                x1 = min(w, stats[k, cv2.CC_STAT_LEFT] + stats[k, cv2.CC_STAT_WIDTH] + 1)
-                y1 = min(h, stats[k, cv2.CC_STAT_TOP] + stats[k, cv2.CC_STAT_HEIGHT] + 1)
-                sub = comp[y0:y1, x0:x1] == k
-                ring = cv2.dilate(sub.astype(np.uint8), kernel).astype(bool) & ~sub
-                ring &= ~small[y0:y1, x0:x1]      # judge vs survivors only
-                neigh = labels[y0:y1, x0:x1][ring]
-                if neigh.size:
-                    cnts = np.bincount(neigh, minlength=len(centers))
-                    maj = int(np.argmax(cnts))
-                    if (not dark[maj]
-                            and cnts[maj] >= _MARK_FIELD_SHARE * cnts.sum()
-                            and abs(lum[ci] - lum[maj]) >= _MARK_LUM_GAP
-                            and float(np.hypot(*(lab_ab[ci] - lab_ab[maj])))
-                            >= _MARK_CHROMA_AB
-                            and (lum[ci] > lum[maj]
-                                 or float(np.hypot(*lab_ab[ci]))
-                                 >= _MARK_DARK_OWN_C)):
                         continue
             if (dark is not None and not dark[ci]
                     and stats[k, cv2.CC_STAT_AREA] <= _SPIKE_MAX_PX):
@@ -434,8 +377,6 @@ def _dissolve_speckle(labels: np.ndarray, centers: np.ndarray,
     """
     out = labels.copy()
     dark = np.array([_luminance(c) < DARK_LINE_LUM for c in centers])
-    from skimage.color import rgb2lab
-    lab_ab = rgb2lab(centers.reshape(1, -1, 3) / 255.0)[0][:, 1:]
     kernel = np.ones((3, 3), np.uint8)
     h, w = labels.shape
     for ci in np.unique(labels):
@@ -473,19 +414,6 @@ def _dissolve_speckle(labels: np.ndarray, centers: np.ndarray,
             # dissolve a component lighter than its absorber.
             tgt = int(np.argmax(counts))
             if _luminance(centers[ci]) >= _luminance(centers[tgt]):
-                continue
-            # chromatic-mark guard (it23 B-icongeom, constants above): a
-            # darker-than-field component that is strongly HUE-SHIFTED from
-            # its absorber is a drawn mark (mail-icon envelope creases on
-            # white), not a shading daub (daubs are same-hue: ab-shift <= 6
-            # measured; creases 48). Measured 0 false keeps on
-            # chopchop/fox/monster at these thresholds.
-            if (stats[k, cv2.CC_STAT_AREA] >= _MARK_MIN_PX
-                    and abs(_luminance(centers[ci]) - _luminance(centers[tgt]))
-                    >= _MARK_LUM_GAP
-                    and float(np.hypot(*(lab_ab[ci] - lab_ab[tgt])))
-                    >= _MARK_CHROMA_AB
-                    and float(np.hypot(*lab_ab[ci])) >= _MARK_DARK_OWN_C):
                 continue
             region = out[y0:y1, x0:x1]
             region[sub] = tgt

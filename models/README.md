@@ -97,4 +97,13 @@ version vs the previous **and vs Recraft**.
   anti-ringing clamp (chopchop strut noise daubs gone, rabbit heart flat +
   highlight rim, app-asset dropped letter restored; soft-gradient trade
   logged, presharpen=0 escape). **vs Recraft:** benchmark noise gap visibly
-  narrows; rSSIM rabbit .951, monster .990. _(Live tree — next bump = v10.)_
+  narrows; rSSIM rabbit .951, monster .990.
+- **v10** (git `01e80e0`, cut 2026-07-09 late; code in `v10/src`): glyph
+  rescue + gradient flatten + flat-art guard (runs 38–40). **vs v9:**
+  flat-art skip restores the monster mouth (run-37 sharpen regression);
+  chromatic-mark rescue survives despeckle floors (app-asset "Share" r +
+  envelope creases back, ledger 0g); recraft-style gradient-region flatten
+  turns the app-asset bg into ONE solid, ragged rings gone (ledger 0f).
+  **vs Recraft:** audit24 (research/audit24/FINDINGS.md) sets the absolute
+  bar: flat clean inputs ≈ parity; soft-shaded/AA classes remain 50–70% —
+  root causes E1–E8 drive the it24+ campaign. _(Live tree — next bump = v11.)_
