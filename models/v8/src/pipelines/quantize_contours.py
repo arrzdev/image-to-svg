@@ -260,7 +260,12 @@ def _despeckle_labels(labels: np.ndarray, min_component_px: int,
         ncomp, comp, stats, _ = cv2.connectedComponentsWithStats(mask, 8)
         for k in range(1, ncomp):
             if stats[k, cv2.CC_STAT_AREA] < floor:
-                small |= comp == k
+                # bbox-local |= (comp == k is False outside its own bbox;
+                # the full-frame compare per component was a profiled hotspot)
+                bx0, by0 = stats[k, cv2.CC_STAT_LEFT], stats[k, cv2.CC_STAT_TOP]
+                bx1 = bx0 + stats[k, cv2.CC_STAT_WIDTH]
+                by1 = by0 + stats[k, cv2.CC_STAT_HEIGHT]
+                small[by0:by1, bx0:bx1] |= comp[by0:by1, bx0:bx1] == k
     # pass 2: junk sub-floor components unless ink-locked light accents
     junk = np.zeros(labels.shape, dtype=bool)
     for ci in np.unique(labels):
@@ -347,7 +352,10 @@ def _despeckle_labels(labels: np.ndarray, min_component_px: int,
                             break
                         if welded:
                             continue
-            junk |= comp == k
+            bx0, by0 = stats[k, cv2.CC_STAT_LEFT], stats[k, cv2.CC_STAT_TOP]
+            bx1 = bx0 + stats[k, cv2.CC_STAT_WIDTH]
+            by1 = by0 + stats[k, cv2.CC_STAT_HEIGHT]
+            junk[by0:by1, bx0:bx1] |= comp[by0:by1, bx0:bx1] == k
     return _reassign_pixels(labels, junk)
 
 
