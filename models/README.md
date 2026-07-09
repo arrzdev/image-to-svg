@@ -14,9 +14,13 @@ git history:
   comparison PNGs.
 - `MANIFEST.md` — what changed, eye verdicts, negative results.
 
-v5 also carries `data`/`outputs`/`frontend`/`autoresearch.focus` symlinks so
-the research harness (`research/autoresearch.sh` → `src/ar_eval.py`,
-`src/testbed.py`) finds its cache and references.
+The newest version (currently **v8**) is the LIVE tree the research loop edits;
+v3–v7 are frozen. Each version carries `data`/`outputs`/`frontend` symlinks so
+its code finds the shared cache; the research harness (`research/autoresearch.sh`)
+runs the live version's `src/ar_eval.py` (→ `src/testbed.py`). At each
+**structural** milestone the loop snapshots the live tree into the next `vN/`
+(via `git archive <commit> models/<live>/src`) with its own manifest + freshly
+rendered examples, and that new folder becomes the live tree.
 
 Mission & versioning rules: `research/docs/PROJECT_SPEC.md` (§5). Bump N only
 on **structural** changes; update this file on every bump, narrating each
@@ -43,7 +47,7 @@ version vs the previous **and vs Recraft**.
   eye (`v4/vs_recraft_fullframe.png`, `v4/vs_recraft_zoom.png`); residual gap is
   subtle palette/shading-color, not structural. Elephant `contour_lines`
   ≈ 918 pts / 39 paths / 13KB. Open defects → docs/BACKLOG.md.
-- **v5** (git `3d251ad`, 2026-07-07 23:29; code in `v5/src`): the autoresearch arc, runs 2–14 —
+- **v5** (git `c61755e`, 2026-07-08 03:01; code in `v5/src`): the autoresearch arc, runs 2–20 —
   line-network integrity + measured idealization. **vs v4:** the v4 defect
   report is cleared — junction nubs/pinches fixed, cross-component dash-gaps
   bridged, despeckle-lost ink re-traced from the source raster, curvature
@@ -56,6 +60,32 @@ version vs the previous **and vs Recraft**.
   fleck absorption, wiggle-gate texture→soft daubs, guarded plank-speckle
   dissolve, the despeckle light-accent guard (striped straw / gem vein / fox
   eye glint / monster scratch rescued), and the junction pool clamp (frond
-  centers + chair crossings cross clean). Each keep eye-verified on all
-  targets; negative results in v5/MANIFEST.md and research/docs/RESEARCH_LOG.md.
-  _(Current best — the loop continues from here; next structural bump = v6.)_
+  centers + chair crossings cross clean). Runs 15–20 (native worktree
+  iterations): light-line capsules un-bead thin light lines, source-supported
+  chord + arc endpoint bridging closes the rabbit heart + chopchop trunk (0
+  welds), medial_axis RNG pinned so renders are byte-deterministic. Each keep
+  eye-verified; negatives in v5/MANIFEST.md + research/docs/RESEARCH_LOG.md.
+- **v6** (git `a8d728d`, 2026-07-08 05:01; code in `v6/src`): serration
+  sharpness + clean terminals (runs 21–23). **vs v5:** monster teeth render
+  tall AND sharp (corner-pinned fills + severed-spike-tip rescue, compound);
+  corpus-wide corner sharpness (mountain pine tips, fox fur wisps, crystals
+  facet joins, logo-badge blade points); ribbon/wedge ends round-capped.
+  **vs Recraft:** monster serration approaches the reference zigzag.
+- **v7** (git `8431d34`, 2026-07-09 07:45; code in `v7/src`): straight lines,
+  letterforms, un-tangled junctions (runs 25–29) — answering the user's
+  eye-verdict. **vs v6:** thin-dark-line lock restores the rabbit heart notch +
+  paw fingers (label cleanup was erasing sub-3px lines); two-tier chroma gate
+  un-mangles the pizza "ZZA" letters and clears the chopchop junction tangles
+  (stroke-ified texture labels); straight-piece priors make pizza checker
+  horizontals ruler-straight. **vs Recraft:** chopchop gap narrows (recraft_gap
+  0.868→0.871); the benchmark moves.
+- **v8** (git `5d1a9d6`, 2026-07-09 12:06; code in `v8/src`): color-guarded
+  joins + deep cusps + ruler-straight grids (runs 34–35). **CURRENT / LIVE.**
+  **vs v7:** color-guarded joining (USER idea — refuse a weld across a color
+  break) removes chopchop knot/leaf welds, fox chin-worm, rabbit spur welds
+  while keeping the heart/trunk closures; junction cusp descent renders the
+  heart notch at full depth ≈ original/Recraft; straight-chain lock kills the
+  fitter's −2.75px S-bow so pizza verticals stay straight through crossings.
+  **vs Recraft:** the user-reported defects (over-rounding/straights,
+  over-joining, the heart, ZZA, junction tangles, paw fingers) are closed by
+  eye. _(Live tree — the loop continues from here; next structural bump = v9.)_

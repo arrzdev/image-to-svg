@@ -1,5 +1,6 @@
 # Autoresearch — image→SVG engine (VISION-FIRST loop)
-<!-- RESTRUCTURED 2026-07-07: engine = models/v5/src (was backend/); state/docs = research/.
+<!-- RESTRUCTURED 2026-07-07: engine folders = models/vN/src (was backend/); state/docs = research/.
+     2026-07-09: milestones backfilled v6/v7/v8; LIVE tree is now models/v8/src (v5-v7 frozen).
      Root SYMLINKS (autoresearch.{md,jsonl,focus,sh}, experiments->research) keep the
      plugin hooks working — do not remove them. -->
 <!-- Lines 1–15 = SessionStart rehydration window (sed 1,15p): keep objective+focus+best+EYE-gate here. -->
@@ -13,7 +14,7 @@ Mission: **research/docs/PROJECT_SPEC.md** · Work: **research/docs/BACKLOG.md**
   Work the defect scoreboard `research/docs/GAP_LEDGER.md` — close items with
   before/after grids. chopchop is THE benchmark target. Idealized vector look
   (clean confident lines, flat regions, noise removed), NOT pixel fidelity.
-- CURRENT VERSION: **v5 `contour_lines`** (git `5d1a9d6`); focus **chopchop** (`./research/autoresearch.focus`). Segment 1 live (2/30).
+- CURRENT VERSION: **v8 `contour_lines`** (git `5d1a9d6`, live tree = `models/v8/src`; v5–v7 frozen milestones); focus **chopchop** (`./research/autoresearch.focus`). Segment 1 live (2/30).
 - Numeric direction gauge: `research/tools/recraft_gap.py [target] --spots` (ours-vs-RECRAFT render rSSIM/rΔE + worst tiles → mandatory eye-spots). Spot-finder + per-keep secondary; NEVER the gate.
 - ⚠ CULPRIT PROTOCOL: every eye verdict that sees ours < recraft must PAUSE and name (a) the concrete defect, (b) the suspected pipeline stage (staged-diagnosis strips when unsure), (c) ledger/BACKLOG entry. See "How better is judged".
 - BEST-SO-FAR: it21 runs 34-35 — color-guarded joining (USER idea; over-join welds gone, ledger #5) + junction cusp descent (heart notch FULL depth, #4) + straight-chain lock (pizza verticals straight, #2 CLOSED). Atop segment-0 wins (tangles, ZZA, thin-line lock, teeth). Gauge: chopchop .871, elephant .981.
@@ -44,7 +45,7 @@ Recraft itself scores *lower* on it than our worse-looking outputs. Therefore:
 ## How "better" is judged — the vision verdict (THE gate)
 For the focus target, render the comparison grid and LOOK:
 ```python
-import sys; sys.path.insert(0, "models/v5/src")
+import sys; sys.path.insert(0, "models/v8/src")
 from testbed import Testbed
 tb = Testbed("elephant.jpg")          # or the current focus basename
 new  = tb.svg(...) / your rendered candidate SVG string
@@ -138,22 +139,22 @@ basename, e.g. `rabbit`) and the "CURRENT FOCUS TARGET" line above. `ar_eval.py`
 and `autoresearch.sh` both read `autoresearch.focus`.
 
 ## Files in Scope (the loop may edit these — the SVG pipeline)
-- `models/v5/src/contours_exp.py` — contour_lines pipeline: `_stroke_elements`,
+- `models/v8/src/contours_exp.py` — contour_lines pipeline: `_stroke_elements`,
   `_ribbon`, cap/join style at internal joins, junction handling.
-- `models/v5/src/strokes.py` — centerline/skeleton, junction-patch/union-find,
+- `models/v8/src/strokes.py` — centerline/skeleton, junction-patch/union-find,
   ribbon width, curvature-aware smoothing.
-- `models/v5/src/pipelines/*.py` — pipeline definitions/registration.
-- `models/v5/src/boundary.py`, `boundary_split.py`, `refine_shared_v3.py`,
+- `models/v8/src/pipelines/*.py` — pipeline definitions/registration.
+- `models/v8/src/boundary.py`, `boundary_split.py`, `refine_shared_v3.py`,
   `postprocess.py`, `idealize.py`, `preprocess.py`, `schneider.py` — supporting
   vectorization stages, when the change is on them.
 - Palette/color idealization code when that becomes the focus.
 
 ## Off Limits (LOCKED eval harness — spec task H; never edit in the loop)
-- **`models/v5/src/testbed.py`** — the judging harness (`tb.crops`, `tb.target`,
+- **`models/v8/src/testbed.py`** — the judging harness (`tb.crops`, `tb.target`,
   `tb.score`, caching). The loop proposes changes to the pipeline, NEVER to how
   its own results get judged.
-- **`models/v5/src/metrics.py`** — the metric-emitting code.
-- **`models/v5/src/ar_eval.py`** and **`./research/autoresearch.sh`** — the sanity harness.
+- **`models/v8/src/metrics.py`** — the metric-emitting code.
+- **`models/v8/src/ar_eval.py`** and **`./research/autoresearch.sh`** — the sanity harness.
 - **`data/targets/*.svg`** — the Recraft north-star references.
 - If one genuinely needs a fix, do it as a deliberate, separately-noted
   re-baseline step (worklog + RESEARCH_LOG), never as a routine experiment.
@@ -189,12 +190,12 @@ what ships** — including whether to combine multiple winners into one version.
      `research/autoresearch.md` (in its own worktree copy);
    - the specific objective for THIS candidate (defect, diagnosis so far,
      acceptance criterion in eye terms);
-   - the scope boundary — exactly which files/module under `models/v5/src/`
+   - the scope boundary — exactly which files/module under `models/v8/src/`
      it may touch, and the locked-harness list it may NOT;
    - the focus target and the `data/inputs/` / `data/targets/` paths;
    - exactly how to render and judge: env prefix
      `DYLD_FALLBACK_LIBRARY_PATH=/opt/homebrew/lib`, the repo venv python,
-     `sys.path.insert(0,'models/v5/src')`, render baseline-then-new,
+     `sys.path.insert(0,'models/v8/src')`, render baseline-then-new,
      `tb.crops({'new','prev','recraft'})`, LOOK at the png;
    - the ABSOLUTE shared artifact dir `<repo>/research/it<N>/candidates/<id>/`
      (in the MAIN repo — the one path a sub-agent may write outside its
@@ -299,7 +300,7 @@ Schema:
  "focus": "chopchop", "best_sha": "50c0a03", "updated": "<YYYY-MM-DD HH:MM>",
  "next_action": "LITERAL next step, e.g. 'verify candidate B-longgap in its worktree at <abs path>: re-render tb.crops spots [(y,x),...] and eye-judge' or 'broaden shipped AB to remaining targets: mountain, rabbit, fox (live: python3 run_model.py -m v5 -i data/inputs/<t>)'",
  "candidates": [
-   {"id": "fleck-recolor", "domain": "stroke-extractor (models/v5/src/contours_exp.py)",
+   {"id": "fleck-recolor", "domain": "stroke-extractor (models/v8/src/contours_exp.py)",
     "worktree": "<abs path reported by the sub-agent (native isolation)>",
     "backlog": "brown flecks", "effort": "inherit|low (deliberate, ≤ orchestrator)",
     "artifacts": "research/it<N>/candidates/<id>/",
@@ -337,7 +338,7 @@ cached testbed.
 Full-engine repro (env prefix mandatory — native renderer + Rust svgcore):
 ```bash
 DYLD_FALLBACK_LIBRARY_PATH=/opt/homebrew/lib .venv/bin/python -c "
-import sys; sys.path.insert(0,'models/v5/src')
+import sys; sys.path.insert(0,'models/v8/src')
 from pipelines import get_pipeline; from testbed import Testbed; from svgutil import fit_svg_size
 tb=Testbed('elephant.jpg'); pp,_,(ow,oh),_=tb.prep()
 open('out.svg','w').write(fit_svg_size(get_pipeline('contour_lines').run(pp,{}),ow,oh))"

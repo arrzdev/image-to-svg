@@ -29,35 +29,6 @@ from .quantize_contours import (
 )
 
 
-def _thin_dark_line_lock(labels: np.ndarray, centers: np.ndarray) -> np.ndarray:
-    """Mask of thin drawn dark-line pixels the label cleanup must not erase.
-
-    thin (half-width <=1.6px) AND not within 2px of thick ink (>2.5px
-    half-width — excludes blob fringes) AND in an elongated component
-    (>=40px at ~2.5px width ≈ >=16px of length).
-    """
-    dark = np.zeros(labels.shape, bool)
-    for ci, c in enumerate(centers):
-        # true ink only (rabbit ink 9-49 lum; AA-fringe/shadow midtones 60-95
-        # lock as phantom dashes — measured run 25)
-        if 0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2] < 60:
-            dark |= labels == ci
-    if not dark.any():
-        return dark
-    dist = cv2.distanceTransform(dark.astype(np.uint8), cv2.DIST_L2, 3)
-    thick = (dist > 2.5).astype(np.uint8)
-    k5 = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
-    near_thick = cv2.dilate(thick, k5).astype(bool)
-    thin_line = dark & (dist <= 1.6) & ~near_thick
-    n, lab = cv2.connectedComponents(thin_line.astype(np.uint8), connectivity=8)
-    if n <= 1:
-        return np.zeros(labels.shape, bool)
-    sizes = np.bincount(lab.ravel())
-    keep = np.zeros(n, bool)
-    keep[1:] = sizes[1:] >= 40
-    return keep[lab]
-
-
 class ContourLinesPipeline(Pipeline):
     id = "contour_lines"
     name = "Contour lines (width-constant)"
@@ -100,21 +71,9 @@ class ContourLinesPipeline(Pipeline):
         if p["merge_de"] > 0:
             labels, centers = _consolidate_palette(labels, centers, p["merge_de"])
             labels, centers = _merge_shadow_tones(labels, centers)
-            lock = _thin_dark_line_lock(labels, centers)
-            labels0 = labels.copy()
             labels = _despeckle_labels(labels, max(p["min_area"], 16), centers)
             labels = _smooth_labels(labels, len(centers), centers=centers)
             labels = _dissolve_speckle(labels, centers, 300)
-            # Thin drawn lines (heart outline, paw fingers, button rings) are
-            # sub-mode-filter width: despeckle/smooth erase them wholesale and
-            # downstream bridging then "closes" the survivors into blobs. The
-            # lock re-stamps pre-cleanup labels wherever cleanup flipped a
-            # locked line pixel to a light label. Locked pixels are thin
-            # (half-width <=1.6px), not blob fringe (no thick ink within 2px),
-            # and elongated (component >=40px) — measured: true lines have
-            # thin-fraction >=0.77, blob fringes <=0.35 (rabbit + chopchop).
-            flipped = lock & (labels != labels0)
-            labels[flipped] = labels0[flipped]
 
         svg, _info = contour_svg(labels, centers, fill_tol=p["fill_tol"],
                                  fill_smooth=p["fill_smooth"],
