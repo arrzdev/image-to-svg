@@ -759,3 +759,16 @@ See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
   fitting -> E7/E1; component-init layer order -> E8; Xing validity check).
 - it24 A-transown + B-lineintent still running in worktrees.
 - Next: verify candidates on arrival (iteration.json next_action).
+
+### Run 42 (measure): ramp-width census — NEGATIIVE, flaw named (DISCARD)
+- Timestamp: 2026-07-10 01:20
+- Edge ramp-width census (research/audit24/ramp_census.py) across 17 inputs:
+  does NOT separate defect classes at native res — elephant 45% >4px tail vs
+  app-asset 25.8% (inverted vs eye evidence); logo-lineart/geometric saturate
+  (resolution+thick-AA confound); L=12 profile cap clips tails.
+- Banked lead for A-transown/E2 briefs: measure ramps at the PIPELINE WORKING
+  resolution, only at LABEL-BOUNDARY pixels (the E1 ownership decision
+  points), normalize by local stroke width. Monster/logo-wordmark 0% >4px
+  confirms the flat-art floor exists; the census direction is right, the
+  coordinate frame was wrong.
+- No pipeline change; candidates A/B still in flight.

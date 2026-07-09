@@ -46,6 +46,7 @@ transfers to us:
 Batch 1 (idealization): Layered Semantic Simplification, Depixelizing Pixel
 Art, Potrace corner semantics, SuperSVG, VectorArk, Deep Vectorization of
 Technical Drawings (cleaning stage), Vectorization Review.
-Batch 2 (loop/judge): Render-in-the-Loop, Rendering-aware RL, Reason-SVG,
-LayerTracer, AmodalSVG, DuetSVG (path-semantics metrics), Chat2SVG.
-— agents dispatched 2026-07-09; results append here on arrival.
+Batch 2 (loop/judge: Render-in-the-Loop, Rendering-aware RL, Reason-SVG,
+LayerTracer, AmodalSVG, DuetSVG, Chat2SVG) — **agent cancelled by USER
+2026-07-10; not relaunched.** If those digests become needed (idealization
+judge design, E8 layering), ask the USER before re-dispatching.
