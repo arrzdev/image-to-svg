@@ -858,3 +858,17 @@ See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
   on app-asset/mountain = free objective check at integration).
 - Runs-13-22 meta-lesson holds again: measure-first culprit testing beat
   the plausible-sounding suspect (flatten) before any code was written.
+
+### Run 49 (verify-interim): B's interim artifact — over-straightening regression caught + fed back (DISCARD as-is; B iterating)
+- Timestamp: 2026-07-10 03:45
+- B dropped interim new.svg (no REPORT yet). Orchestrator-independent
+  renders (verifyB_hand.png / verifyB_mouth.png):
+  (1) head dome silhouette now flat-cut with corner kinks = straightness
+  gate firing on gentle arcs (the briefed landmine, live). Fix sent: whole-
+  run +-0.5px certificate / arc-fit rejection, not short-window flatness.
+  (2) left eye degraded; (3) hand hairline UNCHANGED - may live outside
+  the fill-boundary layer B is editing (layer-split strip requested);
+  (4) teeth unchanged.
+- Value of interim verification: regression caught while B is still in
+  the loop, not at integration. The P2 lesson (zoom or it didn't happen)
+  applied to a candidate mid-flight for the first time.
