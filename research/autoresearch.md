@@ -1,6 +1,6 @@
 # Autoresearch — image→SVG engine (VISION-FIRST loop)
 <!-- RESTRUCTURED 2026-07-07: engine folders = models/vN/src (was backend/); state/docs = research/.
-     2026-07-09: milestones backfilled v6/v7/v8; LIVE tree is now models/v9/src (v5-v7 frozen).
+     2026-07-09: milestones backfilled v6/v7/v8; LIVE tree is now models/v10/src (v5-v7 frozen).
      Root SYMLINKS (autoresearch.{md,jsonl,focus,sh}, experiments->research) keep the
      plugin hooks working — do not remove them. -->
 <!-- Lines 1–15 = SessionStart rehydration window (sed 1,15p): keep objective+focus+best+EYE-gate here. -->
@@ -10,17 +10,25 @@ Mission: **research/docs/PROJECT_SPEC.md** · Work: **research/docs/BACKLOG.md**
 - ⚠ **KEEP/DISCARD IS BY EYE, NOT THE METRIC** (spec §4): render `tb.crops` and
   look. `quality`/`ssim` are a regression sanity check only — they reward
   copying source noise and penalize the idealization we want.
-- GOAL (USER framing 2026-07-08): **REACH Recraft's state FIRST, then surpass it.**
-  Work the defect scoreboard `research/docs/GAP_LEDGER.md` — close items with
-  before/after grids. chopchop is THE benchmark target. Idealized vector look
-  (clean confident lines, flat regions, noise removed), NOT pixel fidelity.
-- CURRENT VERSION: **v8 `contour_lines`** (git `5d1a9d6`, live tree = `models/v9/src`; v5–v7 frozen milestones); focus **chopchop** (`./research/autoresearch.focus`). Segment 1 live (2/30).
+- GOAL (USER 2026-07-09, /autoresearch re-arm): **push quality as far as
+  possible PAST Recraft, beating our own last shipped version every
+  iteration.** Keep gate = beats prev shipped (v10) by eye at ZOOM; ledger
+  items close only at ≈Recraft in the zoomed grid (ABSOLUTE bar — audit24
+  P1). Authority docs: `research/docs/VISION.md` (the USER blueprint: reverse-
+  engineer the drawing — strokes+bucket-fills, local color merge, shadows/
+  gradients→one flat shape, line-intent, boundaries sacred, repeats
+  regularized) + `research/audit24/FINDINGS.md` (root causes E1-E8, process
+  P1-P4, campaign skeleton).
+- ⚠ **ZOOM OR IT DIDN'T HAPPEN** (audit24 P2): verdicts only from crops at
+  ≥2 zoom levels; flat-art targets get the DEEPEST zoom (1-3px defects are
+  the whole remaining gap). Full-frame verdicts are void.
+- CURRENT VERSION: **v10 `contour_lines`** (git `01e80e0` cut `0c86ca9`, live tree = `models/v10/src`; v5–v9 frozen); focus **monster-flat-line** (`./research/autoresearch.focus`). Segment 2 live (maxRuns 30).
 - Numeric direction gauge: `research/tools/recraft_gap.py [target] --spots` (ours-vs-RECRAFT render rSSIM/rΔE + worst tiles → mandatory eye-spots). Spot-finder + per-keep secondary; NEVER the gate.
 - ⚠ CULPRIT PROTOCOL: every eye verdict that sees ours < recraft must PAUSE and name (a) the concrete defect, (b) the suspected pipeline stage (staged-diagnosis strips when unsure), (c) ledger/BACKLOG entry. See "How better is judged".
-- BEST-SO-FAR: it21 runs 34-35 — color-guarded joining (USER idea; over-join welds gone, ledger #5) + junction cusp descent (heart notch FULL depth, #4) + straight-chain lock (pizza verticals straight, #2 CLOSED). Atop segment-0 wins (tangles, ZZA, thin-line lock, teeth). Gauge: chopchop .871, elephant .981.
+- BEST-SO-FAR: v10 = runs 38-40 (flat-art sharpen guard, chromatic-mark rescue/0g, gradient flatten/0f) atop v9 perf+sharpen, v8 color-guard joins + cusps + straight locks.
 - ⚠ ITERATIONS ARE WORKTREE-PARALLEL — if `research/autoresearch.iteration.json` phase≠idle, RESUME that in-flight iteration (see "Worktree-parallel iterations"); the SessionStart hook surfaces it.
 - ⚠ ITERATION LIFECYCLE (USER mandate 2026-07-09, see "Iteration lifecycle"): research→test→validate→document→version-if-better→/clear→continue. `models/staged` symlinks the live tree so the USER can test in-flight work (`run_model.py -m staged`).
-- OPEN (it22 queue): #6 small-detail fitter dual (buttons hooks + fox dash chain); NEW pizza upper-band cell separators lost (label chain, eye-loud); #7 refined re-tint (eroded masks, skip ink); crystals hue drift; pizza crossing nubs → GAP_LEDGER.md.
+- OPEN (it24 = audit24 campaign): **A-transown** E1 transition-ownership quantize (AA-ramp shrapnel, app-asset/fox/boss); **B-lineintent** E4/E5 boundary-intent — corner-pinned ruler-straightness (monster 0k, crystals facets, mountain ridges). Then: E2 object-shadow idealizer, E3/0a/0b/0j boundary-integrity staged diagnosis, E8 per-shape layered emission (kills 0h seams), E7 region-local color. Queue detail: GAP_LEDGER.md + FINDINGS.md skeleton.
 
 ## The metric is NOT the arbiter here (the key adaptation)
 The stock autoresearch loop treats a bare number as the keep/discard gate. **This
@@ -46,7 +54,7 @@ Recraft itself scores *lower* on it than our worse-looking outputs. Therefore:
 ## How "better" is judged — the vision verdict (THE gate)
 For the focus target, render the comparison grid and LOOK:
 ```python
-import sys; sys.path.insert(0, "models/v9/src")
+import sys; sys.path.insert(0, "models/v10/src")
 from testbed import Testbed
 tb = Testbed("elephant.jpg")          # or the current focus basename
 new  = tb.svg(...) / your rendered candidate SVG string
@@ -140,22 +148,22 @@ basename, e.g. `rabbit`) and the "CURRENT FOCUS TARGET" line above. `ar_eval.py`
 and `autoresearch.sh` both read `autoresearch.focus`.
 
 ## Files in Scope (the loop may edit these — the SVG pipeline)
-- `models/v9/src/contours_exp.py` — contour_lines pipeline: `_stroke_elements`,
+- `models/v10/src/contours_exp.py` — contour_lines pipeline: `_stroke_elements`,
   `_ribbon`, cap/join style at internal joins, junction handling.
-- `models/v9/src/strokes.py` — centerline/skeleton, junction-patch/union-find,
+- `models/v10/src/strokes.py` — centerline/skeleton, junction-patch/union-find,
   ribbon width, curvature-aware smoothing.
-- `models/v9/src/pipelines/*.py` — pipeline definitions/registration.
-- `models/v9/src/boundary.py`, `boundary_split.py`, `refine_shared_v3.py`,
+- `models/v10/src/pipelines/*.py` — pipeline definitions/registration.
+- `models/v10/src/boundary.py`, `boundary_split.py`, `refine_shared_v3.py`,
   `postprocess.py`, `idealize.py`, `preprocess.py`, `schneider.py` — supporting
   vectorization stages, when the change is on them.
 - Palette/color idealization code when that becomes the focus.
 
 ## Off Limits (LOCKED eval harness — spec task H; never edit in the loop)
-- **`models/v9/src/testbed.py`** — the judging harness (`tb.crops`, `tb.target`,
+- **`models/v10/src/testbed.py`** — the judging harness (`tb.crops`, `tb.target`,
   `tb.score`, caching). The loop proposes changes to the pipeline, NEVER to how
   its own results get judged.
-- **`models/v9/src/metrics.py`** — the metric-emitting code.
-- **`models/v9/src/ar_eval.py`** and **`./research/autoresearch.sh`** — the sanity harness.
+- **`models/v10/src/metrics.py`** — the metric-emitting code.
+- **`models/v10/src/ar_eval.py`** and **`./research/autoresearch.sh`** — the sanity harness.
 - **`data/targets/*.svg`** — the Recraft north-star references.
 - If one genuinely needs a fix, do it as a deliberate, separately-noted
   re-baseline step (worklog + RESEARCH_LOG), never as a routine experiment.
@@ -224,12 +232,12 @@ what ships** — including whether to combine multiple winners into one version.
      `research/autoresearch.md` (in its own worktree copy);
    - the specific objective for THIS candidate (defect, diagnosis so far,
      acceptance criterion in eye terms);
-   - the scope boundary — exactly which files/module under `models/v9/src/`
+   - the scope boundary — exactly which files/module under `models/v10/src/`
      it may touch, and the locked-harness list it may NOT;
    - the focus target and the `data/inputs/` / `data/targets/` paths;
    - exactly how to render and judge: env prefix
      `DYLD_FALLBACK_LIBRARY_PATH=/opt/homebrew/lib`, the repo venv python,
-     `sys.path.insert(0,'models/v9/src')`, render baseline-then-new,
+     `sys.path.insert(0,'models/v10/src')`, render baseline-then-new,
      `tb.crops({'new','prev','recraft'})`, LOOK at the png;
    - the ABSOLUTE shared artifact dir `<repo>/research/it<N>/candidates/<id>/`
      (in the MAIN repo — the one path a sub-agent may write outside its
@@ -334,7 +342,7 @@ Schema:
  "focus": "chopchop", "best_sha": "50c0a03", "updated": "<YYYY-MM-DD HH:MM>",
  "next_action": "LITERAL next step, e.g. 'verify candidate B-longgap in its worktree at <abs path>: re-render tb.crops spots [(y,x),...] and eye-judge' or 'broaden shipped AB to remaining targets: mountain, rabbit, fox (live: python3 run_model.py -m v5 -i data/inputs/<t>)'",
  "candidates": [
-   {"id": "fleck-recolor", "domain": "stroke-extractor (models/v9/src/contours_exp.py)",
+   {"id": "fleck-recolor", "domain": "stroke-extractor (models/v10/src/contours_exp.py)",
     "worktree": "<abs path reported by the sub-agent (native isolation)>",
     "backlog": "brown flecks", "effort": "inherit|low (deliberate, ≤ orchestrator)",
     "artifacts": "research/it<N>/candidates/<id>/",
@@ -372,7 +380,7 @@ cached testbed.
 Full-engine repro (env prefix mandatory — native renderer + Rust svgcore):
 ```bash
 DYLD_FALLBACK_LIBRARY_PATH=/opt/homebrew/lib .venv/bin/python -c "
-import sys; sys.path.insert(0,'models/v9/src')
+import sys; sys.path.insert(0,'models/v10/src')
 from pipelines import get_pipeline; from testbed import Testbed; from svgutil import fit_svg_size
 tb=Testbed('elephant.jpg'); pp,_,(ow,oh),_=tb.prep()
 open('out.svg','w').write(fit_svg_size(get_pipeline('contour_lines').run(pp,{}),ow,oh))"

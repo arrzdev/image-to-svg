@@ -727,3 +727,17 @@ See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
   + all user-flagged targets re-eyed/byte-checked on the COMBINED build;
   baseline-gap script bug caught before misjudging (16-changed false alarm).
 - it23: 2 dispatched, 2 shipped + run-38 hotfix inline. ITERATION BOUNDARY.
+
+### Segment 2 armed: /autoresearch "past Recraft, beat last shipped every iteration" — v10 cut + it24 dispatched
+- Timestamp: 2026-07-10 00:20
+- Boundary work: audit24 committed (VISION.md = USER blueprint + absolute bar;
+  FINDINGS.md E1-E8/P1-P4; ledger reframe + 0k monster reopened); v10 milestone
+  cut at 01e80e0 (runs 38-40), v9 re-frozen to 678d98f, staged->v10, loop ->
+  models/v10/src; segment-2 config appended (maxRuns 30); focus -> monster-flat-line.
+- it24 dispatch (audit24 campaign, disjoint domains per runs-13-22 meta-review):
+  A-transown = E1 transition-ownership in the label chain (app-asset shrapnel);
+  B-lineintent = E4/E5 corner-pinned ruler-straightness in geometry/fit
+  (monster 0k, zero quantize confound). E2/E3/E7/E8 queued behind.
+- Keep bar this segment: beats v10 by eye at ZOOM; ledger close = ~Recraft
+  absolute. Paper-mining agents (LIVE digest landed; 2nd batch pending) ->
+  PAPER_NOTES.md when they report.
