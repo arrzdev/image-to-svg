@@ -1068,3 +1068,15 @@ See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
   .944 = only integrity residual (pre-existing). Seams 28-87 px/kb on 17/18
   targets (logo-lineart 0 = all-stroke output) — C's improvement surface.
   C/D broaden byte-compares now use baselines/v11, NOT audit24/svg (v10-era).
+
+### USER STOP (budget ended) — loop off; it25 winding down
+- Timestamp: 2026-07-10 (USER directive mid-it25)
+- .autoresearch-off set. Both candidates sent finalize-now directives:
+  C = commit + REPORT (objective checks all green orchestrator-side;
+  integration-ready pending its report); D = commit WIP + handoff REPORT
+  (census+corrections done, mechanism unplumbed).
+- Segment 2 totals at stop: runs 41-62; it24 SHIPPED as v11 (transition
+  ownership E1 + line-intent E4/E5; ledger 0l closed, 0k hand closed);
+  it25 C at final verification (seams->0 everywhere, degsuite IMPROVED),
+  D mid-build. it26 brief ready (E-stroke: 0b+0j+E5).
+- Resume path documented in iteration.json next_action.
