@@ -872,3 +872,16 @@ See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
 - Value of interim verification: regression caught while B is still in
   the loop, not at integration. The P2 lesson (zoom or it didn't happen)
   applied to a candidate mid-flight for the first time.
+
+### Run 50 (verify-interim): A-transown preliminarily VERIFIED on 4/4 dropped pairs (logged discard-by-convention; keep decision at integration)
+- Timestamp: 2026-07-10 04:10
+- Orchestrator-independent renders (verifyA_{icons,phone,fox,rabbit,chop}.png):
+  app-asset white blob GONE + specks reduced + integrity .412->.988 (0l
+  objective check PASSED); fox ink debris gone; rabbit spur/tears reduced
+  (tuft landmine ok); chopchop outline daubs reduced. No regressions at
+  these zooms. Shadow moats/screen strips remain = E2 scope (correct).
+- Note: slight frame offset in chopchop panels (viewBox variance?) —
+  re-check via tb.crops at integration.
+- Pending: A REPORT.md (mechanism/populations), crystals+monster landmine
+  evidence, mountain integrity, full broaden. B iterating on run-49
+  feedback.
