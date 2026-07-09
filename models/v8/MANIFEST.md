@@ -1,7 +1,7 @@
 # v8 — color-guarded joins + deep concave cusps + ruler-straight grids (it21)
 
 Git: **5d1a9d6** (runs 34–35, over v7 @ 8431d34). Engine = `contour_lines`.
-The current shipped engine. Examples rendered at 5d1a9d6.
+Frozen milestone. Examples rendered at 5d1a9d6.
 
 Adds over v7:
 - **Color-guarded joining** (run 34, USER idea): the bridge/chord/extension

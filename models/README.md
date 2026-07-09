@@ -14,7 +14,7 @@ git history:
   comparison PNGs.
 - `MANIFEST.md` — what changed, eye verdicts, negative results.
 
-The newest version (currently **v8**) is the LIVE tree the research loop edits;
+The newest version (currently **v9**) is the LIVE tree the research loop edits;
 v3–v7 are frozen. Each version carries `data`/`outputs`/`frontend` symlinks so
 its code finds the shared cache; the research harness (`research/autoresearch.sh`)
 runs the live version's `src/ar_eval.py` (→ `src/testbed.py`). At each
@@ -88,4 +88,11 @@ version vs the previous **and vs Recraft**.
   fitter's −2.75px S-bow so pizza verticals stay straight through crossings.
   **vs Recraft:** the user-reported defects (over-rounding/straights,
   over-joining, the heart, ZZA, junction tangles, paw fingers) are closed by
-  eye. _(Live tree — the loop continues from here; next structural bump = v9.)_
+  eye. 
+- **v9** (git `d216bce`, 2026-07-09 16:15; code in `v9/src`): sharpen prepass + 40× perf
+  (runs 36–37). **vs v8:** byte-identical-output perf rewrite (chopchop
+  298→7.4s — faster than v5); USER's sharpen prepass default-ON with
+  anti-ringing clamp (chopchop strut noise daubs gone, rabbit heart flat +
+  highlight rim, app-asset dropped letter restored; soft-gradient trade
+  logged, presharpen=0 escape). **vs Recraft:** benchmark noise gap visibly
+  narrows; rSSIM rabbit .951, monster .990. _(Live tree — next bump = v10.)_

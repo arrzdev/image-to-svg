@@ -29,43 +29,6 @@ from .quantize_contours import (
 )
 
 
-# Upscale factor for the sharpen prepass (fixed by the it22 sweep; the
-# exposed knob is the unsharp amount — one atomic mechanism, one lever).
-_PRESHARPEN_UP = 3
-
-
-def _sharpen_prepass(img: np.ndarray, amount: float,
-                     up: int = None, radius: float = 2.0) -> np.ndarray:
-    """USER-validated blur-killer prepass (GAP_LEDGER 0e, it22 A-sharpen).
-
-    Upscale LANCZOS ×up → unsharp mask (σ = radius·up/2, source-scale radius
-    ≈2px) → INTER_AREA back down. Steepens soft AA/blur ramps into step edges
-    BEFORE quantization, so gradient daubs stop becoming k-means labels (and
-    then geometry); the INTER_AREA downscale averages the overshoot ring back
-    into the flat regions instead of minting halo colors (the failure mode of
-    plain single-scale unsharp, rejected 2026-07-07).
-
-    Anti-ringing clamp (it22 landmine fix): the raw unsharp OVERSHOOTS at
-    hard graphic edges — on logo-badge it minted a brighter-yellow ring
-    along every yellow/navy boundary that quantize then kept as a real rim
-    shape. Clipping the sharpened image to the local (erode/dilate) min/max
-    of the pre-sharpen upscale makes minting values brighter/darker than
-    anything nearby impossible, while gradient steepening toward existing
-    local extremes (what kills the blur daubs) is untouched.
-    """
-    if amount <= 0:
-        return img
-    if up is None:
-        up = _PRESHARPEN_UP
-    h, w = img.shape[:2]
-    big = cv2.resize(img, (w * up, h * up), interpolation=cv2.INTER_LANCZOS4)
-    blur = cv2.GaussianBlur(big, (0, 0), radius * up / 2.0)
-    sharp = cv2.addWeighted(big, 1.0 + amount, blur, -amount, 0)
-    k = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2 * up + 1, 2 * up + 1))
-    sharp = np.clip(sharp, cv2.erode(big, k), cv2.dilate(big, k))
-    return cv2.resize(sharp, (w, h), interpolation=cv2.INTER_AREA)
-
-
 def _thin_dark_line_lock(labels: np.ndarray, centers: np.ndarray) -> np.ndarray:
     """Mask of thin drawn dark-line pixels the label cleanup must not erase.
 
@@ -106,10 +69,6 @@ class ContourLinesPipeline(Pipeline):
         Param("merge_de", "Palette merge ΔE", "float", 12.0, min=0.0, max=30.0, step=0.5),
         Param("min_area", "Despeckle (px)", "int", 120, min=0, max=2000, step=10),
         Param("blur", "Pre-blur (px)", "int", 1, min=0, max=9, step=1),
-        Param("presharpen", "Pre-sharpen amount", "float", 1.6, min=0.0, max=3.0, step=0.1,
-              help="Unsharp amount for the upscale(3x)->sharpen->downscale "
-                   "prepass that melts blur/AA gradient noise before it can "
-                   "become labels (0 = off). Runs before the median pre-blur."),
         Param("fill_tol", "Fill fit tolerance", "float", 2.5, min=0.25, max=6.0, step=0.25),
         Param("fill_smooth", "Fill smoothing", "int", 0, min=0, max=15, step=1),
         Param("fill_parsimony", "Fill parsimony (opttol)", "float", 1.0, min=0.0, max=2.0, step=0.1,
@@ -134,8 +93,6 @@ class ContourLinesPipeline(Pipeline):
         if img is None:
             raise RuntimeError(f"Could not read image: {image_path}")
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        if p["presharpen"] > 0:
-            img = _sharpen_prepass(img, p["presharpen"])
         if p["blur"] > 0:
             img = cv2.medianBlur(img, p["blur"] * 2 + 1)
 

@@ -54,38 +54,6 @@ from strokes import (_STRUCT8, _luminance, _skeleton_branches,
 _DEBUG: dict = {}    # diagnostic capture (pend snapshot); no pipeline effect
 
 
-def _medial_axis_crop(mask: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-    """medial_axis(mask, return_distance=True, rng=0) on the component's
-    1px-padded bounding box, pasted back full-frame — exactly equal to the
-    full-frame call, at a fraction of the cost (profiled hotspot: full-frame
-    EDT + corner table + mgrid per component).
-
-    Why byte-identical: skimage's medial_axis orders pixels by (EDT distance,
-    corner score, seeded-permutation tiebreak). The EDT and 3x3 corner scores
-    of an isolated component only depend on the component plus one background
-    pixel of padding; the rng=0 tiebreaker is a permutation of
-    arange(mask.sum()) — a function of the foreground COUNT, and foreground
-    pixels keep their row-major order under cropping. The thinning loop
-    itself only looks at 3x3 neighborhoods, so it is translation-invariant.
-    Background stays 0 in both skeleton and distance outputs, exactly as the
-    full-frame call returns them."""
-    from skimage.morphology import medial_axis
-
-    ys, xs = np.nonzero(mask)
-    if len(ys) == 0:
-        return np.zeros(mask.shape, bool), np.zeros(mask.shape, np.float64)
-    y0 = max(int(ys.min()) - 1, 0)
-    y1 = min(int(ys.max()) + 2, mask.shape[0])
-    x0 = max(int(xs.min()) - 1, 0)
-    x1 = min(int(xs.max()) + 2, mask.shape[1])
-    sk_s, di_s = medial_axis(mask[y0:y1, x0:x1], return_distance=True, rng=0)
-    skel = np.zeros(mask.shape, bool)
-    skel[y0:y1, x0:x1] = sk_s
-    dist = np.zeros(mask.shape, di_s.dtype)
-    dist[y0:y1, x0:x1] = di_s
-    return skel, dist
-
-
 # ------------------------------------------------------------ centerline fit
 
 def _fit_branch(pts: np.ndarray, tol: float, corner_deg: float,
@@ -276,17 +244,6 @@ def _junction_cusp_exts(branches: List[dict], cent: dict, mask: np.ndarray,
     if not uncov.any():
         return {}
     pk, npk = ndimage.label(uncov, structure=_STRUCT8)
-    # pocket pixel coords + depth are node-independent: compute ONCE (the
-    # per-node argwhere(pk == p) rescan was a profiled hotspot). The grouped
-    # coords are the exact row-major arrays argwhere produced.
-    pk_coords = np.argwhere(pk > 0)
-    pk_vals = (pk[pk_coords[:, 0], pk_coords[:, 1]]
-               if len(pk_coords) else np.empty(0, pk.dtype))
-    pockets: dict = {}
-    for p in range(1, npk + 1):
-        pyx = pk_coords[pk_vals == p]
-        if len(pyx) >= 6:
-            pockets[p] = (pyx, float(dbr[tuple(pyx.T)].max()) - cover_r)
     exts: dict = {}
     used_pockets: set = set()
     for nid, cyx in cent.items():
@@ -299,12 +256,13 @@ def _junction_cusp_exts(branches: List[dict], cent: dict, mask: np.ndarray,
         for p in range(1, npk + 1):
             if p in used_pockets:
                 continue
-            if p not in pockets:
+            pyx = np.argwhere(pk == p)
+            if len(pyx) < 6:
                 continue
-            pyx, depth = pockets[p]
             dnode = np.hypot(pyx[:, 0] - node[0], pyx[:, 1] - node[1])
             if float(dnode.min()) > 1.2 * med_w:
                 continue                          # not this node's pocket
+            depth = float(dbr[tuple(pyx.T)].max()) - cover_r
             extent = float(dnode.max())
             if debug is not None:
                 tp = pyx[int(np.argmax(dnode))] + (y0, x0)
@@ -552,6 +510,8 @@ def extract_contour_strokes(labels: np.ndarray, centers: np.ndarray,
     {"d", "width", "color"}; stroke_mask covers the absorbed (line) pixels.
     info: {"widths": per-branch medians, "global_width", "spread", ...}
     """
+    from skimage.morphology import medial_axis
+
     _DEBUG.pop("cusp", None)      # fresh diagnostics per call
 
     # Stroke candidates: truly dark labels (lum<60) may be colored ink (rabbit
@@ -578,41 +538,27 @@ def extract_contour_strokes(labels: np.ndarray, centers: np.ndarray,
         comp_id = np.zeros(labels.shape, np.int32)
         comp_label = {0: -1}
         comp_area = {0: 0}
-        # (nid, window_slice, mask_in_window) — bbox-local masks; operating
-        # on full-image masks per component (and dilating them full-frame)
-        # was the profiled hotspot, with identical results.
-        small: List[Tuple[int, tuple, np.ndarray]] = []
-        Hl, Wl = labels.shape
+        small: List[Tuple[int, np.ndarray]] = []
         nid = 1
         for li in dark:
             lm = labels == li
             if not lm.any():
                 continue
             comp, n = ndimage.label(lm, structure=_STRUCT8)
-            objs = ndimage.find_objects(comp)
             for ci in range(1, n + 1):
-                sl = objs[ci - 1]
-                m_sub = comp[sl] == ci
-                a = int(m_sub.sum())
-                comp_id[sl][m_sub] = nid
+                m = comp == ci
+                a = int(m.sum())
+                comp_id[m] = nid
                 comp_label[nid] = li
                 comp_area[nid] = a
                 if a < 250:
-                    # pad the bbox by 1 so the 8-dilated border fits inside
-                    y0 = max(sl[0].start - 1, 0)
-                    y1 = min(sl[0].stop + 1, Hl)
-                    x0 = max(sl[1].start - 1, 0)
-                    x1 = min(sl[1].stop + 1, Wl)
-                    mw = np.zeros((y1 - y0, x1 - x0), bool)
-                    mw[sl[0].start - y0:sl[0].stop - y0,
-                       sl[1].start - x0:sl[1].stop - x0] = m_sub
-                    small.append((nid, np.s_[y0:y1, x0:x1], mw))
+                    small.append((nid, m))
                 nid += 1
-        for cid, win, mw in small:
+        for cid, m in small:
             a = comp_area[cid]
-            border = ndimage.binary_dilation(mw, structure=_STRUCT8) & ~mw
+            border = ndimage.binary_dilation(m, structure=_STRUCT8) & ~m
             best = None
-            for ncid in np.unique(comp_id[win][border]):
+            for ncid in np.unique(comp_id[border]):
                 ncid = int(ncid)
                 if ncid == 0 or ncid == cid:
                     continue
@@ -622,7 +568,7 @@ def extract_contour_strokes(labels: np.ndarray, centers: np.ndarray,
                     if best is None or comp_area[ncid] > comp_area[best]:
                         best = ncid
             if best is not None:
-                labels[win][mw] = comp_label[best]
+                labels[m] = comp_label[best]
                 flecks_absorbed += 1
 
     stroke_mask = np.zeros(labels.shape, bool)
@@ -638,23 +584,13 @@ def extract_contour_strokes(labels: np.ndarray, centers: np.ndarray,
         if not lab_mask.any():
             continue
         comp, n = ndimage.label(lab_mask, structure=_STRUCT8)
-        objs = ndimage.find_objects(comp)
         color = tuple(int(v) for v in centers[li])
         for ci in range(1, n + 1):
             mask = comp == ci
             area = int(mask.sum())
             if area < min_area:
                 continue
-            # padded component window: every in-component computation below
-            # (EDTs, junction maps) reads only inside it, so cropping to it
-            # is exact — full-frame transforms per component were profiled
-            # hotspots.
-            _sl = objs[ci - 1]
-            msl = np.s_[max(_sl[0].start - 1, 0):
-                        min(_sl[0].stop + 1, labels.shape[0]),
-                        max(_sl[1].start - 1, 0):
-                        min(_sl[1].stop + 1, labels.shape[1])]
-            skel, dist = _medial_axis_crop(mask)
+            skel, dist = medial_axis(mask, return_distance=True, rng=0)
             if not skel.any():
                 continue
             med_w = float(np.median(dist[skel] * 2.0))
@@ -705,9 +641,8 @@ def extract_contour_strokes(labels: np.ndarray, centers: np.ndarray,
             blob_skel = skel & (dist * 2.0 > blob_factor * med_w)
             if blob_skel.any():
                 _, (iy, ix) = ndimage.distance_transform_edt(
-                    ~skel[msl], return_indices=True)
-                blob_mask = np.zeros(mask.shape, bool)
-                blob_mask[msl] = mask[msl] & blob_skel[msl][iy, ix]
+                    ~skel, return_indices=True)
+                blob_mask = mask & blob_skel[iy, ix]
                 bl, nb = ndimage.label(blob_mask, structure=_STRUCT8)
                 sizes = np.bincount(bl.ravel())
                 keep = [b for b in range(1, nb + 1)
@@ -743,7 +678,7 @@ def extract_contour_strokes(labels: np.ndarray, centers: np.ndarray,
                     mask = mask & ~blob_mask
                     if int(mask.sum()) < min_area:
                         continue
-                    skel, dist = _medial_axis_crop(mask)
+                    skel, dist = medial_axis(mask, return_distance=True, rng=0)
                     if not skel.any():
                         continue
 
@@ -813,11 +748,10 @@ def extract_contour_strokes(labels: np.ndarray, centers: np.ndarray,
                         brid[yx[:, 0], yx[:, 1]] = 1
                     for yx in removed_chains:
                         brid[yx[:, 0], yx[:, 1]] = 2
-                    on = brid[msl] > 0
+                    on = brid > 0
                     _, (iy2, ix2) = ndimage.distance_transform_edt(
                         ~on, return_indices=True)
-                    drop_px = np.zeros(mask.shape, bool)
-                    drop_px[msl] = mask[msl] & (brid[msl][iy2, ix2] == 2)
+                    drop_px = mask & (brid[iy2, ix2] == 2)
                     mask = mask & ~drop_px
                     info["texture_branches"] = (
                         info.get("texture_branches", 0) + len(noodle))
@@ -854,15 +788,9 @@ def extract_contour_strokes(labels: np.ndarray, centers: np.ndarray,
                         continue
 
             # node centroids: every incident branch ends on the same point
-            # (single nonzero pass, then group — a full-image argwhere per
-            # nid was a profiled hotspot; coords[vals == nid] is the exact
-            # same row-major coordinate array argwhere produced)
             cent = {0: None}
-            nl_coords = np.argwhere(node_lbl > 0)
-            nl_vals = (node_lbl[nl_coords[:, 0], nl_coords[:, 1]]
-                       if len(nl_coords) else np.empty(0, node_lbl.dtype))
             for nid in range(1, int(node_lbl.max()) + 1):
-                yx = nl_coords[nl_vals == nid]
+                yx = np.argwhere(node_lbl == nid)
                 if len(yx):
                     cent[nid] = yx.mean(axis=0)
 
@@ -880,14 +808,8 @@ def extract_contour_strokes(labels: np.ndarray, centers: np.ndarray,
                                     mode="constant") - 1
             degj[~skel] = 0
             jnm = skel & (degj >= 3)
-            # jdist is only ever read at in-component pixels (branch chains,
-            # cusp chains), all inside the padded window, and every junction
-            # pixel lives there too — the window EDT is exact at those reads.
-            # Outside the window 1e9 stands in for "far from any junction".
-            jdist = None
-            if jnm.any():
-                jdist = np.full(mask.shape, 1e9)
-                jdist[msl] = ndimage.distance_transform_edt(~jnm[msl])
+            jdist = (ndimage.distance_transform_edt(~jnm) if jnm.any()
+                     else None)
             # anchor target per node: the node-cluster centroid is elongated by
             # junction ink pooling, so it can sit OFF the through-line's
             # centerline — a side branch capped there pokes a nub through the
@@ -1670,6 +1592,7 @@ def _light_line_capsules(labels: np.ndarray, centers: np.ndarray,
     patch, capsule strokes are {"d","width","color","kind":"stroke"}.
     """
     import cv2
+    from skimage.morphology import medial_axis
 
     gray = src_img.astype(np.float32).mean(2)
     kern = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (9, 9))
@@ -1687,7 +1610,7 @@ def _light_line_capsules(labels: np.ndarray, centers: np.ndarray,
         area = int(m.sum())
         if area < min_area:
             continue
-        skel, dist = _medial_axis_crop(m)
+        skel, dist = medial_axis(m, return_distance=True, rng=0)
         skel_px = int(skel.sum())
         med_w = float(np.median(dist[m]) * 2.0)
         if med_w > max_med_w or skel_px < min(min_skel_px, whole_min_skel):
@@ -1718,7 +1641,7 @@ def _light_line_capsules(labels: np.ndarray, centers: np.ndarray,
                 continue
             if float(beads[m].sum()) / area < 0.5:
                 continue                   # label barely carries it: leave
-            bskel, bdist = _medial_axis_crop(beads)
+            bskel, bdist = medial_axis(beads, return_distance=True, rng=0)
             if bskel.sum() < 5:
                 continue
             rr = bdist[bskel]

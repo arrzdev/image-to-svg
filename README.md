@@ -46,12 +46,14 @@ models/<v>/MANIFEST.md  # what changed, eye-verdicts, negative results
 | v5      | 2026-07-08 03:01          | `c61755e` | **yes**  | autoresearch arc (runs 2–20): junction anchoring/bridging/ink-extension, corner+miter serrations, shadow-tone merge, fleck absorption, wiggle-gate texture→daubs, guarded speckle dissolve, light-accent guard, junction pool clamp, light-line capsules + sliver steal, chord/arc endpoint bridging (rabbit heart closed), byte-deterministic renders |
 | v6      | 2026-07-08 05:01          | `a8d728d` | **yes**  | serration sharpness (runs 21–23): monster teeth tall AND sharp (corner-pinned fills + spike-tip rescue), corpus-wide corner sharpness, round-capped ribbon ends |
 | v7      | 2026-07-09 07:45          | `8431d34` | **yes**  | straight lines + letterforms (runs 25–29): thin-dark-line lock (heart notch + paw fingers back), two-tier chroma gate (ZZA letters + chopchop junction tangles fixed), straight-piece priors (pizza checkers ruler-straight) |
-| v8      | 2026-07-09 12:06          | `5d1a9d6` | **yes (LIVE)** | color-guarded joins + deep cusps (runs 34–35): refuse welds across a color break (over-joins gone), junction cusp descent (heart notch full depth), straight-chain lock (pizza verticals straight through crossings) |
+| v8      | 2026-07-09 12:06          | `5d1a9d6` | **yes**  | color-guarded joins + deep cusps (runs 34–35): refuse welds across a color break (over-joins gone), junction cusp descent (heart notch full depth), straight-chain lock (pizza verticals straight through crossings) |
+
+| v9      | 2026-07-09 16:15          | `d216bce` | **yes (LIVE)** | 40x performance (byte-identical output) + sharpen prepass default-ON (USER idea: blur-noise melted pre-quantize; heart flat+rim, strut daubs gone, dropped letter restored) |
 
 All runnable versions expose the same pipeline (`contour_lines`, each at its
 own vintage) through `entry.py`; v3's `examples/` additionally keeps its
-`elephant_fast` / `elephant_grail` tournament outputs for reference. **v8 is
-the current/live engine**; v3–v7 are frozen milestones. `models/README.md`
+`elephant_fast` / `elephant_grail` tournament outputs for reference. **v9 is
+the current/live engine**; v3–v8 are frozen milestones. `models/README.md`
 narrates each version vs the previous and vs Recraft.
 
 One version per process: the version sources share module names, so the CLI
@@ -71,7 +73,7 @@ one exists in `data/targets/`. No knobs; each run goes through the same
 ```
 run_model.py       CLI — route any image through any version
 run.sh / server.py browser tester
-models/            v3–v8: entry.py + src/ + examples/ (v8 = live; see above)
+models/            v3–v9: entry.py + src/ + examples/ (v9 = live; see above)
 data/inputs/       test images   · data/targets/  Recraft references (locked)
 data/outputs/      run artifacts (gitignored)
 frontend/          the minimal tester UI
@@ -89,5 +91,5 @@ Engine quality came from an autonomous vision-first experiment loop
 comparison grids, rich discard logging. It is paused via `.autoresearch-off`.
 `research/docs/PROJECT_SPEC.md` is the mission; `research/docs/BACKLOG.md` the
 idea queue; `research/docs/RESEARCH_LOG.md` the full journal. The loop edits
-`models/v8/src/` (the live engine); the next structural milestone snapshots it
-to `models/v9/`.
+`models/v9/src/` (the live engine); the next structural milestone snapshots it
+to `models/v10/`.
