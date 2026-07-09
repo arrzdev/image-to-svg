@@ -379,6 +379,15 @@ The single ranked idea queue is **research/docs/BACKLOG.md** (there is no
 next experiment from BACKLOG's top; append newly discovered ideas back to it.
 
 ## What's Been Tried
+
+### Segment-0 meta-review (runs 12-30, 2026-07-08)
+WINS: measure-first staged diagnosis (stage strips + instrumentation found the
+real culprit 4/4 times); population-measured gates with margins; label-chain
+guards + fit priors as one family. LOSES: tuning the fit when the defect is
+upstream; naive single thresholds. Runs 25-29 (inline): thin-dark-line lock,
+two-tier chroma gate (ZZA + junction tangles), chord-straight emit,
+fill straight-piece prior — user ledger items #1 #2 #3 closed/mostly.
+Gauge at close: chopchop .871, elephant .981, rabbit color gap dE 4.16 open.
 Seeded from v1→v4 history (see models/README.md + research/docs/RESEARCH_LOG.md for the
 full journal). Update this section every 5–10 experiments with wins, dead ends,
 and a meta-review of which *classes* of change win vs lose.

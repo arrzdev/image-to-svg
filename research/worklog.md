@@ -620,3 +620,30 @@ See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
   junctions (fill-edge corner region) + heart notch depth -> A-linefit scope
   now surgical: junction-adjacent fill-edge behavior + concave cusp depth.
 - Run 30 = maxRuns boundary next; prepare segment report.
+
+### Run 30: SEGMENT CLOSE-OUT (maxRuns=30) — meta-review
+- Timestamp: 2026-07-08 09:00
+- Gauge at segment end: chopchop .871 (was .868 at run 24; dE 2.68 from
+  2.82), elephant .981 (.970), rabbit .948 flat (COLOR gap: dE 4.16 =
+  ledger #7), crystals .884/-.006 + mountain/fox -.007 dips on eye-verified
+  lateral-or-better changes (gauge can't score better-than-recraft;
+  crystals re-eye queued).
+- META-REVIEW (what wins vs loses across runs 12-30):
+  WINS: (1) measure-first staged diagnosis — every big keep this segment
+  started as a stage-strip or instrumentation run (heart stages -> despeckle
+  guilty; pizza probe -> 100% fill-layer; ZZA -> stroke-ified letterforms);
+  (2) population-measured gates with margins (chroma two-tier, thin-line
+  lock, spike gap 210) — every threshold set from measured true/false
+  populations survived broadening; (3) label-chain guards + fit priors as
+  a FAMILY (rescue/lock/pin/straight-prior).
+  LOSES: (1) tuning the fit when the defect is upstream (runs 5, 28-neg);
+  (2) naive single thresholds without population measurement (25a lum<96,
+  27 flat spread<=45 — both caught before shipping); (3) walker/cap raises
+  (run-15 postmortem).
+  ARCHITECTURE: culprit protocol + GAP_LEDGER (run 26) measurably steered
+  runs 27-29; recraft_gap agrees with eye on structural changes, silent on
+  thin lines — both behaved as designed.
+- Segment ends at budget. Next segment (user re-arms): junction-adjacent
+  hooks + heart cusp depth (A-linefit surgical), color-guarded joining
+  (ledger #5), buttons fitter dual (#6), color-to-original (#7, rabbit
+  dE 4.16), crystals re-eye.
