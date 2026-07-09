@@ -844,3 +844,17 @@ See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
   alibi. B-lineintent's mechanism has a clean regression test waiting.
 - Per-keep convention addition: record dssim_crystals + dssim_chopchop in
   jsonl metrics from now on (started this run).
+
+### Run 47 (measure): 0l culprit corrected — gaps are E1 slivers, flatten exonerated (DISCARD-by-convention)
+- Timestamp: 2026-07-10 03:15
+- gradflat toggle: app-asset .412->.484 (flatten = only ~25% contributor);
+  mountain BYTE-IDENTICAL (flatten never fired -> hypothesis refuted for it).
+- Interior gap clusters localized (structcheck alpha map): app-asset 2
+  clusters at the phone-edge shrapnel zone ((0.46,0.80) area 1556px@4096);
+  mountain 1 at the peak fragment patches ((0.48,0.23) 1347px). Eyed both
+  (z_0l_appasset_gap/z_0l_mountain_gap): torn micro-labels don't tile ->
+  exposed-background slivers + invented white highlight blob. 0l = E1's
+  geometric fingerprint; folds into A-transown acceptance (integrity ~1.0
+  on app-asset/mountain = free objective check at integration).
+- Runs-13-22 meta-lesson holds again: measure-first culprit testing beat
+  the plausible-sounding suspect (flatten) before any code was written.

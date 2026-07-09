@@ -52,13 +52,16 @@
    (audit24/grids/seam_poc_monster.png), but shifts thin-feature widths →
    ship-grade fix = underpaint dilation in paint order, i.e. E8 layered
    emission. 0h and E8 are ONE candidate. [it25]
-0l. **Gradient-flatten OPEN GAPS (found run 45, structcheck):** app-asset
-   integrity 0.412 (7.15 hairline px/kb), mountain 0.488 — TRUE open gaps,
-   not AA seams (seal strokes don't fix them). Suspected culprit: run-40
-   flatten stamps region colors post-consolidate, producing label
-   boundaries that no longer coincide with the boundary graph's edges.
-   Matches run-40's own "faint flatten-seam" lead. Stage: quantize
-   (flatten stamp) → boundary extraction handoff. [it25, pairs with A]
+0l. **Open GAPS = E1 shrapnel slivers (culprit CORRECTED run 47):** app-asset
+   integrity 0.412, mountain 0.488 — TRUE open gaps, but the flatten
+   hypothesis was REFUTED by toggle (gradflat=0: app-asset only .412→.484,
+   mountain byte-identical — flatten never fired there). Gap pixels
+   localize to 2-3 interior clusters (app-asset (0.46,0.80) = the phone-edge
+   shrapnel zone; mountain (0.48,0.23) = peak fragment patches): torn
+   micro-labels don't tile the plane, leaving exposed-background slivers.
+   0l is E1's geometric fingerprint → folds into A-transown's acceptance:
+   A's fix should drive app-asset/mountain integrity → ~1.0 (verify on
+   integration). Evidence: z_0l_appasset_gap.png, z_0l_mountain_gap.png.
 0i. ~~**Monster mouth mangled**~~ — REGRESSION (run 37) FIXED run 38.
    POSTMORTEM (process): the sharpen deformed flat art; the candidate agent
    called monster "lateral" (false), and orchestrator verification only
