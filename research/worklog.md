@@ -958,3 +958,14 @@ See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
   (2 pipeline, 2 research/tooling), 11 measurement/verify discards - every
   one with banked leads.
 - NEXT: it25 dispatch (C-layeremit E8+0h, D-shadowideal E2) per BRIEFS.md.
+
+### Run 56 (harness maintenance): autoresearch.sh repointed to staged — TRUE v11 baseline quality=0.8981
+- Timestamp: 2026-07-10 07:20
+- autoresearch.sh was still pinned to models/v9/src (frozen at run-37 state
+  since the v10 cut) — the segment's identical 0.8974 readings were STALE.
+  Same bug class as run-41's recraft_gap fix; the v10 cut checklist missed
+  the harness repoint. Fix: models/staged/src (symlink tracks live) — bumps
+  are now repoint-free. No verdict was corrupted (the metric never gates;
+  the eye did all gating). New true baseline on v11: quality 0.8981.
+- Memory (repo-layout) updated with the complete cut recipe including both
+  staged-pointer fixes and the symlink footgun.
