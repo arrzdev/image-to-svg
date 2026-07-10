@@ -15,6 +15,11 @@ Recraft targets + eye-audited; tilecmp overall 0.2725 -> 0.2553):
   * transition-mud ownership — AA blend bands between fills dissolved into
     their parent regions; fill boundaries re-snapped to the source ramp's 50%
     crossing.
+  * STROKE-LAYER RESTORATION (the run's biggest fix) — straighten.py's junk-
+    drop regex had been deleting every fill="none" stroke path (the entire
+    visible drawn-line layer: pizza-box grid, chopchop ink lines) from every
+    quant-12 output since the model's creation. Junk-drop is now precise:
+    keeps round-cap ink strokes, still drops no-stroke junk + butt-cap seals.
 
 Contract: run(path, params) -> svg. Benchmarks: research/design/tilecmp*.py."""
 from __future__ import annotations
