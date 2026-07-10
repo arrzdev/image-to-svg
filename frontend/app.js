@@ -136,3 +136,86 @@ async function run() {
 
 $("run").addEventListener("click", run);
 init();
+
+// ---------------------------------------------------------------- tabs
+for (const btn of document.querySelectorAll("#tabs .tab")) {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll("#tabs .tab").forEach((b) =>
+      b.classList.toggle("active", b === btn));
+    $("tab-tester").hidden = btn.dataset.tab !== "tester";
+    $("tab-edgelab").hidden = btn.dataset.tab !== "edgelab";
+  });
+}
+
+// ------------------------------------------------------------- edge lab
+// Boundary-first playground: POST the current params, show the three stage
+// rasters (edges / bucket fills / composite). Auto-run debounces slider drags.
+const EL_IDS = ["el-dim", "el-pre", "el-prestr", "el-thr", "el-close",
+                "el-mincell", "el-image"];
+
+function elParams() {
+  return {
+    image: $("el-image").value,
+    work_dim: +$("el-dim").value,
+    pre: $("el-pre").value,
+    pre_strength: +$("el-prestr").value,
+    threshold: +$("el-thr").value,
+    close_k: +$("el-close").value,
+    min_cell: +$("el-mincell").value,
+  };
+}
+
+let elBusy = false, elQueued = false;
+async function elRun() {
+  if (elBusy) { elQueued = true; return; }
+  elBusy = true;
+  $("el-run").disabled = true;
+  $("el-status").textContent = "running…";
+  try {
+    const res = await fetch("/api/edgelab", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(elParams()),
+    });
+    if (!res.ok) throw new Error((await res.json()).detail || res.statusText);
+    const r = await res.json();
+    $("el-original").innerHTML =
+      `<img src="/inputs/${encodeURIComponent($("el-image").value)}">`;
+    $("el-edges").innerHTML = `<img src="${r.edges}">`;
+    $("el-fills").innerHTML = `<img src="${r.fills}">`;
+    $("el-composite").innerHTML = `<img src="${r.composite}">`;
+    $("el-panels").hidden = false;
+    const s = r.stats;
+    $("el-status").textContent =
+      `${s.dim} · ${s.cells} cells · ${(s.boundary_px / 1000).toFixed(0)}k boundary px · ${s.seconds}s`;
+  } catch (e) {
+    $("el-status").textContent = `✗ ${e.message}`;
+  } finally {
+    elBusy = false;
+    $("el-run").disabled = false;
+    if (elQueued) { elQueued = false; elRun(); }
+  }
+}
+
+let elTimer = null;
+function elChanged() {
+  $("el-prestr-v").textContent = $("el-prestr").value;
+  $("el-thr-v").textContent = $("el-thr").value;
+  $("el-mincell-v").textContent = $("el-mincell").value;
+  if ($("el-auto").checked) {
+    clearTimeout(elTimer);
+    elTimer = setTimeout(elRun, 350);
+  }
+}
+
+async function elInit() {
+  await fill("el-image", "/api/images");
+  const opts = [...$("el-image").options].map((o) => o.value);
+  if (opts.includes("chopchop.png")) $("el-image").value = "chopchop.png";
+  for (const id of EL_IDS) {
+    $(id).addEventListener("input", elChanged);
+    $(id).addEventListener("change", elChanged);
+  }
+  $("el-run").addEventListener("click", elRun);
+}
+elInit();

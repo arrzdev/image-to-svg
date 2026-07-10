@@ -7,6 +7,12 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
+<nav id="tabs">
+  <button class="tab active" data-tab="tester">Version tester</button>
+  <button class="tab" data-tab="edgelab">Edge Lab</button>
+</nav>
+
+<div id="tab-tester">
 <header>
   <h1>image → svg</h1>
   <div class="controls">
@@ -31,6 +37,63 @@
     <div class="canvas" id="target"></div>
   </section>
 </main>
+</div>
+
+<div id="tab-edgelab" hidden>
+<header>
+  <h1>edge lab <span class="sub">boundary-first playground (edge-1): detect → join → bucket-fill</span></h1>
+  <div class="controls">
+    <label>Image <select id="el-image"></select></label>
+    <label>Resolution
+      <select id="el-dim">
+        <option>768</option><option>1024</option>
+        <option selected>1536</option><option>2048</option>
+      </select>
+    </label>
+    <label>Pre-filter
+      <select id="el-pre">
+        <option value="none" selected>none</option>
+        <option value="gaussian">gaussian</option>
+        <option value="bilateral">bilateral</option>
+      </select>
+    </label>
+    <label>strength <input type="range" id="el-prestr" min="1" max="8" value="3">
+      <span class="val" id="el-prestr-v">3</span></label>
+    <label>ΔE threshold <input type="range" id="el-thr" min="3" max="40" value="14">
+      <span class="val" id="el-thr-v">14</span></label>
+    <label>Join (close px)
+      <select id="el-close">
+        <option value="0">off</option><option value="3" selected>3</option>
+        <option value="5">5</option><option value="7">7</option>
+      </select>
+    </label>
+    <label>Min cell px <input type="range" id="el-mincell" min="0" max="600" step="20" value="0">
+      <span class="val" id="el-mincell-v">0</span></label>
+    <button id="el-run">Run</button>
+    <label class="auto"><input type="checkbox" id="el-auto" checked> auto-run</label>
+    <span id="el-status"></span>
+  </div>
+</header>
+
+<main id="el-panels" hidden>
+  <section>
+    <h2>Original</h2>
+    <div class="canvas" id="el-original"></div>
+  </section>
+  <section>
+    <h2>1 · Edges (joined)</h2>
+    <div class="canvas" id="el-edges"></div>
+  </section>
+  <section>
+    <h2>2 · Bucket fills</h2>
+    <div class="canvas" id="el-fills"></div>
+  </section>
+  <section>
+    <h2>3 · Composite (fills + ink)</h2>
+    <div class="canvas" id="el-composite"></div>
+  </section>
+</main>
+</div>
 
 <script src="app.js"></script>
 </body>

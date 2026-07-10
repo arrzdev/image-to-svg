@@ -7,6 +7,18 @@
 body { margin: 0; padding: 1.25rem 1.5rem; }
 
 header h1 { margin: 0 0 0.75rem; font-size: 1.3rem; }
+header h1 .sub { font-size: 0.8rem; font-weight: normal; opacity: 0.6; }
+
+#tabs { display: flex; gap: 0.25rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border); }
+#tabs .tab {
+  border: none; background: none; padding: 0.5rem 0.9rem; font: inherit;
+  cursor: pointer; opacity: 0.6; border-bottom: 2px solid transparent;
+}
+#tabs .tab.active { opacity: 1; border-bottom-color: currentColor; font-weight: 600; }
+
+input[type="range"] { width: 110px; }
+.controls .val { font-size: 0.85rem; opacity: 0.7; min-width: 1.6em; }
+.controls .auto { font-size: 0.85rem; }
 .controls { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
 .controls label { display: flex; align-items: center; gap: 0.4rem; font-size: 0.9rem; }
 select, button { font: inherit; padding: 0.35rem 0.6rem; }
