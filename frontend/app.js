@@ -84,14 +84,15 @@ async function init() {
     fill("image", "/api/images"),
     fillVersions(),
   ]);
-  // Default to the newest version of the active (ideal) lineage; fall back to
-  // the highest-numbered version overall.
+  // Default to the newest quant version (quant-12 hit all Recraft metric axes
+  // >= 0.90; the edge lineage over-fragments ~10x). Fall back edge -> region.
   const best = (pred) =>
     versions
       .map(parseVersion)
       .filter(pred)
       .sort((a, b) => b.num - a.num)[0];
   const pick =
+    best((x) => x.prefix === "quant") ||
     best((x) => x.prefix === "edge") ||
     best((x) => x.prefix === "region") ||
     best((x) => x.num >= 0);
