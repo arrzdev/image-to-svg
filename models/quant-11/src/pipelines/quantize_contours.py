@@ -738,6 +738,477 @@ def _absorb_same_fill_shrapnel(labels: np.ndarray, centers: np.ndarray,
     return out
 
 
+# Blend-band dissolution constants (AA TRANSITION MUD, auto-loop 2026-07-10,
+# COLOR iteration; populations measured on all 11 gate-target final label
+# maps). At a boundary between two flat regions the AA/JPEG blur ramp
+# quantizes into a thin third label hugging the edge ("mud") that
+# _own_transitions cannot touch: its bounding pair is color-FAR (ablen > 36,
+# e.g. ink vs fill), a contour-class edge by the shipped rule. The honest
+# negative banked in RESEARCH_LOG run 54 ("high-contrast shrapnel subclass
+# not color-separable") is resolved here with SOURCE-side evidence plus the
+# already-validated neutral-ink test from contours_exp stroke candidacy:
+#   fire population (chopchop ink skirts 30-500px, fox in-ink pale debris,
+#     mountain ridge fringe, pizza-box rim dashes, shield outline mud):
+#     source-segment t 0.15-0.84, segd <= 4.7, t-spread >= 0.35, thin <= 4.6,
+#     and every one bounded by NEUTRAL ink (RGB spread 2-27) or a
+#     shading-class pair (pal ablen 22-36).
+#   must-keep population, all REFUSED with margin:
+#     crystals drawn facet slivers: dark bounds are SATURATED (spread
+#       56-147 vs true ink <= 27) and pairs contour-class (ablen 44-67);
+#       the pale gem streak also sits at t=0.88 > 0.85,
+#     app-asset icon shadow moat (soft-shadow REGION, E2's job): 1995 px
+#       > _BLEND_MAX_PX (bands hug edges; big mid-tone areas are shadows),
+#     rabbit brows / drawn thin marks: ink-locked, or their color clusters
+#       at its own tone (t-spread below floor) instead of SPANNING the ramp.
+_BLEND_MIN_PX = 24        # smaller mud is despeckle/shrapnel territory
+_BLEND_MAX_PX = 250       # dash/rim mud only. Above this the population mixes
+                          # with DRAWN soft-shading bands whose color is also
+                          # the ink<->fill blend (fox iris crescent 469px, fur
+                          # tuft 428px — Recraft keeps both; eye-verified) —
+                          # not separable by blend-position/spread evidence.
+_BLEND_MAX_THIN = 5.0     # mean half-width: a band hugs its boundary
+_BLEND_MIN_SHARE2 = 0.80  # ring two-sidedness (top-2 neighbor share)
+_BLEND_MIN_SHAREB = 0.10
+_BLEND_T_LO, _BLEND_T_HI = 0.15, 0.85  # source blend position along A->B
+_BLEND_MAX_SEGD = 5.0     # Lab distance to the source A<->B segment
+_BLEND_MIN_TSP = 0.35     # ramp evidence: pixel t p90-p10 spans the segment
+                          # (a drawn intermediate tone clusters at ONE t)
+_BLEND_INK_LUM = 60.0     # arm 1: a bound is true ink — dark AND near-
+_BLEND_INK_SPREAD = 45    # neutral (max-min RGB; contours_exp stroke rule —
+                          # crystals' saturated dark facet edges fail this)
+_BLEND_PAIR_AB = 36.0     # arm 2: shading-class pair (= _TRANS_MAX_ABLEN)
+_BLEND_PASSES = 2         # multi-band ramps dissolve one band per pass
+
+
+def _dissolve_blend_bands(labels: np.ndarray, centers: np.ndarray,
+                          src: np.ndarray,
+                          lock: np.ndarray = None) -> np.ndarray:
+    """Dissolve AA-ramp "mud" bands into their two bounding regions (COLOR).
+
+    A thin component sandwiched between exactly two region-grade labels whose
+    own SOURCE color is the blend of the two bounds' SOURCE colors (on the
+    Lab segment between them) — and whose pixels SPAN that segment — is a
+    quantized anti-alias/blur ramp, not drawing. Recraft's rule (VISION #2):
+    a 2-region transition never spawns a third shape. Unlike
+    _own_transitions (palette-space, shading-class pairs only) this handles
+    the HIGH-CONTRAST subclass (ink vs fill) by requiring either a
+    neutral-ink bound or a shading-class pair, so crystals' saturated drawn
+    facet slivers never qualify (constants above, population-measured).
+
+    Each mud pixel goes to the side its source color is nearer — a midline
+    split that lands the new crisp boundary on the ramp's 50% crossing.
+    Locked thin-line pixels (drawn strokes) are sacred."""
+    n = len(centers)
+    if n <= 2 or src is None or src.ndim != 3:
+        return labels
+    from skimage.color import rgb2lab
+    lab_pal = rgb2lab(centers.reshape(1, -1, 3) / 255.0)[0]
+    h, w = labels.shape
+    srcf = src[..., :3].astype(np.float32)
+    lab_src = rgb2lab(srcf / 255.0)
+    # per-pixel OWNERSHIP votes use a 3x3-mean source (JPEG-noise denoise) so
+    # the split boundary comes out clean; the evidence STATISTICS use the raw
+    # source (thresholds above were population-measured on it).
+    lab_smooth = rgb2lab(cv2.blur(srcf, (3, 3)) / 255.0)
+    lum = np.array([_luminance(c) for c in centers])
+    spread = centers.astype(np.int32).max(1) - centers.astype(np.int32).min(1)
+    ink_like = (lum < _BLEND_INK_LUM) & (spread <= _BLEND_INK_SPREAD)
+    # stroke-grade labels feed the centerline layer whose width is calibrated
+    # GLOBALLY from the ink mask (contours_exp) — adding even a small skirt
+    # band to one changes every stroke's rendered width (measured: chopchop
+    # tile regressions far from any dissolved band). Mud pixels therefore
+    # NEVER join a stroke-grade bound: the fill side takes the whole band and
+    # the untouched ink stroke keeps painting the crisp boundary on top.
+    stroke_grade = (lum < DARK_LINE_LUM) \
+        & ((lum < 60.0) | (spread <= _BLEND_INK_SPREAD))
+    k3 = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
+    out = labels.copy()
+    for _ in range(_BLEND_PASSES):
+        changed = 0
+        for ci in range(n):
+            mask = (out == ci).astype(np.uint8)
+            if not mask.any():
+                continue
+            ncomp, comp, stats, _ = cv2.connectedComponentsWithStats(mask, 8)
+            for k in range(1, ncomp):
+                area = int(stats[k, cv2.CC_STAT_AREA])
+                if not (_BLEND_MIN_PX <= area <= _BLEND_MAX_PX):
+                    continue
+                x0 = max(0, stats[k, cv2.CC_STAT_LEFT] - 3)
+                y0 = max(0, stats[k, cv2.CC_STAT_TOP] - 3)
+                x1 = min(w, stats[k, cv2.CC_STAT_LEFT]
+                         + stats[k, cv2.CC_STAT_WIDTH] + 3)
+                y1 = min(h, stats[k, cv2.CC_STAT_TOP]
+                         + stats[k, cv2.CC_STAT_HEIGHT] + 3)
+                sub = (comp[y0:y1, x0:x1] == k).astype(np.uint8)
+                subb = sub.astype(bool)
+                if lock is not None and (lock[y0:y1, x0:x1] & subb).any():
+                    continue
+                per = float(cv2.countNonZero(sub - cv2.erode(sub, k3)))
+                if area / max(per, 1.0) > _BLEND_MAX_THIN:
+                    continue
+                ring = cv2.dilate(sub, k3).astype(bool) & ~subb
+                wl = out[y0:y1, x0:x1]
+                neigh = wl[ring]
+                neigh = neigh[neigh != ci]
+                if neigh.size < _SHRAP_MIN_RING:
+                    continue
+                cnts = np.bincount(neigh, minlength=n)
+                order = np.argsort(cnts)[::-1]
+                a_, b_ = int(order[0]), int(order[1])
+                if cnts[b_] == 0:
+                    continue
+                tot = float(cnts.sum())
+                if (cnts[a_] + cnts[b_]) / tot < _BLEND_MIN_SHARE2 \
+                        or cnts[b_] / tot < _BLEND_MIN_SHAREB:
+                    continue
+                if not (ink_like[a_] or ink_like[b_]
+                        or float(np.linalg.norm(lab_pal[a_] - lab_pal[b_]))
+                        <= _BLEND_PAIR_AB):
+                    continue  # contour-class pair, no neutral-ink bound
+                band = cv2.dilate(sub, k3, iterations=2).astype(bool) & ~subb
+                wsrc = lab_src[y0:y1, x0:x1]
+                la = wsrc[band & (wl == a_)]
+                lb = wsrc[band & (wl == b_)]
+                if len(la) < _SHRAP_MIN_RING or len(lb) < _SHRAP_MIN_RING:
+                    continue
+                ca, cb = la.mean(0), lb.mean(0)
+                ab = cb - ca
+                L2 = float(ab @ ab)
+                if L2 < 1e-9:
+                    continue
+                cme = wsrc[subb].mean(0)
+                t = float((cme - ca) @ ab / L2)
+                if not (_BLEND_T_LO <= t <= _BLEND_T_HI):
+                    continue
+                if float(np.linalg.norm(cme - (ca + t * ab))) \
+                        > _BLEND_MAX_SEGD:
+                    continue
+                tpix = (wsrc[subb] - ca) @ ab / L2
+                if float(np.percentile(tpix, 90) - np.percentile(tpix, 10)) \
+                        < _BLEND_MIN_TSP:
+                    continue
+                if stroke_grade[a_] and stroke_grade[b_]:
+                    continue          # would have to grow ink: leave it
+                if stroke_grade[a_] or stroke_grade[b_]:
+                    # ink-bounded mud: the whole band joins the FILL side.
+                    # The untouched ink stroke keeps painting the crisp
+                    # boundary on top; a midline split was measured to
+                    # ripple every stroke via the global width calibration.
+                    wl[subb] = b_ if stroke_grade[a_] else a_
+                else:
+                    tvote = (lab_smooth[y0:y1, x0:x1][subb] - ca) @ ab / L2
+                    wl[subb] = np.where(tvote < 0.5, a_, b_)
+                changed += 1
+        if changed == 0:
+            break
+    return out
+
+
+def _resnap_fill_boundaries(labels: np.ndarray, centers: np.ndarray,
+                            src: np.ndarray, reach: int = 2) -> np.ndarray:
+    """Re-snap fill<->fill boundary ribbons to the source's 50% ramp crossing.
+
+    The zero-width case of transition ownership: even when the AA/blur ramp
+    between two fills mints no third label, nearest-CENTROID assignment puts
+    the boundary where pixel color crosses the midpoint of the two GLOBAL
+    centroids — not where the LOCAL ramp actually crosses halfway between its
+    two plateaus. The systematic offset (highlight bands painted wide, shadow
+    edges displaced) is the largest anchored-COLOR bucket vs Recraft. For
+    every adjacent fill-grade pair, ribbon pixels within `reach` px of the
+    interface re-vote against the pair's plateau colors sampled just beyond
+    the ribbon; stroke-grade labels are untouchable (their mask feeds the
+    GLOBAL stroke width calibration; touching it ripples every stroke).
+
+    Design notes from the measured variant ladder (this loop iteration):
+    per-pixel flank vetoes orphan slivers (app-asset census +0.0095),
+    segment-local plateaus scallop the contour between segments (elephant
+    flow +0.026), median plateaus and sigma-relative contrast floors each
+    traded away more than they saved. Whole-pair voting with a hard local
+    contrast floor is the only variant that nets positive corpus-wide.
+    """
+    n = len(centers)
+    if n <= 1 or src is None or src.ndim != 3:
+        return labels
+    from skimage.color import rgb2lab
+    lum = np.array([_luminance(c) for c in centers])
+    spread = centers.astype(np.int32).max(1) - centers.astype(np.int32).min(1)
+    stroke_grade = (lum < DARK_LINE_LUM) & ((lum < 60.0) | (spread <= 45))
+    srcf = src[..., :3].astype(np.float32)
+    lab_smooth = rgb2lab(cv2.blur(srcf, (3, 3)) / 255.0)
+    out = labels.copy()
+    # adjacent pairs + interface lengths via 4-neighbor shifts
+    right = (labels[:, :-1] != labels[:, 1:])
+    down = (labels[:-1, :] != labels[1:, :])
+    pk = []
+    for m, (sa, sb) in ((right, (labels[:, :-1], labels[:, 1:])),
+                        (down, (labels[:-1, :], labels[1:, :]))):
+        la, lb = sa[m], sb[m]
+        lo = np.minimum(la, lb).astype(np.int64)
+        hi = np.maximum(la, lb).astype(np.int64)
+        pk.append(lo * n + hi)
+    keys, cnts = np.unique(np.concatenate(pk), return_counts=True)
+    k3 = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
+    for key, blen in zip(keys, cnts):
+        a_, b_ = int(key // n), int(key % n)
+        if blen < 30 or stroke_grade[a_] or stroke_grade[b_]:
+            continue
+        ma = out == a_
+        mb = out == b_
+        iface = (cv2.dilate(ma.astype(np.uint8), k3).astype(bool) & mb) | \
+                (cv2.dilate(mb.astype(np.uint8), k3).astype(bool) & ma)
+        d2 = cv2.dilate(iface.astype(np.uint8), k3,
+                        iterations=max(1, reach)).astype(bool)
+        d3 = cv2.dilate(d2.astype(np.uint8), k3)
+        d6 = cv2.dilate(d3, k3, iterations=3).astype(bool)
+        d3 = d3.astype(bool)
+        ribbon = d2 & (ma | mb)
+        pa = ma & d6 & ~d3
+        pb = mb & d6 & ~d3
+        if int(pa.sum()) < 30 or int(pb.sum()) < 30:
+            continue
+        ca = lab_smooth[pa].mean(0)
+        cb = lab_smooth[pb].mean(0)
+        ab = cb - ca
+        L2 = float(ab @ ab)
+        # local plateau contrast floor, two measured failure classes below:
+        # (a) WIDE smooth gradients — the 3-6px "plateaus" are still mid-ramp
+        #     and near-equal (mountain sky bands, the crystals banding class):
+        #     boundary placement there is arbitrary, re-voting only jitters
+        #     the contour (census churn, measured at floor 0);
+        # (b) fills split at TEXTURE/JPEG-noise scale — votes are noise and
+        #     scramble a settled boundary wholesale (pizza-box lid tans at
+        #     local dE 10.6 under heavy mottle: 4077 of 9899 ribbon px
+        #     flipped, flow +0.022, measured).
+        # True mud boundaries measure local dE 18-56 (fox/chopchop pairs).
+        if L2 < 14.0 ** 2:
+            continue
+        t = (lab_smooth[ribbon] - ca) @ ab / L2
+        # decisive votes only: mid-ramp pixels (|t-0.5|<=0.1) keep their old
+        # side, so weak/noisy evidence never wiggles a settled boundary.
+        rl = out[ribbon]
+        newl = np.where(t < 0.4, a_, np.where(t > 0.6, b_, rl))
+        out[ribbon] = newl
+    return out
+# Structured-region split constants (UNDER-RESOLVE fix, autoresearch
+# 2026-07-10). Root cause (probe-verified on crystals x[0.54-0.65]
+# y[0.52-0.65]: ours 16 paths vs Recraft 58): adjacent drawn facets share ONE
+# global k-means colour label, so they fuse into one connected component and
+# one path — no despeckle/min_area change can recover them. Fix: LOCAL
+# re-segmentation, evidence-gated so shading/gradients never split.
+# Populations measured 2026-07-10 (probe_split, post-cleanup label maps,
+# interior fraction of px with Sobel/4 magnitude >= 12):
+#   must-split  (crystals facet components incl. the low-contrast defect
+#               region x[.54-.65] y[.52-.65]): 0.079-0.484, sub-boundary edge
+#               coincidence 0.62-1.00, sub-center Lab dE 16-46
+#   must-not    (rabbit shading <= 0.079 with interior p90 magnitude 5-7,
+#               elephant, mountain sky/clouds): fail the interior gate AND,
+#               decisively, a smooth gradient that k-means DOES split puts
+#               the sub-boundary on the ramp where the local magnitude is
+#               far below _SPLIT_EDGE_MAG (rabbit shading p90 5-7 vs gate
+#               12), so the boundary-coincidence gate kills banding splits
+#               independently of the interior gate.
+_SPLIT_EDGE_MAG = 12.0     # Sobel/4 per-px magnitude that counts as drawn edge
+_SPLIT_MIN_PX = 500        # component must be big enough to hold >1 shape
+_SPLIT_MIN_INTERIOR = 100  # need a real interior sample after 2px erosion
+_SPLIT_EDGE_FRAC = 0.075   # interior drawn-edge density gate (see populations)
+_SPLIT_BND_FRAC = 0.60     # sub-boundary px must sit ON drawn edges
+_SPLIT_MERGE_DE = 9.0      # fold near-duplicate local k-means sub-centers
+_SPLIT_MIN_DE = 12.0       # surviving sub-regions must be this separated
+                           # (lowering to 10 gate-measured WORSE: the dE
+                           # 10-12 splits are census poison corpus-wide)
+_SPLIT_STRONG_DE = 16.0    # joint quality gate: a split in the weak band
+_SPLIT_STRONG_EF = 0.12    # (maxde < 16 AND interior edge frac < 0.12) is
+                           # single-pocket shading noise, not a mosaic —
+                           # measured: every elephant/shield regression split
+                           # is weak on BOTH axes (ef<=0.138 & de<=15.6, only
+                           # one exception) while crystals/fox/chopchop wins
+                           # are strong on at least one (defect-region split
+                           # ef 0.139 @ de 12.7; chromatic facets de 16-45)
+_SPLIT_SUB_MIN_PX = 40     # sub-fragments below this absorb into siblings
+_SPLIT_KMAX = 4            # local k-means size (facet mosaics are 2-4 tones;
+                           # k=6, area-adaptive k, and per-pair boundary
+                           # healing ALL gate-measured worse: extra clusters
+                           # mint boundaries off the drawn edges, and healed
+                           # partial splits leak paths census punishes)
+_SPLIT_MAX_NEW = 128       # per-image cap on appended labels (runaway guard;
+                           # crystals pass 1 alone mints ~55)
+_SPLIT_PASSES = 2          # recurse once into just-split regions: a facet
+                           # MOSAIC holds more than _SPLIT_KMAX tones, so the
+                           # remainder still shows interior structure and
+                           # splits again; a clean flat region's remainder
+                           # fails the evidence gates and stops (measured:
+                           # elephant/shield fire 1-5 single-pocket splits,
+                           # crystals fires 42 mosaic splits)
+_SPLIT_PROTECT_OVL = 0.3   # never split gradflat-stamped regions
+
+
+def _split_structured_regions(labels: np.ndarray, centers: np.ndarray,
+                              img: np.ndarray,
+                              protect: np.ndarray = None
+                              ) -> Tuple[np.ndarray, np.ndarray]:
+    """Locally-adaptive label split for regions with real internal structure.
+
+    For every large non-dark component whose INTERIOR still contains strong
+    source edges (drawn facet lines, glyph detail — not shading ramps), re-run
+    a small local k-means (k<=4) on the source pixels under its mask and give
+    each surviving sub-region its own label, so downstream emission draws the
+    detail Recraft draws. Three independent evidence gates (constants above)
+    keep this strictly local and kill the over-split failure mode:
+    interior edge density, sub-boundary/edge coincidence, sub-center
+    separation. Dark (ink) labels and gradflat-stamped regions are untouched.
+    """
+    n0 = len(centers)
+    lum = [_luminance(c) for c in centers]
+    from skimage.color import rgb2lab
+
+    mag = np.zeros(img.shape[:2], np.float32)
+    for c in range(3):
+        ch = img[..., c].astype(np.float32)
+        gx = cv2.Sobel(ch, cv2.CV_32F, 1, 0, ksize=3) / 4.0
+        gy = cv2.Sobel(ch, cv2.CV_32F, 0, 1, ksize=3) / 4.0
+        mag = np.maximum(mag, np.hypot(gx, gy))
+    edge = mag >= _SPLIT_EDGE_MAG
+    k3 = np.ones((3, 3), np.uint8)
+    h, w = labels.shape
+    out = labels.copy()
+    new_centers = []
+    worklist = list(range(n0))
+    for _pass in range(_SPLIT_PASSES):
+        touched = []
+        for ci in worklist:
+            if lum[ci] < DARK_LINE_LUM:
+                continue                        # ink is sacred
+            mask = (out == ci).astype(np.uint8)
+            ncomp, comp, stats, _ = cv2.connectedComponentsWithStats(mask, 8)
+            for k in range(1, ncomp):
+                if len(new_centers) >= _SPLIT_MAX_NEW:
+                    break
+                area = int(stats[k, cv2.CC_STAT_AREA])
+                if area < _SPLIT_MIN_PX:
+                    continue
+                x0 = max(0, stats[k, cv2.CC_STAT_LEFT] - 1)
+                y0 = max(0, stats[k, cv2.CC_STAT_TOP] - 1)
+                x1 = min(w, stats[k, cv2.CC_STAT_LEFT] + stats[k, cv2.CC_STAT_WIDTH] + 1)
+                y1 = min(h, stats[k, cv2.CC_STAT_TOP] + stats[k, cv2.CC_STAT_HEIGHT] + 1)
+                sub = comp[y0:y1, x0:x1] == k
+                if protect is not None and \
+                        protect[y0:y1, x0:x1][sub].mean() > _SPLIT_PROTECT_OVL:
+                    continue                    # gradflat idealization stands
+                interior = cv2.erode(sub.astype(np.uint8), k3,
+                                     iterations=2).astype(bool)
+                if interior.sum() < _SPLIT_MIN_INTERIOR:
+                    continue
+                ewin = edge[y0:y1, x0:x1]
+                ef = float(ewin[interior].mean())
+                if ef < _SPLIT_EDGE_FRAC:
+                    continue                    # flat/shaded: no structure
+                # local k-means on the source pixels under the component mask
+                px = img[y0:y1, x0:x1][sub].reshape(-1, 3).astype(np.float32)
+                kk = min(_SPLIT_KMAX, len(px))
+                if kk < 2:
+                    continue
+                cv2.setRNGSeed(1234567)
+                crit = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER,
+                        15, 1.0)
+                _, ll, cc = cv2.kmeans(px, kk, None, crit, 2,
+                                       cv2.KMEANS_PP_CENTERS)
+                ll = ll.ravel().astype(np.int32)
+                cc = np.clip(cc, 0, 255)
+                labc = rgb2lab(cc.reshape(1, -1, 3) / 255.0)[0]
+                merge = np.arange(kk)
+                for i in range(kk):
+                    for j in range(i + 1, kk):
+                        if merge[i] != i or merge[j] != j:
+                            continue
+                        if np.linalg.norm(labc[i] - labc[j]) < _SPLIT_MERGE_DE:
+                            merge[j] = i
+                ll = merge[ll]
+                sizes = np.bincount(ll, minlength=kk)
+                floor = max(_SPLIT_SUB_MIN_PX, int(0.04 * area))
+                keep = [s for s in range(kk)
+                        if merge[s] == s and sizes[s] >= floor]
+                if len(keep) < 2:
+                    continue
+                # px of dropped clusters -> colour-nearest kept center
+                bad = ~np.isin(ll, keep)
+                if bad.any():
+                    d = ((px[bad][:, None, :] - cc[None, keep, :]) ** 2).sum(2)
+                    ll[bad] = np.array(keep)[d.argmin(1)]
+                slab = np.full(sub.shape, -1, np.int32)
+                slab[sub] = ll
+                # local mode smooth (de-jag) among kept sub-labels only
+                votes = np.stack([cv2.boxFilter((slab == s).astype(np.float32),
+                                                -1, (3, 3)) for s in keep])
+                smoothed = np.array(keep, np.int32)[votes.argmax(0)]
+                slab[sub] = smoothed[sub]
+                # absorb tiny sub-fragments into their spatial sibling
+                junk = np.zeros(sub.shape, bool)
+                for s in keep:
+                    sm = (slab == s).astype(np.uint8)
+                    nc2, cmp2, st2, _ = cv2.connectedComponentsWithStats(sm, 8)
+                    for k2 in range(1, nc2):
+                        if st2[k2, cv2.CC_STAT_AREA] < _SPLIT_SUB_MIN_PX:
+                            junk |= cmp2 == k2
+                ok = sub & ~junk
+                if junk.any() and ok.any():
+                    _, near = cv2.distanceTransformWithLabels(
+                        (~ok).astype(np.uint8), cv2.DIST_L2, 3,
+                        labelType=cv2.DIST_LABEL_PIXEL)
+                    lut = np.zeros(int(near.max()) + 1, np.int32)
+                    lut[near[ok]] = slab[ok]
+                    jj = junk & sub
+                    slab[jj] = lut[near[jj]]
+                sizes = np.bincount(slab[sub], minlength=kk)
+                keep = [s for s in keep if sizes[s] >= _SPLIT_SUB_MIN_PX]
+                if len(keep) < 2:
+                    continue
+                # gate 2: the split boundary must coincide with drawn edges —
+                # a gradient/banding split fails (boundary sits on the ramp)
+                b = np.zeros(sub.shape, bool)
+                b[:, 1:] |= (slab[:, 1:] != slab[:, :-1]) \
+                    & (slab[:, 1:] >= 0) & (slab[:, :-1] >= 0)
+                b[1:, :] |= (slab[1:, :] != slab[:-1, :]) \
+                    & (slab[1:, :] >= 0) & (slab[:-1, :] >= 0)
+                if not b.any() or float(ewin[b].mean()) < _SPLIT_BND_FRAC:
+                    continue
+                # gate 3: final sub-region mean colours must truly separate
+                means = np.array([[img[y0:y1, x0:x1][slab == s][:, c].mean()
+                                   for c in range(3)] for s in keep],
+                                 np.float64)
+                labm = rgb2lab(means.reshape(1, -1, 3) / 255.0)[0]
+                maxde = max(np.linalg.norm(labm[i] - labm[j])
+                            for i in range(len(keep))
+                            for j in range(i + 1, len(keep)))
+                if maxde < _SPLIT_MIN_DE:
+                    continue
+                # joint quality gate: weak on BOTH evidence axes = a single
+                # shading pocket, not drawn structure (constants above)
+                if maxde < _SPLIT_STRONG_DE and ef < _SPLIT_STRONG_EF:
+                    continue
+                # apply: largest sub-region keeps ci, the rest get new labels
+                order = sorted(keep, key=lambda s: -sizes[s])
+                wout = out[y0:y1, x0:x1]
+                for s in order[1:]:
+                    if len(new_centers) >= _SPLIT_MAX_NEW:
+                        break
+                    m = sub & (slab == s)
+                    nid = n0 + len(new_centers)
+                    wout[m] = nid
+                    cnew = np.clip(np.round(means[keep.index(s)]),
+                                   0, 255).astype(centers.dtype)
+                    new_centers.append(cnew)
+                    lum.append(_luminance(cnew))
+                    touched.append(nid)
+                touched.append(ci)              # remainder may split again
+        if not touched:
+            break
+        worklist = sorted(set(touched))         # recurse into split regions
+    if not new_centers:
+        return labels, centers
+    return out, np.concatenate([centers, np.stack(new_centers)], axis=0)
+
+
 def _smooth_labels(labels: np.ndarray, n_labels: int, ksize: int = 3,
                    centers: np.ndarray = None) -> np.ndarray:
     """Majority (mode) filter on the label map — de-jags region boundaries.

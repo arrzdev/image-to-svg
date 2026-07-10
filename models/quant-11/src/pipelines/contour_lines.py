@@ -23,11 +23,14 @@ from .quantize_contours import (
     _absorb_same_fill_shrapnel,
     _consolidate_palette,
     _despeckle_labels,
+    _dissolve_blend_bands,
     _dissolve_speckle,
     _merge_shadow_tones,
     _own_transitions,
     _quantize,
+    _resnap_fill_boundaries,
     _smooth_labels,
+    _split_structured_regions,
 )
 
 
@@ -143,6 +146,168 @@ def _flatten_gradient_regions(img: np.ndarray) -> tuple:
                 out[..., c][mj] = mean[c]
             flattened.append((mj, np.array(mean, np.float32)))
     return out, flattened
+
+
+# --- Ramp band-split (auto-loop COLOR, gradient banding) --------------------
+# Where the SOURCE has a smooth wide-span luminance ramp inside one label,
+# our collapse-to-one-tone reads as COLOR error (tile evidence: ours dE 6-18
+# vs source where Recraft sits at 1-3). Recraft's idealization is 2-3 FLAT
+# BANDS whose tones track the source — not one median tone, and never an SVG
+# gradient (USER design rule). This pass splits such labels at iso-level
+# cuts of a heavily smoothed ramp coordinate (the component's dominant Lab
+# axis) measured on the SOURCE. Evidence gates keep flat regions
+# and subtle shading alone: the component must be LARGE, its interior locally
+# QUIET (a ramp, not texture/edges), and its L* span WIDE. Fill tones then
+# come from _source_region_colors, which re-anchors each new band label to
+# the source pixels it covers.
+# The ramp coordinate is the component's dominant Lab axis (PCA), not L*
+# alone: crystal facet ramps are chroma-heavy (lbl6 maroon: L*-span 0.8 but
+# Lab-span 12.3; lbl10 red: 11.4 vs 22.5-38.1), so an L-only span gate missed
+# most of the banding population. Population-measured on all 11 gate targets
+# + files-pile as texture control (components >=0.4% frame):
+#   fire:  crystals facets spanP 12.3-38.1 / med9 1.4-8.7 / res 0.75-0.98;
+#          app-asset blue+orange 12.0-26.3 / <=6.7 / >=0.78; fox dark body
+#          14.7 / 5.1 / 0.81; mountain rock 13.8 / 9.0 / 0.97
+#   hold:  chopchop / rabbit / elephant / logos / monster: NO comp reaches
+#          spanP 8; pizza-box max 8.6 (gradflat-owned); shield straps 11.0-
+#          11.5 (ledger-0f one-solid population) sit just under the span cut
+#   texture (must-not): files-pile paper spanP 18-62 but med9 12.8-27.7 or
+#          res-frac 0.15-0.66 — blocked by BOTH smoothness gates
+_BAND_MIN_AREA = 0.0015   # component area, fraction of frame
+_BAND_SPAN = 12.0         # p92-p8 interior span of the ramp coord (~dE)
+_BAND_SPAN3 = 26.0        # span at/above which 3 bands instead of 2
+                          # (23 probed: census win shrank -0.0166->-0.0131
+                          # on crystals; the extra cuts over-fragment)
+_BAND_QUIET_MED = 8.8     # median 9px local range of DENOISED ramp coord
+                          # (fox fur-textured body shading sits at 9.0 and
+                          # bands it wrongly — measured +0.008 color on fox;
+                          # smooth crystal paint winners top out at 8.7)
+_BAND_RES_TOL = 4.0       # |proj - heavy-blur(proj)| residual tolerance
+_BAND_RES_FRAC = 0.75     # interior fraction the smoothed field must explain
+_BAND_MIN_PIECE = 0.15    # every band must hold >= this fraction of the comp
+_BAND_FRAG = 0.02         # band islands below this comp-fraction are absorbed
+_BAND_INK_LUM = 40.0      # never band near-black labels: they own the drawn
+                          # ink network, and recoloring half of it wrecked fox
+                          # (color +0.075; ink lum 30.4 vs darkest true-fill
+                          # winner 47.9 — measured this loop)
+_BAND_MIN_EDGE = 0.06     # scene gate: imgstats edge_density. Banding is the
+                          # Recraft idealization for PAINTED art (crystals
+                          # 0.116, chopchop 0.123); in soft 3D-render scenes
+                          # (app-asset 0.042) Recraft flattens the same ramps
+                          # to ONE tone (eye-verified on the target arrow),
+                          # and banding there minted census/flow boundaries.
+
+
+def _band_split_ramps(labels: np.ndarray, centers: np.ndarray,
+                      raw: np.ndarray,
+                      exclude: np.ndarray = None) -> tuple:
+    """Split smooth wide-span ramp labels into 2-3 iso-level flat bands.
+
+    Runs AFTER the full label-cleanup chain so bands cannot be re-absorbed,
+    and measures ALL evidence on the RAW source (never the sharpened frame).
+    `exclude` masks pixels already idealized by _flatten_gradient_regions —
+    those were measured (ledger 0f) as Recraft ONE-solid regions; re-banding
+    them would undo a shipped win. Returns (labels, centers) with new band
+    labels appended; the largest band keeps the original label id.
+    """
+    h, w = labels.shape
+    frame = float(h * w)
+    lab = cv2.cvtColor(raw, cv2.COLOR_RGB2Lab).astype(np.float32)
+    lab[..., 0] *= 100.0 / 255.0
+    lab[..., 1] -= 128.0
+    lab[..., 2] -= 128.0
+    k9 = cv2.getStructuringElement(cv2.MORPH_RECT, (9, 9))
+    out = labels.copy()
+    new_centers = list(centers)
+    n_orig = len(centers)
+    for li in range(n_orig):
+        c = centers[li].astype(np.float32)
+        if 0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2] < _BAND_INK_LUM:
+            continue          # ink-layer guard: never recolor the line labels
+        m = labels == li
+        if m.sum() < _BAND_MIN_AREA * frame:
+            continue
+        ncc, cc, st, _ = cv2.connectedComponentsWithStats(
+            m.astype(np.uint8), connectivity=8)
+        for ci in range(1, ncc):
+            area = float(st[ci, 4])
+            if area < _BAND_MIN_AREA * frame:
+                continue
+            x, y, ww, hh = st[ci, 0], st[ci, 1], st[ci, 2], st[ci, 3]
+            sub = cc[y:y + hh, x:x + ww] == ci
+            if exclude is not None and \
+                    (exclude[y:y + hh, x:x + ww] & sub).sum() > 0.3 * area:
+                continue
+            # interior only: boundary AA / neighbour bleed must not fake a
+            # wide span or break the quiet gate
+            dist = cv2.distanceTransform(sub.astype(np.uint8), cv2.DIST_L2, 3)
+            interior = dist > 4.0
+            if interior.sum() < 0.25 * area:
+                continue
+            sublab = lab[y:y + hh, x:x + ww]
+            P = sublab[interior]
+            mu = P.mean(0)
+            ax = np.linalg.eigh(np.cov((P - mu).T))[1][:, -1]
+            dint = (P - mu) @ ax
+            span = float(np.percentile(dint, 92) - np.percentile(dint, 8))
+            if span < _BAND_SPAN:
+                continue          # flat or subtle shading: leave alone
+            proj = ((sublab - mu[None, None, :]) @ ax).astype(np.float32)
+            # local range on a lightly DENOISED coord: the raw 9px range is
+            # dominated by JPEG noise (measured: real crystal ramps fail a
+            # raw-range gate at any cap that still blocks texture)
+            pd = cv2.GaussianBlur(proj, (0, 0), 1.5)
+            rng9 = cv2.dilate(pd, k9) - cv2.erode(pd, k9)
+            if float(np.median(rng9[interior])) > _BAND_QUIET_MED:
+                continue          # textured / edgy interior: not a ramp
+            # heavily smoothed masked coord so the iso-cuts are clean curves
+            sig = float(np.clip(np.sqrt(area) / 20.0, 3.0, 12.0))
+            mf = sub.astype(np.float32)
+            Lb = cv2.GaussianBlur(proj * mf, (0, 0), sig) \
+                / np.maximum(cv2.GaussianBlur(mf, (0, 0), sig), 1e-6)
+            res = np.abs(proj - Lb)[interior]
+            if float((res < _BAND_RES_TOL).mean()) < _BAND_RES_FRAC:
+                continue          # smoothed field can't explain the interior
+            vals = Lb[sub]
+            nb = 3 if span >= _BAND_SPAN3 else 2
+            bmap = None
+            while nb >= 2:
+                qs = np.percentile(vals, [100.0 * i / nb
+                                          for i in range(1, nb)])
+                cand = np.digitize(Lb, qs)
+                cand[~sub] = -1
+                # absorb band islands (level-set pockets around local
+                # extrema) into the adjacent band so they don't mint paths
+                for b in range(nb):
+                    bm = cand == b
+                    if not bm.any():
+                        continue
+                    nf, lf, sf, _ = cv2.connectedComponentsWithStats(
+                        bm.astype(np.uint8), connectivity=8)
+                    for j in range(1, nf):
+                        if sf[j, 4] >= max(48.0, _BAND_FRAG * area):
+                            continue
+                        frag = lf == j
+                        cand[frag] = b + 1 if b == 0 else b - 1
+                sizes = [int((cand == b).sum()) for b in range(nb)]
+                if min(sizes) >= _BAND_MIN_PIECE * area:
+                    bmap = cand
+                    break
+                nb -= 1
+            if bmap is None:
+                continue
+            # largest band keeps li; the rest become new source-toned labels
+            order = np.argsort(sizes)[::-1]
+            rsub = raw[y:y + hh, x:x + ww]
+            for b in order[1:]:
+                bm = bmap == b
+                mean = np.clip(np.round(
+                    rsub[bm].reshape(-1, 3).mean(0)), 0, 255).astype(np.uint8)
+                out[y:y + hh, x:x + ww][bm] = len(new_centers)
+                new_centers.append(mean)
+    if len(new_centers) == n_orig:
+        return labels, centers
+    return out, np.stack(new_centers).astype(centers.dtype)
 
 
 def _sharpen_prepass(img: np.ndarray, amount: float,
@@ -261,10 +426,11 @@ class ContourLinesPipeline(Pipeline):
         # cleanly: flat = monster + 4 logos (all revert to the pre-sharpen
         # output byte-identically), lineart = all 9 win targets. Decided on
         # the RAW image so flattening can't flip the classification.
+        from imgstats import analyze
+        _stats = analyze(raw)
         _sharpen_ok = True
         if p["presharpen"] > 0:
-            from imgstats import analyze
-            _sharpen_ok = analyze(raw)["kind"] != "flat"
+            _sharpen_ok = _stats["kind"] != "flat"
 
         def _prepasses(a):
             if p["presharpen"] > 0 and _sharpen_ok:
@@ -290,9 +456,10 @@ class ContourLinesPipeline(Pipeline):
             # before the cleanup chain: everything up to there is
             # byte-identical to prev, then each gradient region becomes ONE
             # label — banding gone, zero side effects outside the regions.
-            labels, centers = _quantize(_prepasses(raw), p["num_colors"],
-                                        p["seed"])
+            qimg = _prepasses(raw)
+            labels, centers = _quantize(qimg, p["num_colors"], p["seed"])
         else:
+            qimg = img
             labels, centers = _quantize(img, p["num_colors"], p["seed"])
         if p["merge_de"] > 0:
             labels, centers = _consolidate_palette(labels, centers, p["merge_de"])
@@ -332,6 +499,54 @@ class ContourLinesPipeline(Pipeline):
             # boundary between them (evidence gate — drawn marks contrast in
             # the source and are refused). Locked thin-line pixels are sacred.
             labels = _absorb_same_fill_shrapnel(labels, centers, raw, lock)
+            # Blend-band dissolution (AA TRANSITION MUD, auto-loop
+            # 2026-07-10 COLOR): _own_transitions only handles shading-class
+            # pairs (ablen <= 36), so the mid-tone ramp bands that hug
+            # HIGH-CONTRAST boundaries (ink vs fill — chopchop plank
+            # outlines, fox in-ink debris, mountain ridges) survive the
+            # whole chain and render as mud that matches neither neighbor.
+            # Source-evidence-gated: the band's own source color must BE the
+            # blend of its two bounds' source colors and its pixels must
+            # SPAN the ramp; each pixel then joins the source-nearer side
+            # (midline split = Recraft's crisp two-region boundary).
+            labels = _dissolve_blend_bands(labels, centers, raw, lock)
+            # ... and its zero-width case: even where the ramp mints no
+            # third label, the boundary between two fills lands where pixel
+            # color crosses the GLOBAL-centroid midpoint, not the local
+            # ramp's 50% crossing. Re-vote the 2px ribbon around every
+            # fill<->fill boundary with local plateau evidence (stroke-grade
+            # labels untouched — global width calibration).
+            labels = _resnap_fill_boundaries(labels, centers, raw)
+
+        # Ramp band-split (auto-loop COLOR): smooth wide-span source ramps
+        # collapsed to one label become 2-3 flat iso-level bands (the
+        # Recraft idealization). Gradflat-stamped regions are excluded —
+        # those were measured as Recraft ONE-solid (ledger 0f). Scene gate:
+        # only PAINTED art (dense drawn edges); Recraft flattens soft-render
+        # scenes' ramps to one tone (see _BAND_MIN_EDGE).
+        if _stats["kind"] != "flat" \
+                and _stats["edge_density"] >= _BAND_MIN_EDGE:
+            _excl = None
+            if _regions:
+                _excl = np.zeros(labels.shape, bool)
+                for _m, _mean in _regions:
+                    _excl |= _m
+            labels, centers = _band_split_ramps(labels, centers, raw, _excl)
+
+        # Structured-region split (UNDER-RESOLVE fix, autoresearch 2026-07-10):
+        # adjacent drawn facets sharing one k-means label fuse into one path
+        # (crystals: 16 paths vs Recraft's 58 in one region). Where a region's
+        # INTERIOR still shows strong source edges, re-segment it locally so
+        # each drawn sub-shape gets its own label. Evidence-gated per
+        # component (edge density + boundary coincidence + colour separation)
+        # so shading and gradients never split; gradflat stamps are protected.
+        _protect = None
+        if _regions:
+            _protect = np.zeros(labels.shape, bool)
+            for _m, _ in _regions:
+                _protect |= _m
+        labels, centers = _split_structured_regions(labels, centers, qimg,
+                                                    protect=_protect)
 
         svg, _info = contour_svg(labels, centers, fill_tol=p["fill_tol"],
                                  fill_smooth=p["fill_smooth"],
