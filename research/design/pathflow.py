@@ -91,7 +91,9 @@ def polylines_in_region(svg, region, native, step):
                     "centroid": frag.mean(axis=0),
                     "length": float(np.hypot(*np.diff(frag, axis=0).T).sum()),
                     "ncubic": sum(1 for s in path
-                                  if s.__class__.__name__ == "CubicBezier")})
+                                  if s.__class__.__name__ == "CubicBezier"),
+                    "d": d, "fill": fill,           # raw source for LLM snippets
+                    "frac_inside": float(inside.mean())})
     return out
 
 
