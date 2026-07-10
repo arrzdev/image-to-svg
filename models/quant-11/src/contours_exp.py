@@ -2287,18 +2287,79 @@ def _stroke_elements(strokes: List[dict]) -> str:
     return "\n".join(parts)
 
 
+# Fill-colour source re-anchor (COLOR mode): RGB trim radius around the
+# centroid and the minimum in-trim coverage to accept a re-centre.
+_FILLC_TRIM = 40.0
+_FILLC_MIN_FRAC = 0.5
+
+
+def _source_region_colors(labels: np.ndarray, centers: np.ndarray,
+                          color_img: Optional[np.ndarray]) -> np.ndarray:
+    """Per-region fill palette anchored to the SOURCE pixels each region covers.
+
+    The k-means centroid a region carries drifts from the pixels it actually
+    ends up painting: k-means runs on the SHARPENED frame (steeper contrast /
+    saturation than the source), and palette consolidation folds thin AA-halo
+    clusters into the neighbour they wrap WITHOUT recomputing the survivor's
+    centre. The tilecmp COLOR channel scores our fills against the SOURCE
+    raster, so that drift shows up directly as ΔE-to-source.
+
+    Re-anchor each label's fill to the source pixels it covers, but as a
+    centroid-trimmed mean rather than a raw mean/median: keep only the covered
+    pixels within _FILLC_TRIM RGB of the centroid, then average those. The
+    trim rejects exactly the two populations that would otherwise poison a
+    plain region average — the dark AA-halo ring consolidation absorbed into
+    the fill, and the far tail of a merged gradient the quantizer under-split —
+    so we recover the region's DOMINANT flat tone (the Recraft-style
+    idealisation) re-centred on the true source values. Uses the ORIGINAL
+    label map (ink is still its own dark label here, before stroke pixels are
+    absorbed into fills), so a fill's colour is never dragged toward the line
+    it abuts. A region with too few in-trim pixels keeps its centroid, so the
+    change can only re-centre a well-populated flat tone, never invent one.
+    Stroke colours are untouched — only the fill palette is re-derived."""
+    if color_img is None or color_img.ndim != 3:
+        return centers
+    out = centers.copy()
+    flat = labels.ravel()
+    px = color_img.reshape(-1, color_img.shape[2])[:, :3].astype(np.float64)
+    cen = centers.astype(np.float64)
+    order = np.argsort(flat, kind="stable")
+    sl = flat[order]
+    bounds = np.searchsorted(sl, np.arange(len(centers) + 1))
+    t2 = _FILLC_TRIM * _FILLC_TRIM
+    for r in range(len(centers)):
+        a, b = bounds[r], bounds[r + 1]
+        if b <= a:
+            continue
+        reg = px[order[a:b]]
+        d2 = ((reg - cen[r]) ** 2).sum(1)
+        keep = reg[d2 < t2]
+        if len(keep) < _FILLC_MIN_FRAC * len(reg):
+            continue
+        out[r] = np.clip(np.round(keep.mean(0)), 0, 255).astype(out.dtype)
+    return out
+
+
 def contour_svg(labels: np.ndarray, centers: np.ndarray,
                 fill_tol: float = 2.5, fill_smooth: int = 9,
                 fill_corner_deg: float = 60.0, fill_parsimony: float = 0.0,
+                color_img: Optional[np.ndarray] = None,
                 **kw) -> Tuple[str, dict]:
     """Full width-constant emission: absorbed fills + stroke network on top.
 
     fill_parsimony > 0 fits the shading-region boundaries with the Potrace
     parsimony fitter (wobble-free by construction) instead of smooth+Schneider
-    — the fills then read as idealized flat shapes, like Recraft's."""
+    — the fills then read as idealized flat shapes, like Recraft's.
+
+    color_img (source raster, optional): re-derives the FILL palette from the
+    actual source pixels each region covers (source-anchored ΔEc), leaving the
+    stroke palette on the original centroids."""
     import boundary
 
     strokes, stroke_mask, info = extract_contour_strokes(labels, centers, **kw)
+    # Fill palette anchored to the source pixels each region covers; strokes
+    # keep the original centroids (their dark_lum / join-colour decisions).
+    fill_centers = _source_region_colors(labels, centers, color_img)
     new_labels = absorb_mask(labels, stroke_mask)
     capsules: List[dict] = []
     src_img = kw.get("src_img")
@@ -2310,10 +2371,11 @@ def contour_svg(labels: np.ndarray, centers: np.ndarray,
     if fill_parsimony > 0:
         # corner-pinned parsimony fills: serration V-notches (monster teeth)
         # survive as hard vertices instead of rounding into scallops
-        svg = _fill_svg_corner_pinned(new_labels, centers, edges, loops,
+        svg = _fill_svg_corner_pinned(new_labels, fill_centers, edges, loops,
                                       parsimony=fill_parsimony, stats=info)
     else:
-        svg = boundary.loops_to_svg_curves(new_labels, centers, edges, loops,
+        svg = boundary.loops_to_svg_curves(new_labels, fill_centers, edges,
+                                           loops,
                                            tol=fill_tol,
                                            corner_deg=fill_corner_deg,
                                            smooth_win=fill_smooth,
