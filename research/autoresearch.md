@@ -7,9 +7,18 @@
 Mission: **research/docs/PROJECT_SPEC.md** · Work: **research/docs/BACKLOG.md** · Trigger: `/autoresearch <objective>` — $ARGUMENTS states the current objective (this file + spec carry detail; empty args = objective below). If `research/autoresearch.iteration.json` phase≠idle: execute its **next_action** field.
 
 ## Objective — rehydrate from here
-- ⚠ **KEEP/DISCARD IS BY EYE, NOT THE METRIC** (spec §4): render `tb.crops` and
-  look. `quality`/`ssim` are a regression sanity check only — they reward
-  copying source noise and penalize the idealization we want.
+- 🔄 **REGIME CHANGE (USER 2026-07-10): FULL-AUTO tilecmp GATE.** Keep/revert is
+  now the **tilecmp** localized metric (`research/design/{tilecmp_loop,findings}.py`),
+  NOT a per-iteration eye verdict. tilecmp was *validated against the eye* and
+  splits census/flow/color (un-gameable the way whole-image SSIM was); the eye is
+  now a **periodic AUDIT**, not the gate. SUPERSEDES "KEEP/DISCARD IS BY EYE" +
+  "metric is NOT the arbiter" below (kept as rationale for banning the OLD
+  whole-image metric — that ban still holds; tilecmp is different). tilecmp is the
+  LOCKED scorer: the loop may NOT edit `research/design/tilecmp*.py`/`findings.py`.
+  See [[tilecmp-diagnostic]]. Direction each iter = `findings.py` top defect.
+- ⚠ (pre-2026-07-10, superseded as GATE) render `tb.crops` and look; old
+  `quality`/`ssim` reward copying source noise — banned as a gate, now only the
+  periodic eye audit uses crops.
 - GOAL (USER 2026-07-09, /autoresearch re-arm): **push quality as far as
   possible PAST Recraft, beating our own last shipped version every
   iteration.** Keep gate = beats prev shipped (v10) by eye at ZOOM; ledger
