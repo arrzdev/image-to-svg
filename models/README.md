@@ -1,6 +1,20 @@
 # Model versions
 
-Each runnable `vN/` folder contains the version's **complete code** and a
+**Naming (2026-07-09): folders are `prefix-N`, split by architecture lineage.**
+The web dropdown groups by prefix and sorts each group numerically.
+
+- **`quant-N`** (was `vN`, N=3..11) — the QUANTIZE-FIRST lineage: global
+  k-means colour quantize decides topology, then contour/line idealization.
+  `quant-11` is the mature production engine; `models/staged` symlinks it.
+- **`ideal-N`** — the IDEALIZE-FIRST lineage (the "how Recraft works" rebuild,
+  design 2026-07-09): edge-preserving idealize → local region topology (no
+  global palette) → colour sampled last → dedicated ink layer. `ideal-1` =
+  clean fills only (proved fills can't carry ink); `ideal-2` = + ink layer
+  (the blueprint union). Design record: `research/design/BLUEPRINT.md`. These
+  reuse `quant-11/src` as the geometry/emission backend and do NOT hard-
+  downscale to 1024 (R1).
+
+Each runnable version folder contains the version's **complete code** and a
 stable entry point, so any version runs from the main branch without touching
 git history:
 

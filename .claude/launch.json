@@ -7,6 +7,13 @@
       "runtimeArgs": ["-m", "uvicorn", "server:app", "--host", "127.0.0.1", "--port", "8000"],
       "port": 8000,
       "env": {"DYLD_FALLBACK_LIBRARY_PATH": "/opt/homebrew/lib"}
+    },
+    {
+      "name": "svg-tester-preview",
+      "runtimeExecutable": "/Users/arrz/Documents/Github/image-to-svg/.venv/bin/python",
+      "runtimeArgs": ["-m", "uvicorn", "server:app", "--host", "127.0.0.1", "--port", "8137"],
+      "port": 8137,
+      "env": {"DYLD_FALLBACK_LIBRARY_PATH": "/opt/homebrew/lib"}
     }
   ]
 }

@@ -2069,6 +2069,37 @@ def _li_span_is_line(seg: np.ndarray, a: int, b: int,
     return False
 
 
+# Edge-lineage opt-in: when set to a px tolerance, curved stretches are fit
+# with the Schneider minimal-cubic least-squares fitter (a circle -> ~2-4
+# cubics) instead of the Potrace segment-merger (which floors at ~16). None =
+# quant-11 default behaviour, byte-identical. Set/reset by the edge pipeline.
+SCHNEIDER_TOL: Optional[float] = None
+SCHNEIDER_SMOOTH: int = 0        # polyline moving-average window (0 = off)
+
+
+def _smooth_poly(p, win, closed):
+    """Moving-average the boundary polyline to erase the pixel staircase before
+    fitting (a raw circle contour needs ~20 cubics to hold 2px; smoothed, ~5).
+    Endpoints of an OPEN piece are pinned corners — never move them."""
+    n = len(p)
+    k = win // 2
+    if win < 3 or n < win:
+        return p
+    if closed:
+        dup = float(np.hypot(*(p[0] - p[-1]))) < 1e-6
+        core = p[:-1] if dup else p
+        m = len(core)
+        oc = core.copy()
+        for i in range(m):
+            idx = [(i + o) % m for o in range(-k, k + 1)]
+            oc[i] = core[idx].mean(0)
+        return np.vstack([oc, oc[:1]]) if dup else oc
+    out = p.copy()
+    for i in range(k, n - k):        # pinned endpoints (they are corners)
+        out[i] = p[i - k:i + k + 1].mean(0)
+    return out
+
+
 def _li_fit_piece(seg: np.ndarray, parsimony: float, head_anchored: bool,
                   tail_anchored: bool, stats: Optional[dict] = None,
                   labels: Optional[np.ndarray] = None,
@@ -2079,6 +2110,29 @@ def _li_fit_piece(seg: np.ndarray, parsimony: float, head_anchored: bool,
     that measure ruler-straight (kinks between spans stay pinned), fit the
     curved remainder with parsimony cubics + raster-gated G1 repair."""
     import svgcore
+
+    # SCHNEIDER path: erase the pixel staircase from the WHOLE piece before any
+    # anchor/line-intent classification — otherwise false kinks fragment a
+    # smooth loop into ~35 short spans (a circle came out 35 cubics instead of
+    # ~8). Smoothing first lets the loop stay one piece and fit minimally.
+    if SCHNEIDER_TOL is not None and SCHNEIDER_SMOOTH:
+        seg = np.asarray(seg, float)
+        _closed = len(seg) > 3 and float(np.hypot(*(seg[0] - seg[-1]))) < 1e-6
+        seg = _smooth_poly(seg, SCHNEIDER_SMOOTH, _closed)
+
+    def _fit_curved(pts):
+        """Fit a curved (already corner-split) stretch to the fewest cubics."""
+        if SCHNEIDER_TOL is not None:
+            import schneider_fit
+            arr = np.asarray(pts, float)
+            closed = len(arr) > 3 and float(np.hypot(*(arr[0] - arr[-1]))) < 1e-6
+            if closed:
+                return schneider_fit.fit_closed(arr, SCHNEIDER_TOL)
+            return schneider_fit.fit_curve(arr, SCHNEIDER_TOL)
+        flat = [float(v) for xy in pts for v in xy]
+        cs = svgcore.fit_open_parsimony(flat, 1.0, parsimony)
+        chain = [tuple(cs[k:k + 8]) for k in range(0, len(cs), 8)]
+        return _li_g1_repair(chain, np.asarray(pts, float))
 
     npts = len(seg)
     q0, q1 = seg[0], seg[-1]
@@ -2103,11 +2157,8 @@ def _li_fit_piece(seg: np.ndarray, parsimony: float, head_anchored: bool,
         if b - a >= 4 and _li_span_is_line(seg, a, b, labels, pair):
             line_spans.append((a, b))
     if not line_spans:
-        # no ruler evidence: whole piece = parsimony + G1 (unchanged path)
-        flat = [float(v) for xy in seg for v in xy]
-        cs = svgcore.fit_open_parsimony(flat, 1.0, parsimony)
-        chain = [tuple(cs[k:k + 8]) for k in range(0, len(cs), 8)]
-        return _li_g1_repair(chain, seg)
+        # no ruler evidence: whole piece = curve fit (parsimony or Schneider)
+        return _fit_curved(seg)
 
     cubics: List[Tuple[float, ...]] = []
     pos = 0
@@ -2115,10 +2166,7 @@ def _li_fit_piece(seg: np.ndarray, parsimony: float, head_anchored: bool,
         if pos < i:                      # curved stretch before the line
             gap = seg[pos:i + 1]
             if len(gap) >= 2:
-                flat = [float(v) for xy in gap for v in xy]
-                cs = svgcore.fit_open_parsimony(flat, 1.0, parsimony)
-                chain = [tuple(cs[k:k + 8]) for k in range(0, len(cs), 8)]
-                cubics += _li_g1_repair(chain, gap)
+                cubics += _fit_curved(gap)
         if j is None:
             break
         if stats is not None:

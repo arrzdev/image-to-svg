@@ -74,6 +74,7 @@ def run(req: RunReq):
         "kb": out.stat().st_size // 1024,
         "saved": str(out.relative_to(ROOT)),
         "target": f"/targets/{target.name}" if has_target else None,
+        "target_kb": target.stat().st_size // 1024 if has_target else None,
     }
 
 
