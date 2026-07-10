@@ -68,7 +68,12 @@ BOILERPLATE = """
 ## Report back (raw data, not fluff)
 - File(s) changed + 2-3 line description + `git diff`.
 - Full gate output (baseline vs candidate overall/census/flow/color, {mode} share, VERDICT, exit code).
-- Honest read on why it passed/reverted. Leave the worktree edited, DO NOT commit.
+- Honest read on why it passed/reverted.
+- LEAVE your change in the worktree — do NOT `git revert`/`checkout` it and do NOT
+  commit, EVEN IF your own self-gate reverts. The orchestrator re-gates you
+  independently (anti-gaming) and decides keep/discard; if you self-revert it has
+  nothing to verify. Only exception: if your edit crashes the engine, revert to a
+  running state.
 """
 
 
