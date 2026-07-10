@@ -28,3 +28,6 @@ research/autoresearch.iteration.json.precompact.bak
 research/it*/
 research/it15_baseline_*.svg
 .claude/worktrees/
+
+# tilecmp diagnostic artifacts (regeneratable in seconds)
+research/design/tilecmp_out/
