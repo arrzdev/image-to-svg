@@ -20,6 +20,7 @@ import numpy as np
 
 from .base import Param, Pipeline
 from .quantize_contours import (
+    _absorb_same_fill_shrapnel,
     _consolidate_palette,
     _despeckle_labels,
     _dissolve_speckle,
@@ -322,6 +323,15 @@ class ContourLinesPipeline(Pipeline):
             # thin-fraction >=0.77, blob fringes <=0.35 (rabbit + chopchop).
             flipped = lock & (labels != labels0)
             labels[flipped] = labels0[flipped]
+            # Same-fill shrapnel absorption (OVER-FRAGMENT, auto-loop
+            # 2026-07-10): the passes above all PROTECT dark labels, so
+            # dark-on-dark shadow shrapnel (k-means splitting one soft shadow
+            # into interleaved near-identical tones) survives to become
+            # spurious paths. Merge a small component into an adjacent
+            # near-same-fill region ONLY where the RAW source shows no real
+            # boundary between them (evidence gate — drawn marks contrast in
+            # the source and are refused). Locked thin-line pixels are sacred.
+            labels = _absorb_same_fill_shrapnel(labels, centers, raw, lock)
 
         svg, _info = contour_svg(labels, centers, fill_tol=p["fill_tol"],
                                  fill_smooth=p["fill_smooth"],

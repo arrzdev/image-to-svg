@@ -626,6 +626,118 @@ def _dissolve_speckle(labels: np.ndarray, centers: np.ndarray,
     return out
 
 
+# Same-fill shrapnel absorption constants (OVER-FRAGMENT, auto-loop 2026-07-10;
+# populations measured on app-asset post-cleanup label map, 159 small comps):
+# shrapnel that must merge (interleaved shadow-tone fragments L4/L10/L12,
+# ramp leftovers) sits at palette dE 3.2-7.2 AND source-side dE <= 6.6; drawn
+# detail that must live (glyph parts, mail-icon creases, screen highlights)
+# sits at palette dE >= 10.5 or source-side dE >= 8.9. The SOURCE-side test is
+# the evidence gate: a fragment whose own source pixels match the neighbor's
+# local source pixels is a quantizer artifact (one flat tone split across a
+# centroid boundary / an AA band) — the source shows NO real boundary there.
+_SHRAP_MAX_FRAC = 0.002   # comp area cap, fraction of frame (~1400px at 1024)
+_SHRAP_MAX_DPAL = 8.0     # palette CIEDE2000 guard (shrapnel <= 7.2; next 10.5)
+_SHRAP_MAX_DSRC = 4.0     # source-evidence CIEDE2000 (comp mean vs neighbor's
+                          # near-band mean in the RAW image; gate-swept: 3.0
+                          # gave +0.0063/color+0.0017, 5.0 gave +0.0057/
+                          # color+0.0024, 4.0 gave +0.0069/color+0.0009)
+_SHRAP_MIN_RING = 8       # px; below this the evidence is too thin to act on
+_SHRAP_PASSES = 3         # cascade: multi-band ramps merge one band per pass
+
+
+def _absorb_same_fill_shrapnel(labels: np.ndarray, centers: np.ndarray,
+                               src: np.ndarray,
+                               lock: np.ndarray = None) -> np.ndarray:
+    """Merge small components into an adjacent near-same-fill region when the
+    SOURCE image shows no real boundary between them (OVER-FRAGMENT fix).
+
+    The cleanup chain deliberately protects dark labels everywhere (despeckle
+    floor /10, mode-filter immunity, _dissolve_speckle skips them) to keep
+    line art alive — so dark-on-dark shadow shrapnel has NO cleanup path:
+    k-means splits one soft shadow into 2-3 near-identical dark tones whose
+    tiny interleaved components each become a path (app-asset x[0.54-0.62]
+    y[0.60-0.71]: 7 paths vs Recraft's 3). This pass is the evidence-gated
+    reverse of a split, label-color-agnostic and component-local:
+
+    absorb comp -> neighbor iff
+      * comp is small (area <= _SHRAP_MAX_FRAC of frame),
+      * comp contains no locked thin-line pixel (drawn strokes are sacred),
+      * neighbor's palette color is near-same (dE <= _SHRAP_MAX_DPAL), and
+      * EVIDENCE: comp's own mean SOURCE color is within _SHRAP_MAX_DSRC of
+        the neighbor's mean SOURCE color in a 2px band beside the comp —
+        i.e. in the source there is no boundary here, the split is ours.
+
+    Among passing neighbors the source-closest wins (a ramp band joins the
+    side it actually resembles, cf. _own_transitions). Drawn marks keep
+    their fragment: any visible mark contrasts with its field in the source
+    (measured >= 8.9 dE), so the evidence gate refuses the merge. Guards are
+    dE-based (scale-free) and frame-relative (scale-invariant)."""
+    n = len(centers)
+    if n <= 1 or src is None or src.ndim != 3:
+        return labels
+    from skimage.color import rgb2lab, deltaE_ciede2000
+    lab = rgb2lab(centers.reshape(1, -1, 3) / 255.0)[0]
+
+    def _de(mean_a, mean_b):
+        la = rgb2lab(np.asarray(mean_a, np.float64).reshape(1, 1, 3) / 255.0)
+        lb = rgb2lab(np.asarray(mean_b, np.float64).reshape(1, 1, 3) / 255.0)
+        return float(deltaE_ciede2000(la, lb))
+
+    h, w = labels.shape
+    max_area = _SHRAP_MAX_FRAC * h * w
+    k3 = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
+    srcf = src[..., :3].astype(np.float32)
+    out = labels.copy()
+    for _ in range(_SHRAP_PASSES):
+        merged = 0
+        for ci in range(n):
+            mask = (out == ci).astype(np.uint8)
+            if not mask.any():
+                continue
+            ncomp, comp, stats, _ = cv2.connectedComponentsWithStats(mask, 8)
+            for k in range(1, ncomp):
+                if stats[k, cv2.CC_STAT_AREA] > max_area:
+                    continue
+                x0 = max(0, stats[k, cv2.CC_STAT_LEFT] - 3)
+                y0 = max(0, stats[k, cv2.CC_STAT_TOP] - 3)
+                x1 = min(w, stats[k, cv2.CC_STAT_LEFT]
+                         + stats[k, cv2.CC_STAT_WIDTH] + 3)
+                y1 = min(h, stats[k, cv2.CC_STAT_TOP]
+                         + stats[k, cv2.CC_STAT_HEIGHT] + 3)
+                sub = (comp[y0:y1, x0:x1] == k).astype(np.uint8)
+                subb = sub.astype(bool)
+                if lock is not None and (lock[y0:y1, x0:x1] & subb).any():
+                    continue
+                wl = out[y0:y1, x0:x1]
+                ring = cv2.dilate(sub, k3).astype(bool) & ~subb
+                neigh = wl[ring]
+                neigh = neigh[neigh != ci]
+                if neigh.size < _SHRAP_MIN_RING:
+                    continue
+                cnts = np.bincount(neigh, minlength=n)
+                ws = srcf[y0:y1, x0:x1]
+                cmean = ws[subb].mean(0)
+                band = cv2.dilate(sub, k3, iterations=2).astype(bool) & ~subb
+                best, best_d = -1, 1e9
+                for nb in np.flatnonzero(cnts >= _SHRAP_MIN_RING):
+                    if float(deltaE_ciede2000(lab[ci][None, None],
+                                              lab[nb][None, None])) \
+                            > _SHRAP_MAX_DPAL:
+                        continue
+                    nbm = band & (wl == nb)
+                    if int(nbm.sum()) < _SHRAP_MIN_RING:
+                        continue
+                    d = _de(cmean, ws[nbm].mean(0))
+                    if d <= _SHRAP_MAX_DSRC and d < best_d:
+                        best, best_d = int(nb), d
+                if best >= 0:
+                    wl[subb] = best
+                    merged += 1
+        if merged == 0:
+            break
+    return out
+
+
 def _smooth_labels(labels: np.ndarray, n_labels: int, ksize: int = 3,
                    centers: np.ndarray = None) -> np.ndarray:
     """Majority (mode) filter on the label map — de-jags region boundaries.
