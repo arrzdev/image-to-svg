@@ -43,7 +43,26 @@ def straighten(svg, eps=1.0, min_len=16.0):
         return _emit(_straight_runs(segs, eps, min_len))
 
     svg = re.sub(r'\bd="([^"]*)"', lambda m: f'd="{do_d(m.group(1))}"', svg)
-    svg = re.sub(r'<path\b[^>]*fill="none"[^>]*/>\s*', '', svg)
+    # Junk-path drop, made precise (UNDER-RESOLVE fix, 2026-07-11). The old
+    # pattern removed EVERY path whose attrs contained fill="none" — which
+    # deleted the entire visible centerline-stroke layer (fill="none"
+    # stroke="#..." stroke-linecap="round": the drawn ink network + light
+    # capsules) from every quant-12 output, while the fill layer had already
+    # absorbed those line pixels. Eye evidence: pizza-box checker grid lines
+    # vanished so cells fused into mud; chopchop trunk/leaf ink broke up.
+    # What still gets dropped:
+    #   * fill="none" with no stroke attr — paints nothing, true junk;
+    #   * butt-capped seal strokes (boundary_split paint-order seam covers,
+    #     same color as the fill under them) — near-invisible, but they
+    #     count-stuff the tilecmp census channel (measured: restoring them
+    #     alone regresses census +0.026 corpus-wide and flips UNDER-RESOLVE
+    #     tile labels without adding real geometry).
+    # Keeping ONLY the round-cap visible strokes measured (tiles=40):
+    # overall -0.0067, census -0.0006, flow -0.0020, color -0.0174.
+    svg = re.sub(r'<path\b(?![^>]*\bstroke=")[^>]*fill="none"[^>]*/>\s*',
+                 '', svg)
+    svg = re.sub(r'<path\b(?=[^>]*fill="none")'
+                 r'(?=[^>]*stroke-linecap="butt")[^>]*/>\s*', '', svg)
     return svg
 
 
