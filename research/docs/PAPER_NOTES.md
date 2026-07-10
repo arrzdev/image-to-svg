@@ -150,6 +150,102 @@ recommendation: segment-first backbone + light optimization as validator.
 7. **(E5) Corner-pattern exclusion from smoothing + ‖p−p̂‖⁴ leash**
    (Depixelizing) as the "make it look drawn" post-pass.
 
+## VectorArk (2605.24398, Adobe 2026) — DEEP READ 2026-07-10 [implementation-grade]
+
+Backbone = InternVL2-1B finetuned on ~5M SVGs; but the REPRESENTATION and all
+POST-PROCESSING are mechanical and portable. Full text cached in session
+scratchpad (vectorark_fulltext.txt).
+
+**Rounded polygon (§3.1, Fig 5):** path = triples (xᵢ,yᵢ,dᵢ). Sample path
+equidistantly → fit line+circular-arc primitives, G1, via Cornucopia (Baran et
+al. CGF 2010) restricted to line/arc (fit tolerances live in THAT paper, not
+this one). Arc D͡E → extend endpoint tangents to intersection B → vertices
+D,B,E; then REMOVE any vertex whose incident edges are collinear (kills D/E at
+tangential joins). d(B)=|BD| tangent length; all other vertices d=−1 (sharp).
+Radius r = d·tan(α/2), α = interior angle at B (distance quantizes stabler than
+radius). Arcs with negligible curvature → lines. Arcs spanning ≥120° uniformly
+subdivided. Emission (implied): L to arc-start, `A r r 0 0 sweep` to arc-end
+per rounded vertex; sweep from turn direction. 28–47% more compact than
+command-token reps; 3 DOF/segment vs 4 for cubics; piecewise-constant curvature.
+CAVEAT (Supp 6.5.3): representation regularizes small irregularities away —
+LOSES SSIM on easy icons vs exact reps while DINO stays equal = the formal
+"idealization vs pixel fidelity" tradeoff, in our favor.
+
+**Outline normalization (§3.1/4.1):** classical trace (Image Trace v29.1;
+VTracer validated drop-in, both ≈0.98 DINO) → discard color → render B/W
+fixed-stroke outline → VLM re-vectorizes geometry → colors/z/strokes
+re-attached mechanically. Outline-vs-color input is their BIGGEST ablation
+lever (SVGenius Hard SSIM 0.697→0.83). NOTE: the actual cleanup/idealization
+on the outline is THE LEARNED PART — no classical rule given for which
+transitions are structure vs artifact.
+
+**Color re-attachment (Supp 7.1, fully mechanical):** rasterize each path to
+binary mask (256²) in shared coords; exclusive mask Mᵢ^excl = Mᵢ \ ⋃_{j≠i}Mⱼ;
+fill = per-channel MEDIAN of source pixels under Mᵢ^excl; paths with empty
+exclusive mask skipped, colored paths' pixels RELEASED each pass, iterate until
+no progress (occlusion reveal). (Our it1 centroid-trimmed recolor = same
+spirit; this is the paper-blessed formulation.)
+
+**Z-order (Supp 7.2, mechanical):** overlap graph → connected components →
+per component: subset-containment DAG (Pᵢ⊂Pⱼ ⇒ Pⱼ first), backtrack orderings
+under topo constraints, prune commuting pairs, cap 120 evals/component,
+fallback = area-descending; evaluate by masked MSE vs source. Most components
+n≤5.
+
+**Stroke recovery (Supp 7.4):** march ±normal until color changes; width =
+median of largest width-cluster, color = mode of largest color-cluster;
+ACCEPT only if render MSE improves ≥ 0.0002.
+
+**Degradation suite (§3.3):** render GT SVG at random 224–336px → random
+Gaussian blur → re-trace classically → that's the imperfect input; 25% clean.
+(Regression harness for idealization: degrade Recraft targets, trace, diff.)
+
+**MISSING from paper:** Cornucopia tolerances/corner thresholds; arc→line
+curvature threshold; outline stroke width; blur params; sweep-flag rule;
+sampling temperature/N. Failure modes admitted: dense small structure merges;
+text/gradients simplified; no gradients/filters/transparency in post.
+
+## Layered Vectorization (2406.05404) — DEEP READ 2026-07-10 [paper + OFFICIAL CODE]
+
+Agent cloned SZUVIZ/layered_vectorization and extracted the values the paper
+omits (code cached in session scratchpad lv_code/). Tags: paper vs CODE.
+
+**Simplification cascade:** SD1.5 SDS on the VAE latent, empty prompt AND cfg=0,
+SGD lr=0.1, 80 iters, snapshots [80,60,40,20,0] → 5 levels at 512². CRITICAL FOR
+US: classical alternates (bilateral/Gaussian/SLIC) compared QUALITATIVELY ONLY —
+no numbers; their supp bilateral schedule = (d,σC,σS)=(10+5N,100+50N,100+50N),
+N=0..3. Only non-replicable diffusion ability = AMODAL COMPLETION (removes
+occluders, hallucinates hidden wall) — unquantified. So a bilateral cascade is a
+defensible classical substitute for flat art.
+
+**Layer assignment (the portable core; exact CODE rules):** masks per level =
+SAM ViT-H automatic (pps=32, iou 0.86, stab 0.85, min_area 100) + hole-close +
+connectedComponents split, area-desc, COARSEST LEVEL FIRST, full-canvas mask
+prepended. For each mask M, scan layers back→front vs each existing E:
+  1. IoU(M,E) > 0.70 → DISCARD M (dup; 0.65 tried earlier).
+  2. I/area(E) ≥ .5 and area(M) > area(E) → DISCARD M (redundant macro).
+  3. I/area(M) ≥ .5 and area(M) < area(E) → M in FRONT → next layer / new front.
+  4. else (all overlaps < 50%) → append M to this layer.
+Structure masks capped at 0.4·max_paths by area. Detail re-entry: fine masks
+join back layers, stack in front, or die as dups — coarse shapes never split;
+Stage-II insert-behind rule: new mask covering ≥70% of an existing structure
+mask AND >1.1× its area is inserted BEHIND it.
+
+**Fitting (DiffVG; we skip in classical port, rules still useful):** init =
+findContours + approxPolyDP ε=5.0 → one cubic per polygon edge; holes via 3px
+cut channel. Stage I shape-only: per-layer random-color mask MSE + overlap
+penalty (ReLU at luminance 178/255 = fires when ≥2 same-layer shapes cover a
+pixel) ×2e-7 + 0.02·global MSE (absent from paper Eq 5), Adam lr 1.0/0.01, 50
+iters. Stage II: k-means k=80 target quantize, structure color = mode over
+visible pixels, freeze; LIVE-style additions: err<0.025 zeroed, 139 quantile
+bins, top components, 5 rounds to max 256 paths; remove = leave-one-out render
+diff ≤7.0 (512², [0,1]); merge = overlap ≥3px AND Σ|rgba diff| ≤0.1.
+
+**Benchmarks:** Vector Compactness (≥85%-inside fraction): ours 73.8 vs SGLIVE
+65.9, LIVE 43.4, DiffVG 41.9. Topology-on-raw-vs-simplified ablation:
+qualitative only. ALL thresholds are absolute 512-px units (not scale-invariant
+— adapt per BLUEPRINT R1). No runtime reported; flat fills only (no gradients).
+
 ## Pending digests
 
 Batch 2 (loop/judge: Render-in-the-Loop, Rendering-aware RL, Reason-SVG,
