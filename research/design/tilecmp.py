@@ -272,15 +272,23 @@ def compare(ours_svg, theirs_svg, n=64, native=2048, input_img=None):
     mo, do = color_tiles(ours_svg, n, cw, ch)
     mt, dt = color_tiles(theirs_svg, n, cw, ch)
     dE_ot = de76(mo, mt)
-    color = 0.6 * np.clip(dE_ot / 10.0, 0, 1) + 0.4 * ndiff(do, dt)
     dE_os = dE_ts = None
     if input_img is not None:
+        # ANCHORED colour error: penalise a tile only where OUR fill is farther
+        # from the source than Recraft's is. Removes the "Recraft legitimately
+        # re-colours away from source" confound — we're dinged only where we're
+        # genuinely worse than the grail against ground truth.
         from PIL import Image
         src = np.asarray(Image.open(input_img).convert("RGB")
                          .resize((int(round(cw)), int(round(ch)))))
         ms, _ = color_tiles(src, n, cw, ch, is_svg=False)
         dE_os = de76(mo, ms)
         dE_ts = de76(mt, ms)
+        excess = np.clip(dE_os - dE_ts, 0, None)          # our excess vs grail
+        color = 0.7 * np.clip(excess / 8.0, 0, 1) + 0.3 * ndiff(do, dt)
+    else:
+        # no source: fall back to raw ours-vs-theirs colour distance
+        color = 0.6 * np.clip(dE_ot / 10.0, 0, 1) + 0.4 * ndiff(do, dt)
 
     # --- per-tile weight = ink present (so empty tiles don't dominate)
     weight = np.maximum(go.arc, gt.arc)
@@ -294,10 +302,23 @@ def compare(ours_svg, theirs_svg, n=64, native=2048, input_img=None):
            "overall": wmean(np.mean([census, flow, color], axis=0))}
 
     # --- failure-mode label per tile (only meaningful where weighted)
+    #
+    # Ink-presence is checked FIRST: if we have ~no stroke where Recraft has
+    # stroke it is a missing-geometry problem (UNDER-RESOLVE) no matter how big
+    # the mean-colour delta looks — otherwise a dropped white line on a black
+    # field reads as "COLOR" (calibration bug found on flat line-art). COLOR
+    # only wins when BOTH sides have geometry and the hue still differs.
     labels = np.empty((n, n), dtype=object)
-    ratio = (po + EPS) / (pt + EPS)
+    ratio = (po + EPS) / (pt + EPS)              # path-count ratio ours/theirs
+    ink = (go.arc + EPS) / (gt.arc + EPS)        # stroke-presence ratio
     for i in range(n):
         for j in range(n):
+            if ink[i, j] < 0.35:
+                labels[i, j] = "UNDER-RESOLVE"    # we're missing geometry here
+                continue
+            if ink[i, j] > 2.85:
+                labels[i, j] = "OVER-FRAGMENT"    # spurious geometry here
+                continue
             comps = {"census": census[i, j], "flow": flow[i, j],
                      "color": color[i, j]}
             dom = max(comps, key=comps.get)
