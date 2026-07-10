@@ -1,0 +1,8 @@
+{"verdict": "DISCARD", "reason": "locked-file-edit", "files": ["research/design/tilecmp.py"], "mode": "UNDER-RESOLVE", "t": 1783699909}
+{"verdict": "DISCARD", "reason": "gate-fail", "mode": "UNDER-RESOLVE", "files": ["models/quant-11/src/contours_exp.py"], "t": 1783699968}
+{"verdict": "DISCARD", "reason": "gate-fail", "mode": "UNDER-RESOLVE", "files": ["models/quant-11/src/pipelines/contour_lines.py", "models/quant-11/src/pipelines/quantize_contours.py"], "t": 1783705434}
+{"verdict": "KEEP", "mode": "OVER-FRAGMENT", "files": ["models/quant-11/src/pipelines/contour_lines.py", "models/quant-11/src/pipelines/quantize_contours.py"], "sha": "5af1aec", "t": 1783706353}
+{"verdict": "DISCARD", "reason": "gate-fail", "mode": "UNDER-RESOLVE", "files": ["models/quant-11/src/pipelines/quantize_contours.py", "models/quant-11/src/pipelines/quantize_contours.py"], "t": 1783706476}
+{"verdict": "DISCARD", "reason": "gate-fail", "mode": "COLOR", "files": ["models/quant-11/src/pipelines/contour_lines.py"], "t": 1783709049}
+{"verdict": "DISCARD", "reason": "gate-fail", "mode": "COLOR", "files": ["models/quant-11/src/pipelines/contour_lines.py", "models/quant-11/src/pipelines/quantize_contours.py"], "t": 1783713938}
+{"verdict": "KEEP", "mode": "COLOR", "files": ["models/quant-11/src/pipelines/contour_lines.py", "models/quant-11/src/pipelines/quantize_contours.py"], "sha": "0ae03fe", "t": 1783714198}

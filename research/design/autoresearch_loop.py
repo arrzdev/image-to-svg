@@ -137,8 +137,15 @@ def brief(tiles, exclude):
 
 
 def _diff_names(worktree):
-    r = subprocess.run(["git", "-C", worktree, "diff", "--name-only"],
-                       capture_output=True, text=True)
+    # Normalize the index first: a worktree whose conflicts were resolved by
+    # editing files (index still unmerged) makes plain `git diff` emit
+    # combined-diff format that `git apply` rejects (bit us on composite-it8).
+    # Staging everything turns both clean and conflict-resolved worktrees into
+    # ordinary --cached diffs.
+    subprocess.run(["git", "-C", worktree, "add", "-A"],
+                   capture_output=True, text=True)
+    r = subprocess.run(["git", "-C", worktree, "diff", "--cached",
+                        "--name-only"], capture_output=True, text=True)
     return [x for x in r.stdout.splitlines() if x.strip()]
 
 
@@ -164,7 +171,8 @@ def gate(worktree, tiles):
     print(r.stdout.strip())
     passed = r.returncode == 0
     if passed:
-        patch = subprocess.run(["git", "-C", worktree, "diff", "--", "models/"],
+        patch = subprocess.run(["git", "-C", worktree, "diff", "--cached",
+                                "--", "models/"],
                                capture_output=True, text=True).stdout
         pf = os.path.join(HERE, ".loop_patch.diff")
         open(pf, "w").write(patch)
