@@ -1,0 +1,105 @@
+diff --git a/models/quant-11/src/pipelines/quantize_contours.py b/models/quant-11/src/pipelines/quantize_contours.py
+index 1b56208..32ba732 100644
+--- a/models/quant-11/src/pipelines/quantize_contours.py
++++ b/models/quant-11/src/pipelines/quantize_contours.py
+@@ -778,6 +778,34 @@ _BLEND_INK_SPREAD = 45    # neutral (max-min RGB; contours_exp stroke rule —
+                           # crystals' saturated dark facet edges fail this)
+ _BLEND_PAIR_AB = 36.0     # arm 2: shading-class pair (= _TRANS_MAX_ABLEN)
+ _BLEND_PASSES = 2         # multi-band ramps dissolve one band per pass
++# arm 3 (ink<->fill AA mud, auto-loop 2026-07-11): SATURATED mid-dark drawn
++# ink. The elephant's purple outline network ((90,45,129) lum 68 spread 84)
++# is drawn ink to the eye, but fails BOTH shipped arms (not neutral, pair
++# contour-class), so its AA bands survive as 1-2px lavender fringes hugging
++# every outline (eye-verified at (261,439)/(296,566)/(835,350) vs Recraft's
++# crisp ink-meets-fill). satink = dark-ish labels that can NEVER feed the
++# stroke layer (the exact complement of the contours_exp stroke-candidacy
++# rule: lum in [60,96) AND spread > 45), so dissolving their skirts cannot
++# ripple the GLOBAL stroke width calibration by construction — and crystals'
++# navy/maroon facet edges (lum < 60 -> stroke-grade) stay refused, as does
++# the banked pale-gem-streak population (t 0.88 > T_HI, unchanged).
++# On soft sources the surviving skirt is the light TAIL of the ramp (the ink
++# label already ate the dark half), so its pixels cluster at one high t
++# instead of spanning: t-spread measured 0.24-0.26 on the elephant fringes
++# vs the 0.35 floor. The tail exemption below accepts a clustered band ONLY
++# for satink-exclusive candidacy and ONLY when it sits in the light tail
++# (>= _BLEND_SAT_TAIL toward the fill); drawn mid-tones at t 0.15-0.6 keep
++# the full t-spread protection everywhere.
++_BLEND_SAT_TAIL = 0.6
++# Sub-24px floor for ink-hugging light mud: the dark-label protections mean
++# despeckle/shrapnel never own dash mud beside ink (measured: chopchop plank
++# outlines carry 30+ evidence-passing 8-23px dashes; fox/rabbit/shield a
++# handful each), so the "smaller is despeckle territory" rationale behind
++# _BLEND_MIN_PX does not hold there. Accept 8-23px components only when a
++# bound is drawn ink (neutral or satink) AND the component itself is NOT
++# stroke-grade — the dark half of the ramp stays with the ink label, so ink
++# masses (and the global width calibration) are untouched.
++_BLEND_MIN_INK_PX = 8
+ 
+ 
+ def _dissolve_blend_bands(labels: np.ndarray, centers: np.ndarray,
+@@ -821,6 +849,7 @@ def _dissolve_blend_bands(labels: np.ndarray, centers: np.ndarray,
+     # the untouched ink stroke keeps painting the crisp boundary on top.
+     stroke_grade = (lum < DARK_LINE_LUM) \
+         & ((lum < 60.0) | (spread <= _BLEND_INK_SPREAD))
++    satink = (lum < DARK_LINE_LUM) & ~stroke_grade   # arm 3, see constants
+     k3 = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
+     out = labels.copy()
+     for _ in range(_BLEND_PASSES):
+@@ -829,10 +858,11 @@ def _dissolve_blend_bands(labels: np.ndarray, centers: np.ndarray,
+             mask = (out == ci).astype(np.uint8)
+             if not mask.any():
+                 continue
++            ci_sg = bool(stroke_grade[ci])
+             ncomp, comp, stats, _ = cv2.connectedComponentsWithStats(mask, 8)
+             for k in range(1, ncomp):
+                 area = int(stats[k, cv2.CC_STAT_AREA])
+-                if not (_BLEND_MIN_PX <= area <= _BLEND_MAX_PX):
++                if not (_BLEND_MIN_INK_PX <= area <= _BLEND_MAX_PX):
+                     continue
+                 x0 = max(0, stats[k, cv2.CC_STAT_LEFT] - 3)
+                 y0 = max(0, stats[k, cv2.CC_STAT_TOP] - 3)
+@@ -862,10 +892,18 @@ def _dissolve_blend_bands(labels: np.ndarray, centers: np.ndarray,
+                 if (cnts[a_] + cnts[b_]) / tot < _BLEND_MIN_SHARE2 \
+                         or cnts[b_] / tot < _BLEND_MIN_SHAREB:
+                     continue
+-                if not (ink_like[a_] or ink_like[b_]
+-                        or float(np.linalg.norm(lab_pal[a_] - lab_pal[b_]))
+-                        <= _BLEND_PAIR_AB):
+-                    continue  # contour-class pair, no neutral-ink bound
++                old_arm = (ink_like[a_] or ink_like[b_]
++                           or float(np.linalg.norm(lab_pal[a_] - lab_pal[b_]))
++                           <= _BLEND_PAIR_AB)
++                # arm 3 never dissolves a stroke-grade component: the dark
++                # ramp half must stay with the ink label (width calibration)
++                sat_arm = (not ci_sg) and bool(satink[a_] or satink[b_])
++                if not (old_arm or sat_arm):
++                    continue  # contour-class pair, no drawn-ink bound
++                if area < _BLEND_MIN_PX and (ci_sg or not (
++                        ink_like[a_] or ink_like[b_]
++                        or satink[a_] or satink[b_])):
++                    continue  # sub-24px only for ink-hugging light mud
+                 band = cv2.dilate(sub, k3, iterations=2).astype(bool) & ~subb
+                 wsrc = lab_src[y0:y1, x0:x1]
+                 la = wsrc[band & (wl == a_)]
+@@ -885,9 +923,18 @@ def _dissolve_blend_bands(labels: np.ndarray, centers: np.ndarray,
+                         > _BLEND_MAX_SEGD:
+                     continue
+                 tpix = (wsrc[subb] - ca) @ ab / L2
+-                if float(np.percentile(tpix, 90) - np.percentile(tpix, 10)) \
+-                        < _BLEND_MIN_TSP:
+-                    continue
++                tsp = float(np.percentile(tpix, 90)
++                            - np.percentile(tpix, 10))
++                if tsp < _BLEND_MIN_TSP:
++                    # light-tail exemption, satink-exclusive candidacy only
++                    # (see _BLEND_SAT_TAIL): the ink label already owns the
++                    # dark ramp half, so the surviving skirt legitimately
++                    # clusters high instead of spanning.
++                    if old_arm or not sat_arm:
++                        continue
++                    dark_a = bool(satink[a_] or stroke_grade[a_])
++                    if (t if dark_a else 1.0 - t) < _BLEND_SAT_TAIL:
++                        continue
+                 if stroke_grade[a_] and stroke_grade[b_]:
+                     continue          # would have to grow ink: leave it
+                 if stroke_grade[a_] or stroke_grade[b_]:

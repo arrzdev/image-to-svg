@@ -132,3 +132,14 @@ version vs the previous **and vs Recraft**.
   structural root causes (E1, E4) now have shipped mechanisms; remaining
   gap concentrates in E2 shadows, 0h seams/E8 emission, E5 lattice
   regularity, E7 color. _(Live tree — next bump = v12.)_
+- **quant-13** (cut 2026-07-11; frozen `quant-13/src`; `staged` → here): the
+  full-auto tilecmp loop's shipped wins on top of quant-12 — source-anchored
+  fill recolor, dark-shrapnel absorption, evidence-gated region split,
+  gradient banding (2-3 flat bands like Recraft), transition-mud
+  ownership/boundary resnap. **vs quant-12:** tilecmp corpus distance to
+  Recraft 0.2725 → 0.2553, all three channels improved, every merge gated
+  (research/design/tilecmp_gate.py) + eye-audited. Lineage decision recorded:
+  QUANTIZED backbone is the engine (edge lineage dead — over-fragments 10x;
+  vectorark-1 paper-fusion challenger parked at 0.367). Loop machinery:
+  research/design/autoresearch_loop.py; run ledger:
+  research/design/autoresearch_loop_ledger.jsonl.
