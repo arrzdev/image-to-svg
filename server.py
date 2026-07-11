@@ -86,6 +86,7 @@ class EdgeLabReq(BaseModel):
     threshold: float = 14.0    # Lab dE boundary trigger
     close_k: int = 3           # join kernel (0 = no join)
     min_cell: int = 0          # dissolve cells smaller than this (px)
+    svg_eps: float = 1.5       # polygon simplification (px) for the SVG stage
 
 
 @app.post("/api/edgelab")
@@ -166,15 +167,52 @@ def edgelab(req: EdgeLabReq):
     composite = fill_full.copy()
     composite[bndc] = bcol[bndc]
 
+    # 7. SVG stage: exactly ONE <path> per bucket cell. Vectorize the
+    # BACKFILLED partition (every wall px assigned to its nearest cell), so
+    # the paths tile the canvas watertight — no gaps where the walls were.
+    cells_full = cells[tuple(idx)]
+    eps = max(0.0, float(req.svg_eps))
+    counts_full = np.bincount(cells_full.ravel(), minlength=ncell)
+    slices = ndimage.find_objects(cells_full)
+    svg_paths = []
+    for lab_id in np.argsort(-counts_full):
+        if lab_id == 0 or counts_full[lab_id] == 0:
+            continue
+        sl = slices[lab_id - 1]
+        if sl is None:
+            continue
+        y0, x0 = sl[0].start, sl[1].start
+        m = (cells_full[sl] == lab_id).astype(np.uint8)
+        cs, _ = cv2.findContours(m, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
+        subs = []
+        for c in cs:
+            if len(c) < 3 or cv2.contourArea(c) < 3:
+                continue
+            ap = cv2.approxPolyDP(c, eps, True) if eps > 0 else c
+            if len(ap) < 3:
+                continue
+            pts = ap[:, 0, :]
+            d = "M" + "L".join(f"{x + x0} {y + y0}" for x, y in pts) + "Z"
+            subs.append(d)
+        if not subs:
+            continue
+        fill = "#%02x%02x%02x" % tuple(int(v) for v in mean[lab_id])
+        svg_paths.append(f'<path d="{"".join(subs)}" fill="{fill}" '
+                         f'fill-rule="evenodd"/>')
+    svg_text = (f'<svg xmlns="http://www.w3.org/2000/svg" '
+                f'viewBox="0 0 {W} {H}">' + "".join(svg_paths) + "</svg>")
+
     def png64(a):
         ok, buf = cv2.imencode(".png", cv2.cvtColor(a, cv2.COLOR_RGB2BGR))
         return "data:image/png;base64," + base64.b64encode(buf).decode()
 
     live = int((np.bincount(cells.ravel(), minlength=ncell)[1:] > 0).sum())
     return {"edges": png64(edges), "fills": png64(fill_full),
-            "composite": png64(composite),
+            "composite": png64(composite), "svg": svg_text,
             "stats": {"boundary_px": int(bndc.sum()), "cells": live,
                       "dim": f"{W}x{H}",
+                      "svg_paths": len(svg_paths),
+                      "svg_kb": len(svg_text) // 1024,
                       "seconds": round(time.time() - t0, 2)}}
 
 
