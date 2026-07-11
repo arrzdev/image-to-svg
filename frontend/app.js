@@ -187,7 +187,7 @@ async function elRun() {
     $("el-composite").innerHTML = `<img src="${r.composite}">`;
     showSvgHiRes($("el-svg"), r.svg);
     $("el-svgmeta").textContent =
-      `· ${r.stats.svg_paths} paths · ${r.stats.svg_kb} KB`;
+      `· ${r.stats.svg_paths} fills + ${r.stats.ink_paths} ink · ${r.stats.svg_kb} KB`;
     $("el-panels").hidden = false;
     const s = r.stats;
     $("el-status").textContent =

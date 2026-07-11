@@ -47,24 +47,24 @@
     <label>Resolution
       <select id="el-dim">
         <option>768</option><option>1024</option>
-        <option selected>1536</option><option>2048</option>
+        <option>1536</option><option selected>2048</option>
       </select>
     </label>
     <label>Pre-filter
       <select id="el-pre">
-        <option value="none" selected>none</option>
+        <option value="none">none</option>
         <option value="gaussian">gaussian</option>
-        <option value="bilateral">bilateral</option>
+        <option value="bilateral" selected>bilateral</option>
       </select>
     </label>
-    <label>strength <input type="range" id="el-prestr" min="1" max="8" value="3">
-      <span class="val" id="el-prestr-v">3</span></label>
-    <label>ΔE threshold <input type="range" id="el-thr" min="3" max="40" value="14">
-      <span class="val" id="el-thr-v">14</span></label>
+    <label>strength <input type="range" id="el-prestr" min="1" max="8" value="1">
+      <span class="val" id="el-prestr-v">1</span></label>
+    <label>ΔE threshold <input type="range" id="el-thr" min="3" max="40" value="5">
+      <span class="val" id="el-thr-v">5</span></label>
     <label>Join (close px)
       <select id="el-close">
-        <option value="0">off</option><option value="3" selected>3</option>
-        <option value="5">5</option><option value="7">7</option>
+        <option value="0">off</option><option value="3">3</option>
+        <option value="5">5</option><option value="7" selected>7</option>
       </select>
     </label>
     <label>Min cell px <input type="range" id="el-mincell" min="0" max="600" step="20" value="0">
@@ -95,7 +95,7 @@
     <div class="canvas" id="el-composite"></div>
   </section>
   <section>
-    <h2>4 · SVG — one path per cell <span id="el-svgmeta"></span></h2>
+    <h2>4 · SVG — fill paths + ink strokes <span id="el-svgmeta"></span></h2>
     <div class="canvas" id="el-svg"></div>
   </section>
 </main>

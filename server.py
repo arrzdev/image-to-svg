@@ -79,14 +79,86 @@ def run(req: RunReq):
 
 
 class EdgeLabReq(BaseModel):
+    # defaults = the USER's hand-tuned recipe (2026-07-11): native-ish res,
+    # light edge-preserving denoise, high sensitivity, hard weld.
     image: str
-    work_dim: int = 1536
-    pre: str = "none"          # none | gaussian | bilateral
-    pre_strength: int = 3      # gaussian: kernel radius; bilateral: sigma/25
-    threshold: float = 14.0    # Lab dE boundary trigger
-    close_k: int = 3           # join kernel (0 = no join)
+    work_dim: int = 2048
+    pre: str = "bilateral"     # none | gaussian | bilateral
+    pre_strength: int = 1      # gaussian: kernel radius; bilateral: sigma/25
+    threshold: float = 5.0     # Lab dE boundary trigger
+    close_k: int = 7           # join kernel (0 = no join)
     min_cell: int = 0          # dissolve cells smaller than this (px)
-    svg_eps: float = 1.5       # polygon simplification (px) for the SVG stage
+    svg_eps: float = 1.5       # polyline simplification (px) for the SVG stage
+
+
+def _trace_ink(bndc, bcol, eps):
+    """Vectorize the welded wall mask as INK: skeletonize, split the skeleton
+    at junctions, and trace each continuous degree-2 run as ONE stroke path
+    (width = 2x median distance-to-edge, colour = median darkest-side colour
+    along the run). Returns list of <path .../> strings."""
+    import cv2
+    import numpy as np
+    from skimage.morphology import skeletonize
+
+    skel = skeletonize(bndc)
+    dist = cv2.distanceTransform(bndc.astype(np.uint8), cv2.DIST_L2, 3)
+    ys, xs = np.nonzero(skel)
+    if not len(ys):
+        return []
+    skel_set = set(zip(ys.tolist(), xs.tolist()))
+    OFF = ((-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1))
+
+    def nbrs(p):
+        return [(p[0] + dy, p[1] + dx) for dy, dx in OFF
+                if (p[0] + dy, p[1] + dx) in skel_set]
+
+    deg = {p: len(nbrs(p)) for p in skel_set}
+    seen = set()
+
+    def walk(start, first):
+        seg = [start, first]
+        seen.add((start, first)); seen.add((first, start))
+        prev, cur = start, first
+        while deg.get(cur) == 2:
+            step = [q for q in nbrs(cur) if q != prev]
+            if not step or (cur, step[0]) in seen:
+                break
+            nq = step[0]
+            seen.add((cur, nq)); seen.add((nq, cur))
+            seg.append(nq)
+            prev, cur = cur, nq
+        return seg
+
+    segments = []
+    for p in skel_set:                      # junction/endpoint-anchored runs
+        if deg[p] != 2:
+            for q in nbrs(p):
+                if (p, q) not in seen:
+                    segments.append(walk(p, q))
+    for p in skel_set:                      # pure loops (no junction anywhere)
+        if deg[p] == 2:
+            for q in nbrs(p):
+                if (p, q) not in seen:
+                    segments.append(walk(p, q))
+
+    out = []
+    for seg in segments:
+        if len(seg) < 4:                    # dot noise
+            continue
+        py = np.array([p[0] for p in seg]); px = np.array([p[1] for p in seg])
+        w = float(np.median(dist[py, px])) * 2.0
+        w = max(1.2, min(24.0, round(w, 1)))
+        col = np.median(bcol[py, px], axis=0)
+        fillc = "#%02x%02x%02x" % tuple(int(v) for v in col)
+        pts = np.stack([px, py], 1).astype(np.int32).reshape(-1, 1, 2)
+        ap = cv2.approxPolyDP(pts, max(0.5, eps), False)[:, 0, :]
+        if len(ap) < 2:
+            continue
+        d = "M" + "L".join(f"{x} {y}" for x, y in ap)
+        out.append(f'<path d="{d}" fill="none" stroke="{fillc}" '
+                   f'stroke-width="{w}" stroke-linecap="round" '
+                   f'stroke-linejoin="round"/>')
+    return out
 
 
 @app.post("/api/edgelab")
@@ -199,8 +271,10 @@ def edgelab(req: EdgeLabReq):
         fill = "#%02x%02x%02x" % tuple(int(v) for v in mean[lab_id])
         svg_paths.append(f'<path d="{"".join(subs)}" fill="{fill}" '
                          f'fill-rule="evenodd"/>')
+    ink_paths = _trace_ink(bndc, bcol, eps)
     svg_text = (f'<svg xmlns="http://www.w3.org/2000/svg" '
-                f'viewBox="0 0 {W} {H}">' + "".join(svg_paths) + "</svg>")
+                f'viewBox="0 0 {W} {H}">' + "".join(svg_paths)
+                + "".join(ink_paths) + "</svg>")
 
     def png64(a):
         ok, buf = cv2.imencode(".png", cv2.cvtColor(a, cv2.COLOR_RGB2BGR))
@@ -212,6 +286,7 @@ def edgelab(req: EdgeLabReq):
             "stats": {"boundary_px": int(bndc.sum()), "cells": live,
                       "dim": f"{W}x{H}",
                       "svg_paths": len(svg_paths),
+                      "ink_paths": len(ink_paths),
                       "svg_kb": len(svg_text) // 1024,
                       "seconds": round(time.time() - t0, 2)}}
 
