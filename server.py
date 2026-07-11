@@ -90,12 +90,17 @@ class EdgeLabReq(BaseModel):
     min_cell: int = 0          # dissolve cells smaller than this (px)
     svg_eps: float = 1.5       # polyline simplification (px) for the SVG stage
     ink: bool = False          # dual-pass ink layer on top of the fills
-    # independent OUTLINE detector (USER design 2026-07-11): a second, heavily
-    # smoothed high-threshold pass that pops only strong-CONTRAST lines
-    # (whatever their colour) — its welded mask becomes filled ink ribbons.
-    ink_threshold: float = 40.0
+    # independent OUTLINE detector v3 (USER reports 2026-07-11): ink = LCh
+    # body gate (dark AND near-neutral: black passes, dark-brown wood fails
+    # on chroma) + component-level CONTRAST gate (each candidate must stand
+    # out from its non-ink surroundings — "the most contrasting things in
+    # THIS drawing"), + junk/spur/donut cleanup.
+    ink_threshold: float = 25.0   # component contrast gate (Lab dE vs ring)
     ink_strength: int = 8      # bilateral sigma/25 for the ink pass
     ink_close: int = 7         # weld kernel for the ink mask
+    ink_lmax: float = 50.0     # L* max: ink must be darker than this
+    ink_cmax: float = 20.0     # C* max: ink must be near-neutral (brown ~25-35)
+    merge_de: float = 8.0      # RAG bucket merge threshold (Lab dE; 0 = off)
 
 
 def _lab_boundary(img_rgb, thr):
@@ -313,35 +318,136 @@ def edgelab(req: EdgeLabReq):
         tiny = counts < int(req.min_cell)
         tiny[0] = False                      # label 0 = the boundary itself
         cells[tiny[cells]] = 0
-    # 3c. INK extraction — INDEPENDENT OUTLINE DETECTOR (dual-pass, USER
-    # design): a second heavily-smoothed high-threshold boundary pass fires
-    # only on strong-CONTRAST lines (colour-agnostic: purple outlines on blue
-    # pop just as black ones do); its welded mask is the ink layer. Ink px
-    # leave the cell partition so the backfill extends fills UNDERNEATH
-    # (layered overdraw) — transition-band confetti along outlines dies here.
+    # 3c. RAG bucket merging (USER report: over-segmentation — close shades
+    # must merge into one averaged bucket; the boundary between them dies).
+    # Agglomerative merge of adjacent cells by area-weighted Lab dE.
+    if float(req.merge_de) > 0 and ncell > 2:
+        import heapq
+        labm = cv2.cvtColor(work, cv2.COLOR_RGB2LAB).astype(np.float64)
+        flatL = labm.reshape(-1, 3)
+        cl0 = cells.ravel()
+        cnt = np.bincount(cl0, minlength=ncell).astype(np.float64)
+        sums = np.stack([np.bincount(cl0, weights=flatL[:, c],
+                                     minlength=ncell) for c in range(3)], 1)
+        # adjacency measured on the wall-free partition
+        idx0 = ndimage.distance_transform_edt(
+            cells == 0, return_distances=False, return_indices=True)
+        cf = cells[tuple(idx0)]
+        pairs = set()
+        a_, b_ = cf[:, :-1].ravel(), cf[:, 1:].ravel()
+        m = a_ != b_
+        pairs |= set(zip(np.minimum(a_[m], b_[m]).tolist(),
+                         np.maximum(a_[m], b_[m]).tolist()))
+        a_, b_ = cf[:-1, :].ravel(), cf[1:, :].ravel()
+        m = a_ != b_
+        pairs |= set(zip(np.minimum(a_[m], b_[m]).tolist(),
+                         np.maximum(a_[m], b_[m]).tolist()))
+        parent = list(range(ncell))
+
+        def find(x):
+            while parent[x] != x:
+                parent[x] = parent[parent[x]]
+                x = parent[x]
+            return x
+
+        def mean_of(r):
+            return sums[r] / max(cnt[r], 1.0)
+
+        thr_m = float(req.merge_de)
+        heap = []
+        for (pa, pb) in pairs:
+            if pa == 0 or pb == 0:
+                continue
+            d = float(np.linalg.norm(mean_of(pa) - mean_of(pb)))
+            if d < thr_m * 2:               # coarse pre-filter
+                heapq.heappush(heap, (d, pa, pb))
+        neigh = {}
+        for (pa, pb) in pairs:
+            if pa and pb:
+                neigh.setdefault(pa, set()).add(pb)
+                neigh.setdefault(pb, set()).add(pa)
+        while heap:
+            d, pa, pb = heapq.heappop(heap)
+            ra, rb = find(pa), find(pb)
+            if ra == rb:
+                continue
+            d_now = float(np.linalg.norm(mean_of(ra) - mean_of(rb)))
+            if d_now > thr_m:
+                continue
+            # union: fold rb into ra, area-weighted colour
+            parent[rb] = ra
+            sums[ra] += sums[rb]; cnt[ra] += cnt[rb]
+            for nb in neigh.get(rb, ()):    # re-seed the union's pairs
+                rn = find(nb)
+                if rn != ra:
+                    dn = float(np.linalg.norm(mean_of(ra) - mean_of(rn)))
+                    if dn < thr_m * 2:
+                        heapq.heappush(heap, (dn, ra, rn))
+                    neigh.setdefault(ra, set()).add(rn)
+        root = np.arange(ncell)
+        for i in range(1, ncell):
+            root[i] = find(i)
+        root[0] = 0
+        cells = root[cells]
+
+    # 3d. INK extraction v3 (USER reports: black ink YES, dark-brown wood NO;
+    # outlines = the most CONTRASTING things in the drawing; junk/spur/donut
+    # cleanup). Body gate in LCh: dark (L* < lmax) AND near-neutral
+    # (C* < cmax — black ink C*~2-5, brown wood C*~25-35). Then each candidate
+    # component must STAND OUT from its non-ink surroundings by >= the
+    # contrast gate (Lab dE, component median vs 7px ring median). Small
+    # components die (junk floor, % of image); interior holes below a % floor
+    # are filled — that's the DONUT killer (rim-pair loops and micro-holes
+    # inside strokes).
     ink_mask = None
     if req.ink:
         ib = raw
         if int(req.ink_strength) > 0:
             sig = 25 * int(req.ink_strength)
             ib = cv2.bilateralFilter(raw, 9, sig, sig)
-        im_ = _lab_boundary(ib, float(req.ink_threshold))
+        labi = cv2.cvtColor(ib, cv2.COLOR_RGB2LAB).astype(np.float32)
+        Li = labi[:, :, 0] * (100.0 / 255.0)
+        Ci = np.sqrt((labi[:, :, 1] - 128.0) ** 2
+                     + (labi[:, :, 2] - 128.0) ** 2)
+        body = ((Li < float(req.ink_lmax))
+                & (Ci < float(req.ink_cmax))).astype(np.uint8)
+        body = cv2.morphologyEx(body, cv2.MORPH_OPEN,
+                                np.ones((3, 3), np.uint8))     # de-spur
         if int(req.ink_close) >= 3:
             k = int(req.ink_close) | 1
-            im_ = cv2.morphologyEx(im_.astype(np.uint8), cv2.MORPH_CLOSE,
-                                   np.ones((k, k), np.uint8)).astype(bool)
-        # contrast pops an outline's EDGES; a wide dark line's flat BODY has
-        # no internal contrast — union it in via darkness+thinness so whole
-        # lines (not just their rims) become ink
-        lum_w = (0.299 * raw[:, :, 0] + 0.587 * raw[:, :, 1]
-                 + 0.114 * raw[:, :, 2])
-        darkm = (lum_w < 90).astype(np.uint8)
-        halfw = cv2.distanceTransform(darkm, cv2.DIST_L2, 3)
-        ink_mask = im_ | (darkm.astype(bool)
-                          & (halfw < 12.0 * max(H, W) / 2048.0))
+            body = cv2.morphologyEx(body, cv2.MORPH_CLOSE,
+                                    np.ones((k, k), np.uint8))  # bridge breaks
+        n_b, blab, bst, _ = cv2.connectedComponentsWithStats(body, 8)
+        keep = np.zeros(n_b, bool)
+        junk_floor = max(24, int(2e-5 * H * W))
+        for j in range(1, n_b):
+            if bst[j, cv2.CC_STAT_AREA] < junk_floor:
+                continue
+            x0 = bst[j, cv2.CC_STAT_LEFT]; y0 = bst[j, cv2.CC_STAT_TOP]
+            wj = bst[j, cv2.CC_STAT_WIDTH]; hj = bst[j, cv2.CC_STAT_HEIGHT]
+            xa, ya = max(0, x0 - 8), max(0, y0 - 8)
+            xb, yb = min(W, x0 + wj + 8), min(H, y0 + hj + 8)
+            sub = blab[ya:yb, xa:xb] == j
+            ring = cv2.dilate(sub.astype(np.uint8),
+                              np.ones((7, 7), np.uint8)).astype(bool) & ~sub
+            ring &= body[ya:yb, xa:xb] == 0    # contrast vs NON-ink pixels
+            if ring.sum() < 12:
+                keep[j] = True
+                continue
+            csub = labi[ya:yb, xa:xb]
+            dE = float(np.linalg.norm(np.median(csub[sub], axis=0)
+                                      - np.median(csub[ring], axis=0)))
+            keep[j] = dE >= float(req.ink_threshold)
+        ink_mask = keep[blab]
+        # DONUT killer: fill enclosed holes below the floor
+        inv = (~ink_mask).astype(np.uint8)
+        n_h, hlab, hst, _ = cv2.connectedComponentsWithStats(inv, 4)
+        hole_floor = max(16, int(1e-5 * H * W))
+        for j in range(1, n_h):
+            if hst[j, cv2.CC_STAT_AREA] <= hole_floor:
+                ink_mask[hlab == j] = True
         cells[ink_mask] = 0
-        # cells amputated to slivers by the ink removal die too (backfill
-        # extends the surviving neighbours underneath)
+        # cells amputated to slivers by the ink removal die too
         c2 = np.bincount(cells.ravel(), minlength=ncell)
         c2[0] = 0
         cells[(c2 < 24)[cells]] = 0

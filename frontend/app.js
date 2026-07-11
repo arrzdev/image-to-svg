@@ -151,8 +151,9 @@ for (const btn of document.querySelectorAll("#tabs .tab")) {
 // Boundary-first playground: POST the current params, show the three stage
 // rasters (edges / bucket fills / composite). Auto-run debounces slider drags.
 const EL_IDS = ["el-dim", "el-pre", "el-prestr", "el-thr", "el-close",
-                "el-mincell", "el-eps", "el-ink", "el-inkthr", "el-inkstr",
-                "el-inkclose", "el-image"];
+                "el-mincell", "el-merge", "el-eps", "el-ink", "el-inkthr",
+                "el-inkstr", "el-inkclose", "el-inklmax", "el-inkcmax",
+                "el-image"];
 
 function elParams() {
   return {
@@ -168,6 +169,9 @@ function elParams() {
     ink_threshold: +$("el-inkthr").value,
     ink_strength: +$("el-inkstr").value,
     ink_close: +$("el-inkclose").value,
+    ink_lmax: +$("el-inklmax").value,
+    ink_cmax: +$("el-inkcmax").value,
+    merge_de: +$("el-merge").value,
   };
 }
 
@@ -250,6 +254,9 @@ function elChanged() {
   $("el-eps-v").textContent = $("el-eps").value;
   $("el-inkthr-v").textContent = $("el-inkthr").value;
   $("el-inkstr-v").textContent = $("el-inkstr").value;
+  $("el-inklmax-v").textContent = $("el-inklmax").value;
+  $("el-inkcmax-v").textContent = $("el-inkcmax").value;
+  $("el-merge-v").textContent = $("el-merge").value;
   if ($("el-auto").checked) {
     clearTimeout(elTimer);
     elTimer = setTimeout(elRun, 350);
