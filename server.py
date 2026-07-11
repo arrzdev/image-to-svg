@@ -89,6 +89,9 @@ class EdgeLabReq(BaseModel):
     close_k: int = 7           # join kernel (0 = no join)
     min_cell: int = 0          # dissolve cells smaller than this (px)
     svg_eps: float = 1.5       # polyline simplification (px) for the SVG stage
+    ink: bool = False          # stroke the wall skeleton over the fills
+                               # (off: fills-only — the backfilled partition
+                               # already renders ink interiors as cells)
 
 
 def _trace_ink(bndc, bcol, eps):
@@ -271,7 +274,7 @@ def edgelab(req: EdgeLabReq):
         fill = "#%02x%02x%02x" % tuple(int(v) for v in mean[lab_id])
         svg_paths.append(f'<path d="{"".join(subs)}" fill="{fill}" '
                          f'fill-rule="evenodd"/>')
-    ink_paths = _trace_ink(bndc, bcol, eps)
+    ink_paths = _trace_ink(bndc, bcol, eps) if req.ink else []
     svg_text = (f'<svg xmlns="http://www.w3.org/2000/svg" '
                 f'viewBox="0 0 {W} {H}">' + "".join(svg_paths)
                 + "".join(ink_paths) + "</svg>")

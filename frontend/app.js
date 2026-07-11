@@ -151,7 +151,7 @@ for (const btn of document.querySelectorAll("#tabs .tab")) {
 // Boundary-first playground: POST the current params, show the three stage
 // rasters (edges / bucket fills / composite). Auto-run debounces slider drags.
 const EL_IDS = ["el-dim", "el-pre", "el-prestr", "el-thr", "el-close",
-                "el-mincell", "el-eps", "el-image"];
+                "el-mincell", "el-eps", "el-ink", "el-image"];
 
 function elParams() {
   return {
@@ -163,6 +163,7 @@ function elParams() {
     close_k: +$("el-close").value,
     min_cell: +$("el-mincell").value,
     svg_eps: +$("el-eps").value,
+    ink: $("el-ink").checked,
   };
 }
 
