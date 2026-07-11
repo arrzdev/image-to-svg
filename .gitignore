@@ -34,3 +34,5 @@ research/design/tilecmp_out/
 research/design/.tilecmp_cache/
 research/design/.loop_state.json
 research/design/.loop_patch.diff
+research/omnisvg_test/weights/
+research/omnisvg_test/OmniSVG/

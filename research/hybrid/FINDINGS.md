@@ -28,3 +28,27 @@ or tile-based full-res cleanup models. Script: idealize_img2img.py.
 ## B. OmniSVG-4B direct image->SVG — measured separately
 (see omnisvg_test/ report; testing how close open-weights SOTA gets on our
 corpus with tilecmp.)
+
+## B. OmniSVG1.1_4B direct image->SVG — MEASURED, not a competitor
+Ran locally on M3 Max/MPS (bf16; fp16 NaNs — Qwen2.5-VL issue; state-dict
+remap for transformers 4.57; 6-13 tok/s; 1-5 min/image). tilecmp vs Recraft
+targets, colour anchored to input:
+
+| image          | OmniSVG (best) | quant-13 |
+|----------------|----------------|----------|
+| logo-geometric | 0.336          | 0.104    |
+| chopchop       | 0.797          | 0.331    |
+
+Easy icon: pretty but LOSSY reinterpretation (solid triangle -> hollow ring,
+circles filled white, colour channel 0.643 = invents/drops colours). Complex
+illustration: catastrophic collapse — output is the sand ellipse (+ a
+repetition-loop blob in other candidates); one candidate EOS'd voluntarily at
+417 tokens. Structural ceiling: 200x200 quantised grid, ~2k-token budget
+(~50-150 paths) vs Recraft's 997 paths / 408KB on the same image.
+
+CONCLUSION: open-weights image->SVG SOTA is 2.4-3.2x behind our classical
+quant-13 on our corpus, in the direction that matters (fidelity). Its one
+Recraft-like property — idealisation (clean arcs, minimal paths) — comes with
+hallucination. The Recraft-class recipe (VectorArk: conservative outline-
+normalised vectorization + learned cleanup, 5M-SVG training) exists only
+closed. Artifacts: research/omnisvg_test/ (weights + clone gitignored).
