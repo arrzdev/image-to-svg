@@ -138,15 +138,98 @@ def _trace_ink(bndc, bcol, eps):
             for q in nbrs(p):
                 if (p, q) not in seen:
                     segments.append(walk(p, q))
+    loops = []
     for p in skel_set:                      # pure loops (no junction anywhere)
         if deg[p] == 2:
             for q in nbrs(p):
                 if (p, q) not in seen:
-                    segments.append(walk(p, q))
+                    loops.append(walk(p, q))
+
+    # ---- ink-graph optimization (the raw junction-cut segments are ~4x too
+    # many paths): 1. prune noise spurs, 2. merge collinear continuations
+    # across junctions so one visually continuous line = ONE path.
+    SPUR_MIN = 20          # px: shorter free-ended stubs are skeleton noise
+    CONT_DEG = 50.0        # max direction change that still reads "same line"
+
+    def _end_dir(seg, at_start):
+        k = min(6, len(seg) - 1)
+        if at_start:
+            v = (seg[0][0] - seg[k][0], seg[0][1] - seg[k][1])
+        else:
+            v = (seg[-1][0] - seg[-1 - k][0], seg[-1][1] - seg[-1 - k][1])
+        n = (v[0] ** 2 + v[1] ** 2) ** 0.5 or 1.0
+        return (v[0] / n, v[1] / n)         # unit vector pointing OUT the end
+
+    junc = {}                               # junction px -> [(seg_i, end)]
+    for i, s in enumerate(segments):
+        for end, p in ((0, s[0]), (1, s[-1])):
+            if deg.get(p, 0) > 2:
+                junc.setdefault(p, []).append((i, end))
+    alive = [len(s) >= 3 for s in segments]
+    for i, s in enumerate(segments):        # spur pruning
+        if len(s) < SPUR_MIN:
+            free = (deg.get(s[0], 0) == 1) + (deg.get(s[-1], 0) == 1)
+            if free:
+                alive[i] = False
+
+    # pair up best collinear continuations at every junction
+    import math
+    link = {}                               # (seg,end) -> (seg,end)
+    for jp, ends in junc.items():
+        ends = [(i, e) for (i, e) in ends if alive[i]]
+        cand = []
+        for a in range(len(ends)):
+            for b in range(a + 1, len(ends)):
+                ia, ea = ends[a]; ib, eb = ends[b]
+                if ia == ib:
+                    continue
+                da = _end_dir(segments[ia], ea == 0)
+                db = _end_dir(segments[ib], eb == 0)
+                # both vectors point OUT of their ends i.e. away from the
+                # junction; a continuation has them OPPOSITE
+                ang = math.degrees(math.acos(
+                    max(-1.0, min(1.0, -(da[0] * db[0] + da[1] * db[1])))))
+                if ang <= CONT_DEG:
+                    cand.append((ang, ends[a], ends[b]))
+        used = set()
+        for ang, ea_, eb_ in sorted(cand):
+            if ea_ in used or eb_ in used or ea_ in link or eb_ in link:
+                continue
+            link[ea_] = eb_; link[eb_] = ea_
+            used.add(ea_); used.add(eb_)
+
+    # chain segments through links into merged polylines
+    consumed = set()
+    chains = []
+    for i, s in enumerate(segments):
+        if not alive[i] or i in consumed:
+            continue
+        # find a chain start: an end with no link (or fall back to i,0 for
+        # closed chains)
+        start = None
+        for end in (0, 1):
+            if (i, end) not in link:
+                start = (i, 1 - end)        # begin traversal exiting other end
+                break
+        if start is None:
+            start = (i, 1)
+        pts = []
+        cur, exit_end = start
+        while True:
+            consumed.add(cur)
+            seg = segments[cur] if exit_end == 1 else segments[cur][::-1]
+            pts.extend(seg if not pts else seg[1:])
+            nxt = link.get((cur, exit_end))
+            if nxt is None or nxt[0] in consumed:
+                break
+            cur = nxt[0]
+            exit_end = 1 - nxt[1]           # enter at nxt end, exit the other
+        chains.append(pts)
+    chains.extend(l for l in loops if len(l) >= 4)
 
     out = []
-    for seg in segments:
-        if len(seg) < 4:                    # dot noise
+    for seg in chains:
+        if len(seg) < SPUR_MIN:             # post-merge dust
             continue
         py = np.array([p[0] for p in seg]); px = np.array([p[1] for p in seg])
         w = float(np.median(dist[py, px])) * 2.0
