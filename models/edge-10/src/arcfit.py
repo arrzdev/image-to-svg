@@ -30,10 +30,12 @@ TAU = 2.0 * np.pi
 
 
 # --------------------------------------------------------------- smoothing
-def smooth_closed(pts: np.ndarray, win: int = 5) -> np.ndarray:
-    """Box-smooth a closed polyline with a positional leash of ~1px: erases the
-    pixel staircase without letting geometry drift (Depixelizing's E_p idea,
-    cheap version)."""
+def smooth_closed(pts: np.ndarray, win: int = 5,
+                  leash: float = 1.25) -> np.ndarray:
+    """Box-smooth a closed polyline with a positional leash: erases staircase
+    and short-wavelength boundary wander without letting geometry drift
+    (Depixelizing's E_p idea, cheap version). `leash` caps per-point
+    displacement in px; `win` must exceed the wander wavelength to remove it."""
     n = len(pts)
     if n < win + 2 or win < 3:
         return pts
@@ -42,12 +44,11 @@ def smooth_closed(pts: np.ndarray, win: int = 5) -> np.ndarray:
     sm = np.empty_like(pts, dtype=np.float64)
     for i in range(n):
         sm[i] = pts[(i + idx) % n].mean(axis=0)
-    # leash: cap displacement at 1.25 px
     d = sm - pts
     dist = np.hypot(d[:, 0], d[:, 1])
-    over = dist > 1.25
+    over = dist > leash
     if over.any():
-        sm[over] = pts[over] + d[over] * (1.25 / dist[over, None])
+        sm[over] = pts[over] + d[over] * (leash / dist[over, None])
     return sm
 
 
@@ -224,12 +225,13 @@ def fit_piece(pts: np.ndarray, tol: float, depth: int = 0) -> List[Prim]:
 
 def fit_closed_contour(pts: np.ndarray, tol: float = 1.2,
                        corner_deg: float = 55.0, smooth_win: int = 5,
-                       corner_win: float = 4.0) -> List[Prim]:
+                       corner_win: float = 4.0,
+                       leash: float = 1.25) -> List[Prim]:
     """Full fit of a closed contour: smooth -> corners -> per-piece line/arc."""
     pts = np.asarray(pts, dtype=np.float64)
     if len(pts) < 4:
         return []
-    pts = smooth_closed(pts, smooth_win)
+    pts = smooth_closed(pts, smooth_win, leash)
     corners = find_corners(pts, corner_deg, corner_win)
     prims: List[Prim] = []
     if not corners:

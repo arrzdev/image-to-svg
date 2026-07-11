@@ -42,6 +42,11 @@ DEFAULTS = {
     "svg_eps": 1.0,
     "curve_fit": True,    # smooth line+arc fitting (circles look like circles);
                           # off = raw Douglas-Peucker polygons
+    "smoothness": 3.0,    # 0-10: how hard to iron out boundary WANDER (the
+                          # 1-2px jitter at 10-30px wavelength that survives
+                          # a small smoothing window). Scales the smoothing
+                          # window, displacement leash, fit tolerance and the
+                          # seam overlap together. 0 = staircase-only smoothing.
     # buckets (USER elephant recipe)
     "pre": "bilateral",
     "pre_strength": 1,
@@ -62,13 +67,20 @@ _THIN_HALFW = 3.0         # px: max half-width that still counts as a ribbon
 _SEG_D = 10.0             # Lab distance-to-segment for the blend test
 
 
-def _trace_subs(mask_crop, eps, x0, y0, curve):
+def _trace_subs(mask_crop, eps, x0, y0, curve, smooth=3.0):
     """Trace one mask crop into SVG subpath strings. curve=True fits smooth
-    LINE+ARC runs (corner-pinned, smoothing leashed to ~1.25px so neighbours
-    can't drift into each other — the fix for the 'trembly polygon' look);
-    curve=False emits raw Douglas-Peucker polygons."""
+    LINE+ARC runs; `smooth` (0-10) scales how hard boundary wander is ironed
+    out: window grows past the wander wavelength, the leash allows the ironing
+    (still capped, so neighbours can't drift far), the fit tolerance lets arcs
+    sweep THROUGH residual wobble instead of tracking it. curve=False emits
+    raw Douglas-Peucker polygons."""
     mode = cv2.CHAIN_APPROX_NONE if curve else cv2.CHAIN_APPROX_SIMPLE
     cs, _h = cv2.findContours(mask_crop, cv2.RETR_CCOMP, mode)
+    s = max(0.0, float(smooth))
+    win = 5 + 2 * int(round(s))              # 5 .. 25 px window
+    leash = 1.0 + 0.6 * s                    # 1 .. 7 px displacement cap
+    tol = max(0.8, float(eps) or 1.2) + 0.35 * s
+    cwin = 4.0 + 0.6 * s                     # corner window keeps up with win
     subs = []
     for c in cs:
         if len(c) < 3 or cv2.contourArea(c) < 3:
@@ -76,8 +88,9 @@ def _trace_subs(mask_crop, eps, x0, y0, curve):
         pts = c[:, 0, :].astype(np.float64)
         if curve and len(pts) >= 12:
             pts[:, 0] += x0; pts[:, 1] += y0
-            prims = fit_closed_contour(pts, tol=max(0.8, eps or 1.2),
-                                       corner_deg=55.0, smooth_win=5)
+            prims = fit_closed_contour(pts, tol=tol, corner_deg=55.0,
+                                       smooth_win=win, corner_win=cwin,
+                                       leash=leash)
             d = prims_to_d(prims)
             if d:
                 subs.append(d)
@@ -325,7 +338,10 @@ def process(image_path: str, params: Optional[dict] = None) -> dict:
     counts_full = np.bincount(cells_full.ravel(), minlength=ncell)
     slices = ndimage.find_objects(cells_full)
     svg_paths = []
-    pad = _SEAM_DILATE + 1
+    smooth = float(p.get("smoothness", 3.0))
+    # seam overlap must grow with the fit's freedom to deviate
+    seam = max(_SEAM_DILATE, int(np.ceil(1.0 + 0.45 * smooth)))
+    pad = seam + 1
     for lab_id in np.argsort(-counts_full):
         if lab_id == 0 or counts_full[lab_id] == 0:
             continue
@@ -336,8 +352,8 @@ def process(image_path: str, params: Optional[dict] = None) -> dict:
         y1 = min(H, sl[0].stop + pad); x1 = min(W, sl[1].stop + pad)
         m = (cells_full[y0:y1, x0:x1] == lab_id).astype(np.uint8)
         # seam glue: neighbours overlap instead of abutting
-        m = cv2.dilate(m, np.ones((3, 3), np.uint8), iterations=_SEAM_DILATE)
-        subs = _trace_subs(m, eps, x0, y0, bool(p["curve_fit"]))
+        m = cv2.dilate(m, np.ones((3, 3), np.uint8), iterations=seam)
+        subs = _trace_subs(m, eps, x0, y0, bool(p["curve_fit"]), smooth)
         if not subs:
             continue
         fill = "#%02x%02x%02x" % tuple(int(v) for v in mean[lab_id])
@@ -356,7 +372,7 @@ def process(image_path: str, params: Optional[dict] = None) -> dict:
             x0 = istats[j, cv2.CC_STAT_LEFT]; y0 = istats[j, cv2.CC_STAT_TOP]
             wj = istats[j, cv2.CC_STAT_WIDTH]; hj = istats[j, cv2.CC_STAT_HEIGHT]
             m = (ilab[y0:y0 + hj, x0:x0 + wj] == j).astype(np.uint8)
-            subs = _trace_subs(m, eps, x0, y0, bool(p["curve_fit"]))
+            subs = _trace_subs(m, eps, x0, y0, bool(p["curve_fit"]), smooth)
             if not subs:
                 continue
             med = np.median(srcf[ilab == j], axis=0)
