@@ -143,3 +143,13 @@ version vs the previous **and vs Recraft**.
   vectorark-1 paper-fusion challenger parked at 0.367). Loop machinery:
   research/design/autoresearch_loop.py; run ledger:
   research/design/autoresearch_loop_ledger.jsonl.
+- **edge-10** (cut 2026-07-11; `edge-10/src/pipeline.py`; the Edge Lab web tab
+  runs THIS module in-process — lab tinkering IS model behaviour): the
+  boundary-first lineage resurrected via the interactive Edge Lab. Two
+  independent detectors: buckets (bilateral-1, dE 5, RAG merge 22 — close
+  shades merge, the wall between them deleted) + ink (LCh gates L*<30 /
+  C*<100 / contrast 0, filled RIBBON paths on top, Recraft-style). Seam glue:
+  fills dilated 2px before tracing (painter's-order overlap, no hairline gaps)
+  + AA transition-ribbon cells absorbed via the Lab blend-segment test.
+  USER-frozen recipe (elephant: 56 paths / 61 KB; chopchop: 229 paths /
+  112 KB). Not yet tilecmp-benchmarked vs quant-13.
