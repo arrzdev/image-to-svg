@@ -41,62 +41,78 @@
 
 <div id="tab-edgelab" hidden>
 <header>
-  <h1>edge lab <span class="sub">boundary-first playground (edge-1): detect → join → bucket-fill</span></h1>
-  <div class="controls">
-    <label>Image <select id="el-image"></select></label>
-    <label>Resolution
-      <select id="el-dim">
-        <option>768</option><option>1024</option>
-        <option>1536</option><option selected>2048</option>
-      </select>
-    </label>
-    <label>Pre-filter
-      <select id="el-pre">
-        <option value="none">none</option>
-        <option value="gaussian">gaussian</option>
-        <option value="bilateral" selected>bilateral</option>
-      </select>
-    </label>
-    <label>strength <input type="range" id="el-prestr" min="0" max="50" value="1">
-      <span class="val" id="el-prestr-v">1</span></label>
-    <label>ΔE threshold <input type="range" id="el-thr" min="0" max="120" value="5">
-      <span class="val" id="el-thr-v">5</span></label>
-    <label>Join (close px)
-      <select id="el-close">
-        <option value="0">off</option><option value="3">3</option>
-        <option value="5">5</option><option value="7" selected>7</option>
-        <option value="9">9</option><option value="11">11</option>
-        <option value="13">13</option><option value="15">15</option>
-        <option value="21">21</option>
-      </select>
-    </label>
-    <label>Min cell px <input type="range" id="el-mincell" min="0" max="3000" step="10" value="0">
-      <span class="val" id="el-mincell-v">0</span></label>
-    <label>merge ΔE <input type="range" id="el-merge" min="0" max="60" value="8">
-      <span class="val" id="el-merge-v">8</span></label>
-    <label>SVG simplify px <input type="range" id="el-eps" min="0" max="12" step="0.5" value="1.5">
-      <span class="val" id="el-eps-v">1.5</span></label>
-    <label class="auto"><input type="checkbox" id="el-ink" checked> ink ribbons</label>
-    <label>ink contrast <input type="range" id="el-inkthr" min="0" max="120" value="25">
-      <span class="val" id="el-inkthr-v">25</span></label>
-    <label>ink strength <input type="range" id="el-inkstr" min="0" max="50" value="8">
-      <span class="val" id="el-inkstr-v">8</span></label>
-    <label>ink L*max <input type="range" id="el-inklmax" min="0" max="100" value="50">
-      <span class="val" id="el-inklmax-v">50</span></label>
-    <label>ink C*max <input type="range" id="el-inkcmax" min="0" max="100" value="20">
-      <span class="val" id="el-inkcmax-v">20</span></label>
-    <label>ink weld
-      <select id="el-inkclose">
-        <option value="0">off</option><option value="3">3</option>
-        <option value="5">5</option><option value="7" selected>7</option>
-        <option value="9">9</option><option value="11">11</option>
-        <option value="13">13</option><option value="15">15</option>
-        <option value="21">21</option>
-      </select>
-    </label>
-    <button id="el-run">Run</button>
-    <label class="auto"><input type="checkbox" id="el-auto" checked> auto-run</label>
-    <span id="el-status"></span>
+  <h1>edge lab <span class="sub">boundary-first playground: buckets (regions) + ink (lines), two independent detectors</span></h1>
+
+  <div class="ctlgroup">
+    <div class="ctlhead">general</div>
+    <div class="controls">
+      <label title="Which input image to process.">Image <select id="el-image"></select></label>
+      <label title="Working size (long side, px). Every px-valued knob acts at this scale.">Resolution
+        <select id="el-dim">
+          <option>768</option><option>1024</option>
+          <option>1536</option><option selected>2048</option>
+        </select>
+      </label>
+      <label title="Polygon simplification for the SVG paths, in px. 0 = pixel-exact staircase; higher = fewer points, chunkier shapes.">SVG simplify px <input type="range" id="el-eps" min="0" max="12" step="0.5" value="1.5">
+        <span class="val" id="el-eps-v">1.5</span></label>
+      <button id="el-run">Run</button>
+      <label class="auto" title="Re-run automatically ~0.4s after any knob changes."><input type="checkbox" id="el-auto" checked> auto-run</label>
+      <span id="el-status"></span>
+    </div>
+  </div>
+
+  <div class="ctlgroup">
+    <div class="ctlhead">buckets — colour regions (panels 1, 2, 5)</div>
+    <div class="controls">
+      <label title="Denoise BEFORE region detection. bilateral = smooths noise but keeps edges sharp (recommended); gaussian = blurs everything; none = raw pixels.">Pre-filter
+        <select id="el-pre">
+          <option value="none">none</option>
+          <option value="gaussian">gaussian</option>
+          <option value="bilateral" selected>bilateral</option>
+        </select>
+      </label>
+      <label title="How hard the pre-filter smooths (0 = off). Higher melts AA noise and tiny texture so fewer fake regions form — too high melts real detail.">strength <input type="range" id="el-prestr" min="0" max="50" value="1">
+        <span class="val" id="el-prestr-v">1</span></label>
+      <label title="Region-boundary sensitivity: neighbouring pixels differing by more than this (Lab dE) become a wall. Lower = more + smaller buckets; higher = fewer + bigger buckets.">ΔE threshold <input type="range" id="el-thr" min="0" max="120" value="5">
+        <span class="val" id="el-thr-v">5</span></label>
+      <label title="Welds gaps in the walls up to this many px so buckets can't leak into each other; also closes the double-walls of thin lines.">Join (close px)
+        <select id="el-close">
+          <option value="0">off</option><option value="3">3</option>
+          <option value="5">5</option><option value="7" selected>7</option>
+          <option value="9">9</option><option value="11">11</option>
+          <option value="13">13</option><option value="15">15</option>
+          <option value="21">21</option>
+        </select>
+      </label>
+      <label title="Buckets smaller than this many px are dissolved into their surroundings (speckle removal).">Min cell px <input type="range" id="el-mincell" min="0" max="3000" step="10" value="0">
+        <span class="val" id="el-mincell-v">0</span></label>
+      <label title="AFTER detection: adjacent buckets whose average colours differ by less than this (Lab dE) merge into one averaged bucket — the wall between them is deleted. 0 = off.">merge ΔE <input type="range" id="el-merge" min="0" max="60" value="8">
+        <span class="val" id="el-merge-v">8</span></label>
+    </div>
+  </div>
+
+  <div class="ctlgroup">
+    <div class="ctlhead">ink — outline/line detector, drawn on top (panel 4)</div>
+    <div class="controls">
+      <label class="auto" title="Enable the second, independent line detector. Detected ink leaves the buckets (fills extend underneath) and is drawn on top as filled ribbon shapes."><input type="checkbox" id="el-ink" checked> ink ribbons</label>
+      <label title="Smoothing for the ink detector only (bilateral). Higher = only bold clean lines survive; lower = faint lines detected too.">ink strength <input type="range" id="el-inkstr" min="0" max="50" value="8">
+        <span class="val" id="el-inkstr-v">8</span></label>
+      <label title="Lightness gate: a pixel can only be ink if DARKER than this (L* 0 = black, 100 = white).">ink L*max <input type="range" id="el-inklmax" min="0" max="100" value="50">
+        <span class="val" id="el-inklmax-v">50</span></label>
+      <label title="Chroma gate: a pixel can only be ink if more NEUTRAL than this (C* 0 = pure grey/black). Rejects coloured dark stuff (brown wood ~25-35); raise it to allow coloured outlines.">ink C*max <input type="range" id="el-inkcmax" min="0" max="100" value="20">
+        <span class="val" id="el-inkcmax-v">20</span></label>
+      <label title="Each candidate line must stand out from its surroundings by at least this (Lab dE, line colour vs 7px ring around it). Filters dark shading that passed the colour gates. 'The most contrasting things in the drawing.'">ink contrast <input type="range" id="el-inkthr" min="0" max="120" value="25">
+        <span class="val" id="el-inkthr-v">25</span></label>
+      <label title="Bridges small breaks in detected lines (px) and fills two-rim lines into solid ribbons.">ink weld
+        <select id="el-inkclose">
+          <option value="0">off</option><option value="3">3</option>
+          <option value="5">5</option><option value="7" selected>7</option>
+          <option value="9">9</option><option value="11">11</option>
+          <option value="13">13</option><option value="15">15</option>
+          <option value="21">21</option>
+        </select>
+      </label>
+    </div>
   </div>
 </header>
 
