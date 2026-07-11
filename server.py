@@ -300,6 +300,19 @@ def edgelab(req: EdgeLabReq):
         tiny = counts < int(req.min_cell)
         tiny[0] = False                      # label 0 = the boundary itself
         cells[tiny[cells]] = 0
+    # 3c. INK extraction (Recraft-style): dark AND thin pixels form the ink
+    # layer. Their px leave the cell partition entirely, so the backfill
+    # extends the surrounding fills UNDERNEATH the ink (layered overdraw) —
+    # this also stops thin dark line-interiors becoming confetti cells.
+    ink_mask = None
+    if req.ink:
+        lum_w = (0.299 * work[:, :, 0] + 0.587 * work[:, :, 1]
+                 + 0.114 * work[:, :, 2])
+        darkm = (lum_w < 80).astype(np.uint8)
+        half = cv2.distanceTransform(darkm, cv2.DIST_L2, 3)
+        maxhalf = 10.0 * max(H, W) / 2048.0
+        ink_mask = darkm.astype(bool) & (half < maxhalf)
+        cells[ink_mask] = 0
     # 4. bucket fill each cell with its mean colour; backfill boundary px
     flat = work.reshape(-1, 3).astype(np.float64)
     cl = cells.ravel()
@@ -357,7 +370,38 @@ def edgelab(req: EdgeLabReq):
         fill = "#%02x%02x%02x" % tuple(int(v) for v in mean[lab_id])
         svg_paths.append(f'<path d="{"".join(subs)}" fill="{fill}" '
                          f'fill-rule="evenodd"/>')
-    ink_paths = _trace_ink(bndc, bcol, eps) if req.ink else []
+    # ink ribbons: one FILLED path per connected ink component (outer contour
+    # + holes, evenodd) — how Recraft draws lines (verified on their targets:
+    # long continuous ribbon fills, junction-branching included, no strokes)
+    ink_paths = []
+    if ink_mask is not None and ink_mask.any():
+        n_i, ilab, istats, _ = cv2.connectedComponentsWithStats(
+            ink_mask.astype(np.uint8), 8)
+        order = np.argsort(-istats[1:, cv2.CC_STAT_AREA]) + 1
+        srcf = work.astype(np.float64)
+        for j in order:
+            if istats[j, cv2.CC_STAT_AREA] < 40:
+                break
+            x0, y0 = istats[j, cv2.CC_STAT_LEFT], istats[j, cv2.CC_STAT_TOP]
+            wj, hj = istats[j, cv2.CC_STAT_WIDTH], istats[j, cv2.CC_STAT_HEIGHT]
+            m = (ilab[y0:y0 + hj, x0:x0 + wj] == j).astype(np.uint8)
+            cs, _h = cv2.findContours(m, cv2.RETR_CCOMP,
+                                      cv2.CHAIN_APPROX_SIMPLE)
+            subs = []
+            for c in cs:
+                if len(c) < 3 or cv2.contourArea(c) < 3:
+                    continue
+                ap = cv2.approxPolyDP(c, eps, True) if eps > 0 else c
+                if len(ap) < 3:
+                    continue
+                subs.append("M" + "L".join(
+                    f"{x + x0} {y + y0}" for x, y in ap[:, 0, :]) + "Z")
+            if not subs:
+                continue
+            med = np.median(srcf[ilab == j], axis=0)
+            fillc = "#%02x%02x%02x" % tuple(int(v) for v in med)
+            ink_paths.append(f'<path d="{"".join(subs)}" fill="{fillc}" '
+                             f'fill-rule="evenodd"/>')
     svg_text = (f'<svg xmlns="http://www.w3.org/2000/svg" '
                 f'viewBox="0 0 {W} {H}">' + "".join(svg_paths)
                 + "".join(ink_paths) + "</svg>")
