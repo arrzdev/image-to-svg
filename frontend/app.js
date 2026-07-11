@@ -198,6 +198,7 @@ async function elRun() {
         `fill="hsl(${(fi++ * 137.508) % 360} ${65 + (fi % 3) * 12}% ${45 + (fi % 4) * 10}%)"`);
     showSvgHiRes($("el-frag"), frag);
     $("el-fragmeta").textContent = `· ${fi} paths`;
+    loadRecraftRandom($("el-image").value);
     $("el-panels").hidden = false;
     const s = r.stats;
     $("el-status").textContent =
@@ -208,6 +209,32 @@ async function elRun() {
     elBusy = false;
     $("el-run").disabled = false;
     if (elQueued) { elQueued = false; elRun(); }
+  }
+}
+
+// Recraft target with every path randomly recoloured — reverse-engineering
+// view of how THEY decompose the drawing (esp. outlines/ink).
+async function loadRecraftRandom(imageName) {
+  const stem = imageName.replace(/\.[^.]+$/, "");
+  const panel = $("el-recraftPanel");
+  try {
+    const res = await fetch(`/targets/${encodeURIComponent(stem)}.svg`);
+    if (!res.ok) throw new Error("no target");
+    let svg = await res.text();
+    let ri = 0;
+    const rand = () =>
+      `hsl(${(ri++ * 137.508) % 360} ${65 + (ri % 3) * 12}% ${45 + (ri % 4) * 10}%)`;
+    svg = svg.replace(/<path\b[^>]*>/g, (tag) => {
+      if (/fill="none"/.test(tag)) return tag;
+      if (/fill="[^"]*"/.test(tag))
+        return tag.replace(/fill="[^"]*"/, `fill="${rand()}"`);
+      return tag.replace(/<path\b/, `<path fill="${rand()}"`);
+    });
+    showSvgHiRes($("el-recraft"), svg);
+    $("el-recraftmeta").textContent = `· ${ri} paths`;
+    panel.style.display = "";
+  } catch {
+    panel.style.display = "none";
   }
 }
 
