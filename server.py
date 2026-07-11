@@ -89,9 +89,27 @@ class EdgeLabReq(BaseModel):
     close_k: int = 7           # join kernel (0 = no join)
     min_cell: int = 0          # dissolve cells smaller than this (px)
     svg_eps: float = 1.5       # polyline simplification (px) for the SVG stage
-    ink: bool = False          # stroke the wall skeleton over the fills
-                               # (off: fills-only — the backfilled partition
-                               # already renders ink interiors as cells)
+    ink: bool = False          # dual-pass ink layer on top of the fills
+    # independent OUTLINE detector (USER design 2026-07-11): a second, heavily
+    # smoothed high-threshold pass that pops only strong-CONTRAST lines
+    # (whatever their colour) — its welded mask becomes filled ink ribbons.
+    ink_threshold: float = 40.0
+    ink_strength: int = 8      # bilateral sigma/25 for the ink pass
+    ink_close: int = 7         # weld kernel for the ink mask
+
+
+def _lab_boundary(img_rgb, thr):
+    """Pixel-vs-neighbour Lab-dE boundary mask (edge-1's rule)."""
+    import cv2
+    import numpy as np
+    lab = cv2.cvtColor(img_rgb, cv2.COLOR_RGB2LAB).astype(np.float32)
+    H, W = img_rgb.shape[:2]
+    bnd = np.zeros((H, W), bool)
+    dh = np.sqrt(((lab[:, 1:] - lab[:, :-1]) ** 2).sum(2))
+    bnd[:, :-1] |= dh > thr; bnd[:, 1:] |= dh > thr
+    dv = np.sqrt(((lab[1:, :] - lab[:-1, :]) ** 2).sum(2))
+    bnd[:-1, :] |= dv > thr; bnd[1:, :] |= dv > thr
+    return bnd
 
 
 def _trace_ink(bndc, bcol, eps):
@@ -266,24 +284,19 @@ def edgelab(req: EdgeLabReq):
                        cv2.COLOR_BGR2RGB)
     wd = max(256, min(2304, int(req.work_dim)))
     s = wd / max(img.shape[:2])
-    work = cv2.resize(img, (round(img.shape[1] * s), round(img.shape[0] * s)),
-                      interpolation=cv2.INTER_AREA)
+    raw = cv2.resize(img, (round(img.shape[1] * s), round(img.shape[0] * s)),
+                     interpolation=cv2.INTER_AREA)
+    work = raw
     if req.pre == "gaussian" and req.pre_strength > 0:
         k = 2 * int(req.pre_strength) + 1
-        work = cv2.GaussianBlur(work, (k, k), 0)
+        work = cv2.GaussianBlur(raw, (k, k), 0)
     elif req.pre == "bilateral" and req.pre_strength > 0:
         sig = 25 * int(req.pre_strength)
-        work = cv2.bilateralFilter(work, 9, sig, sig)
+        work = cv2.bilateralFilter(raw, 9, sig, sig)
     H, W = work.shape[:2]
-    lab = cv2.cvtColor(work, cv2.COLOR_RGB2LAB).astype(np.float32)
 
     # 1. boundary mask (edge-1's rule: pixel differs from right/down neighbour)
-    thr = float(req.threshold)
-    bnd = np.zeros((H, W), bool)
-    dh = np.sqrt(((lab[:, 1:] - lab[:, :-1]) ** 2).sum(2))
-    bnd[:, :-1] |= dh > thr; bnd[:, 1:] |= dh > thr
-    dv = np.sqrt(((lab[1:, :] - lab[:-1, :]) ** 2).sum(2))
-    bnd[:-1, :] |= dv > thr; bnd[1:, :] |= dv > thr
+    bnd = _lab_boundary(work, float(req.threshold))
     # 2. join: morphological close makes the cell walls watertight
     if req.close_k >= 3:
         k = int(req.close_k) | 1
@@ -300,19 +313,38 @@ def edgelab(req: EdgeLabReq):
         tiny = counts < int(req.min_cell)
         tiny[0] = False                      # label 0 = the boundary itself
         cells[tiny[cells]] = 0
-    # 3c. INK extraction (Recraft-style): dark AND thin pixels form the ink
-    # layer. Their px leave the cell partition entirely, so the backfill
-    # extends the surrounding fills UNDERNEATH the ink (layered overdraw) —
-    # this also stops thin dark line-interiors becoming confetti cells.
+    # 3c. INK extraction — INDEPENDENT OUTLINE DETECTOR (dual-pass, USER
+    # design): a second heavily-smoothed high-threshold boundary pass fires
+    # only on strong-CONTRAST lines (colour-agnostic: purple outlines on blue
+    # pop just as black ones do); its welded mask is the ink layer. Ink px
+    # leave the cell partition so the backfill extends fills UNDERNEATH
+    # (layered overdraw) — transition-band confetti along outlines dies here.
     ink_mask = None
     if req.ink:
-        lum_w = (0.299 * work[:, :, 0] + 0.587 * work[:, :, 1]
-                 + 0.114 * work[:, :, 2])
-        darkm = (lum_w < 80).astype(np.uint8)
-        half = cv2.distanceTransform(darkm, cv2.DIST_L2, 3)
-        maxhalf = 10.0 * max(H, W) / 2048.0
-        ink_mask = darkm.astype(bool) & (half < maxhalf)
+        ib = raw
+        if int(req.ink_strength) > 0:
+            sig = 25 * int(req.ink_strength)
+            ib = cv2.bilateralFilter(raw, 9, sig, sig)
+        im_ = _lab_boundary(ib, float(req.ink_threshold))
+        if int(req.ink_close) >= 3:
+            k = int(req.ink_close) | 1
+            im_ = cv2.morphologyEx(im_.astype(np.uint8), cv2.MORPH_CLOSE,
+                                   np.ones((k, k), np.uint8)).astype(bool)
+        # contrast pops an outline's EDGES; a wide dark line's flat BODY has
+        # no internal contrast — union it in via darkness+thinness so whole
+        # lines (not just their rims) become ink
+        lum_w = (0.299 * raw[:, :, 0] + 0.587 * raw[:, :, 1]
+                 + 0.114 * raw[:, :, 2])
+        darkm = (lum_w < 90).astype(np.uint8)
+        halfw = cv2.distanceTransform(darkm, cv2.DIST_L2, 3)
+        ink_mask = im_ | (darkm.astype(bool)
+                          & (halfw < 12.0 * max(H, W) / 2048.0))
         cells[ink_mask] = 0
+        # cells amputated to slivers by the ink removal die too (backfill
+        # extends the surviving neighbours underneath)
+        c2 = np.bincount(cells.ravel(), minlength=ncell)
+        c2[0] = 0
+        cells[(c2 < 24)[cells]] = 0
     # 4. bucket fill each cell with its mean colour; backfill boundary px
     flat = work.reshape(-1, 3).astype(np.float64)
     cl = cells.ravel()
@@ -378,7 +410,7 @@ def edgelab(req: EdgeLabReq):
         n_i, ilab, istats, _ = cv2.connectedComponentsWithStats(
             ink_mask.astype(np.uint8), 8)
         order = np.argsort(-istats[1:, cv2.CC_STAT_AREA]) + 1
-        srcf = work.astype(np.float64)
+        srcf = raw.astype(np.float64)
         for j in order:
             if istats[j, cv2.CC_STAT_AREA] < 40:
                 break

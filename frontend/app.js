@@ -151,7 +151,8 @@ for (const btn of document.querySelectorAll("#tabs .tab")) {
 // Boundary-first playground: POST the current params, show the three stage
 // rasters (edges / bucket fills / composite). Auto-run debounces slider drags.
 const EL_IDS = ["el-dim", "el-pre", "el-prestr", "el-thr", "el-close",
-                "el-mincell", "el-eps", "el-ink", "el-image"];
+                "el-mincell", "el-eps", "el-ink", "el-inkthr", "el-inkstr",
+                "el-inkclose", "el-image"];
 
 function elParams() {
   return {
@@ -164,6 +165,9 @@ function elParams() {
     min_cell: +$("el-mincell").value,
     svg_eps: +$("el-eps").value,
     ink: $("el-ink").checked,
+    ink_threshold: +$("el-inkthr").value,
+    ink_strength: +$("el-inkstr").value,
+    ink_close: +$("el-inkclose").value,
   };
 }
 
@@ -244,6 +248,8 @@ function elChanged() {
   $("el-thr-v").textContent = $("el-thr").value;
   $("el-mincell-v").textContent = $("el-mincell").value;
   $("el-eps-v").textContent = $("el-eps").value;
+  $("el-inkthr-v").textContent = $("el-inkthr").value;
+  $("el-inkstr-v").textContent = $("el-inkstr").value;
   if ($("el-auto").checked) {
     clearTimeout(elTimer);
     elTimer = setTimeout(elRun, 350);

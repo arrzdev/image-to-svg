@@ -57,9 +57,9 @@
         <option value="bilateral" selected>bilateral</option>
       </select>
     </label>
-    <label>strength <input type="range" id="el-prestr" min="1" max="8" value="1">
+    <label>strength <input type="range" id="el-prestr" min="0" max="20" value="1">
       <span class="val" id="el-prestr-v">1</span></label>
-    <label>ΔE threshold <input type="range" id="el-thr" min="3" max="40" value="5">
+    <label>ΔE threshold <input type="range" id="el-thr" min="3" max="80" value="5">
       <span class="val" id="el-thr-v">5</span></label>
     <label>Join (close px)
       <select id="el-close">
@@ -72,6 +72,17 @@
     <label>SVG simplify px <input type="range" id="el-eps" min="0" max="4" step="0.5" value="1.5">
       <span class="val" id="el-eps-v">1.5</span></label>
     <label class="auto"><input type="checkbox" id="el-ink" checked> ink ribbons</label>
+    <label>ink ΔE <input type="range" id="el-inkthr" min="10" max="80" value="40">
+      <span class="val" id="el-inkthr-v">40</span></label>
+    <label>ink strength <input type="range" id="el-inkstr" min="0" max="20" value="8">
+      <span class="val" id="el-inkstr-v">8</span></label>
+    <label>ink weld
+      <select id="el-inkclose">
+        <option value="0">off</option><option value="3">3</option>
+        <option value="5">5</option><option value="7" selected>7</option>
+        <option value="9">9</option><option value="11">11</option>
+      </select>
+    </label>
     <button id="el-run">Run</button>
     <label class="auto"><input type="checkbox" id="el-auto" checked> auto-run</label>
     <span id="el-status"></span>
