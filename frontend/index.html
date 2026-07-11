@@ -53,8 +53,9 @@
           <option>1536</option><option selected>2048</option>
         </select>
       </label>
-      <label title="Polygon simplification for the SVG paths, in px. 0 = pixel-exact staircase; higher = fewer points, chunkier shapes.">SVG simplify px <input type="range" id="el-eps" min="0" max="12" step="0.5" value="1">
+      <label title="With smooth curves ON: the curve-fit tolerance (px) — how far the smooth line may deviate from the raw boundary. With curves OFF: polygon simplification in px (0 = pixel-exact staircase).">SVG simplify px <input type="range" id="el-eps" min="0" max="12" step="0.5" value="1">
         <span class="val" id="el-eps-v">1</span></label>
+      <label class="auto" title="Fit boundaries with smooth LINES + CIRCULAR ARCS (a circle renders as an actual circle, corners stay sharp, smoothing is leashed to ~1px so shapes can't drift). Off = raw polygons."><input type="checkbox" id="el-curve" checked> smooth curves</label>
       <button id="el-run">Run</button>
       <label class="auto" title="Re-run automatically ~0.4s after any knob changes."><input type="checkbox" id="el-auto" checked> auto-run</label>
       <span id="el-status"></span>

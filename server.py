@@ -87,6 +87,7 @@ class EdgeLabReq(BaseModel):
     image: str
     work_dim: int = 2048
     svg_eps: float = 1.0
+    curve_fit: bool = True
     pre: str = "bilateral"
     pre_strength: int = 1
     threshold: float = 5.0
