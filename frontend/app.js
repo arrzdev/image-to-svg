@@ -152,9 +152,8 @@ for (const btn of document.querySelectorAll("#tabs .tab")) {
 // rasters (edges / bucket fills / composite). Auto-run debounces slider drags.
 const EL_IDS = ["el-dim", "el-pre", "el-prestr", "el-thr", "el-close",
                 "el-mincell", "el-merge", "el-eps", "el-curve", "el-smooth",
-                "el-ink", "el-inkthr",
-                "el-inkstr", "el-inkclose", "el-inklmax", "el-inkcmax",
-                "el-image"];
+                "el-strokes", "el-linew", "el-lineu", "el-lines", "el-linel",
+                "el-linec", "el-image"];
 
 function elParams() {
   return {
@@ -168,12 +167,12 @@ function elParams() {
     svg_eps: +$("el-eps").value,
     curve_fit: $("el-curve").checked,
     smoothness: +$("el-smooth").value,
-    ink: $("el-ink").checked,
-    ink_threshold: +$("el-inkthr").value,
-    ink_strength: +$("el-inkstr").value,
-    ink_close: +$("el-inkclose").value,
-    ink_lmax: +$("el-inklmax").value,
-    ink_cmax: +$("el-inkcmax").value,
+    strokes: $("el-strokes").checked,
+    line_max_w: +$("el-linew").value,
+    line_uniform: +$("el-lineu").value,
+    line_smooth: +$("el-lines").value,
+    line_lmax: +$("el-linel").value,
+    line_cmax: +$("el-linec").value,
     merge_de: +$("el-merge").value,
   };
 }
@@ -199,7 +198,7 @@ async function elRun() {
     $("el-composite").innerHTML = `<img src="${r.composite}">`;
     showSvgHiRes($("el-svg"), r.svg);
     $("el-svgmeta").textContent =
-      `· ${r.stats.svg_paths} fills + ${r.stats.ink_paths} ink · ${r.stats.svg_kb} KB`;
+      `· ${r.stats.svg_paths} fills + ${r.stats.stroke_paths} strokes · ${r.stats.svg_kb} KB`;
     // fragmentation view: fills only, one RANDOM colour per path (golden-angle
     // hues so adjacent paths never share a colour)
     let fi = 0;
@@ -256,10 +255,11 @@ function elChanged() {
   $("el-mincell-v").textContent = $("el-mincell").value;
   $("el-eps-v").textContent = $("el-eps").value;
   $("el-smooth-v").textContent = $("el-smooth").value;
-  $("el-inkthr-v").textContent = $("el-inkthr").value;
-  $("el-inkstr-v").textContent = $("el-inkstr").value;
-  $("el-inklmax-v").textContent = $("el-inklmax").value;
-  $("el-inkcmax-v").textContent = $("el-inkcmax").value;
+  $("el-linew-v").textContent = $("el-linew").value;
+  $("el-lineu-v").textContent = $("el-lineu").value;
+  $("el-lines-v").textContent = $("el-lines").value;
+  $("el-linel-v").textContent = $("el-linel").value;
+  $("el-linec-v").textContent = $("el-linec").value;
   $("el-merge-v").textContent = $("el-merge").value;
   if ($("el-auto").checked) {
     clearTimeout(elTimer);

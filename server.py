@@ -82,8 +82,8 @@ def run(req: RunReq):
 
 
 class EdgeLabReq(BaseModel):
-    """Full param passthrough to models/edge-10/src/pipeline.py — defaults
-    mirror the model's DEFAULTS (the USER's frozen recipe)."""
+    """Full param passthrough to models/edge-11/src/pipeline.py — defaults
+    mirror the model's DEFAULTS."""
     image: str
     work_dim: int = 2048
     svg_eps: float = 1.0
@@ -95,12 +95,12 @@ class EdgeLabReq(BaseModel):
     close_k: int = 0
     min_cell: int = 0
     merge_de: float = 22.0
-    ink: bool = True
-    ink_strength: int = 0
-    ink_lmax: float = 30.0
-    ink_cmax: float = 100.0
-    ink_threshold: float = 0.0
-    ink_close: int = 0
+    strokes: bool = True
+    line_max_w: float = 16.0
+    line_uniform: float = 12.0
+    line_smooth: float = 4.0
+    line_lmax: float = 100.0
+    line_cmax: float = 100.0
 
 
 @app.post("/api/edgelab")
@@ -112,15 +112,15 @@ def edgelab(req: EdgeLabReq):
     image = INPUTS / Path(req.image).name
     if not image.exists():
         raise HTTPException(404, f"unknown image {req.image!r}")
-    src = str(MODELS / "edge-10" / "src")
+    src = str(MODELS / "edge-11" / "src")
     if src not in sys.path:
         sys.path.insert(0, src)
-    import pipeline as edge10
+    import pipeline as edgepipe
 
     t0 = time.time()
     params = req.model_dump() if hasattr(req, "model_dump") else req.dict()
     params.pop("image")
-    res = edge10.process(str(image), params)
+    res = edgepipe.process(str(image), params)
 
     def png64(a):
         ok, buf = cv2.imencode(".png", cv2.cvtColor(a, cv2.COLOR_RGB2BGR))

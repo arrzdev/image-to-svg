@@ -153,3 +153,14 @@ version vs the previous **and vs Recraft**.
   + AA transition-ribbon cells absorbed via the Lab blend-segment test.
   USER-frozen recipe (elephant: 56 paths / 61 KB; chopchop: 229 paths /
   112 KB). Not yet tilecmp-benchmarked vs quant-13.
+- **edge-11** (cut 2026-07-12; `edge-11/src/`; the Edge Lab tab now runs THIS
+  module): synthesized strokes over buckets (USER architecture). Lines are
+  detected STRUCTURALLY (thin + uniform interior + not-a-blend — any colour:
+  purple outlines, white hairlines) and REBUILT from centerline + low-passed
+  width profile instead of traced: skeleton graph -> spur pruning -> collinear
+  junction merging -> leashed 1D smoothing -> emit <path stroke> when width
+  ~constant, variable-width ribbon fill otherwise; traced-ribbon fallback for
+  fragmented skeletons (sausage guard); pinch-break bridging so one drawn line
+  = one component. Buckets inherited from edge-10 (RAG merge, transition
+  absorption, seam glue, arcfit). elephant 44 fills + 89 strokes / 37 KB;
+  chopchop 116 + 213 / 93 KB. Reference edges are topology-only.

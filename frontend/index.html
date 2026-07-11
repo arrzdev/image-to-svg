@@ -95,26 +95,19 @@
   </div>
 
   <div class="ctlgroup">
-    <div class="ctlhead">ink — outline/line detector, drawn on top (panel 4)</div>
+    <div class="ctlhead">strokes — structural line detection + synthesis, drawn on top (panel 4)</div>
     <div class="controls">
-      <label class="auto" title="Enable the second, independent line detector. Detected ink leaves the buckets (fills extend underneath) and is drawn on top as filled ribbon shapes."><input type="checkbox" id="el-ink" checked> ink ribbons</label>
-      <label title="Smoothing for the ink detector only (bilateral). Higher = only bold clean lines survive; lower = faint lines detected too.">ink strength <input type="range" id="el-inkstr" min="0" max="50" value="0">
-        <span class="val" id="el-inkstr-v">0</span></label>
-      <label title="Lightness gate: a pixel can only be ink if DARKER than this (L* 0 = black, 100 = white).">ink L*max <input type="range" id="el-inklmax" min="0" max="100" value="30">
-        <span class="val" id="el-inklmax-v">30</span></label>
-      <label title="Chroma gate: a pixel can only be ink if more NEUTRAL than this (C* 0 = pure grey/black). Rejects coloured dark stuff (brown wood ~25-35); raise it to allow coloured outlines.">ink C*max <input type="range" id="el-inkcmax" min="0" max="100" value="100">
-        <span class="val" id="el-inkcmax-v">100</span></label>
-      <label title="Each candidate line must stand out from its surroundings by at least this (Lab dE, line colour vs 7px ring around it). Filters dark shading that passed the colour gates. 'The most contrasting things in the drawing.'">ink contrast <input type="range" id="el-inkthr" min="0" max="120" value="0">
-        <span class="val" id="el-inkthr-v">0</span></label>
-      <label title="Bridges small breaks in detected lines (px) and fills two-rim lines into solid ribbons.">ink weld
-        <select id="el-inkclose">
-          <option value="0" selected>off</option><option value="3">3</option>
-          <option value="5">5</option><option value="7">7</option>
-          <option value="9">9</option><option value="11">11</option>
-          <option value="13">13</option><option value="15">15</option>
-          <option value="21">21</option>
-        </select>
-      </label>
+      <label class="auto" title="Detect LINES structurally: a thin region of one uniform colour that is not the blend of its neighbours — any colour qualifies (purple outline, white hairline). Each line is REBUILT from its centerline + width profile (digitally clean), painted on top; fills extend underneath."><input type="checkbox" id="el-strokes" checked> strokes</label>
+      <label title="Max FULL width (px) that still counts as a line. Anything wider is a bucket no matter how uniform — this is what separates a line from a flat region.">max line width <input type="range" id="el-linew" min="2" max="48" value="16">
+        <span class="val" id="el-linew-v">16</span></label>
+      <label title="How flat the line's interior colour must be (Lab std dev). Lower = only perfectly flat paint counts; higher = tolerate shading along the line.">uniformity <input type="range" id="el-lineu" min="2" max="40" value="12">
+        <span class="val" id="el-lineu-v">12</span></label>
+      <label title="Centerline smoothing. Lines are collision-free (drawn on top), so this can go much higher than bucket smoothness without any seam risk.">stroke smoothness <input type="range" id="el-lines" min="0" max="10" step="0.5" value="4">
+        <span class="val" id="el-lines-v">4</span></label>
+      <label title="Optional lightness filter: only accept lines darker than this L* (100 = accept any lightness).">L*max <input type="range" id="el-linel" min="0" max="100" value="100">
+        <span class="val" id="el-linel-v">100</span></label>
+      <label title="Optional chroma filter: only accept lines more neutral than this C* (100 = accept any colour).">C*max <input type="range" id="el-linec" min="0" max="100" value="100">
+        <span class="val" id="el-linec-v">100</span></label>
     </div>
   </div>
 </header>
@@ -137,7 +130,7 @@
     <div class="canvas" id="el-composite"></div>
   </section>
   <section>
-    <h2>4 · SVG — fill paths + ink strokes <span id="el-svgmeta"></span></h2>
+    <h2>4 · SVG — buckets + synthesized strokes <span id="el-svgmeta"></span></h2>
     <div class="canvas" id="el-svg"></div>
   </section>
   <section>
