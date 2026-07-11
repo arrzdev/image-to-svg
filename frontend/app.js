@@ -189,6 +189,15 @@ async function elRun() {
     showSvgHiRes($("el-svg"), r.svg);
     $("el-svgmeta").textContent =
       `· ${r.stats.svg_paths} fills + ${r.stats.ink_paths} ink · ${r.stats.svg_kb} KB`;
+    // fragmentation view: fills only, one RANDOM colour per path (golden-angle
+    // hues so adjacent paths never share a colour)
+    let fi = 0;
+    const frag = r.svg
+      .replace(/<path [^>]*fill="none"[^>]*\/>/g, "")          // drop ink
+      .replace(/fill="#[0-9a-fA-F]{6}"/g, () =>
+        `fill="hsl(${(fi++ * 137.508) % 360} ${65 + (fi % 3) * 12}% ${45 + (fi % 4) * 10}%)"`);
+    showSvgHiRes($("el-frag"), frag);
+    $("el-fragmeta").textContent = `· ${fi} paths`;
     $("el-panels").hidden = false;
     const s = r.stats;
     $("el-status").textContent =
