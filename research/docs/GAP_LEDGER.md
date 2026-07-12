@@ -231,6 +231,16 @@
   is the direct UNDER-RESOLVE-share lever (adds arc; flips ink<0.35 tiles)
   and pairs naturally with the shipped re-anchor. = run-70 candidate.
 
+- **[it70-leads, 2026-07-13] Thin dark rings quantize INTO their dark parent**
+  (run-70 probe, shield rivet-2): the ring's px belong to the maroon BACKGROUND
+  label L3 (86k-px dominant comp) + sub-30px L10 fragments — unreachable by the
+  re-anchor family (parent gate + area both correctly locked). Recraft draws a
+  clean maroon ring/shadow. Culprit stage: quantize/label-chain ownership of
+  thin dark-on-dark boundaries. Named fix shape: extend _resnap_fill_boundaries
+  to dark/dark boundaries, or a ring-aware carve (thin annulus whose source
+  tone differs from parent interior). TRUE arc-adder (UR lever). = run-71
+  candidate. Also: strap texture streaks (label-chain shrapnel family) persist.
+
 ## CLOSED
 
 - ~~Monster teeth scalloped/half-height~~ — runs 21+22 compound (tall AND sharp).
