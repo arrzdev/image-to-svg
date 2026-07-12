@@ -252,6 +252,27 @@
   process rule: label attributions in ledger entries must name label id AND
   center rgb+lum (run-70's "L3 maroon background" misread cost a probe cycle).
 
+- **[it72-leads, 2026-07-13] FITTER diagnosis: 3 leads = 2 stages + 1 routing**
+  (stage-strip verified, research/it72/candidates/fitter-bends/):
+  (a) **SHAPE-GATE ROUTING = the bar-scale lead (run-73)**: line NETWORKS
+  fill-routed because band exemption needs p25r>=0.8 — crystals apex outline
+  (label 8, rgb(26,64,82), 4803px, elong 134, p25r 0.71) AND rabbit's whole
+  2.83px ink network (elong 840) render as independently-fitted glyph fills:
+  label-map wobble faithfully reproduced, width idealization unreachable.
+  Flip criterion must exclude fox 115k-px body silhouette (elong 870, cov
+  1.33 OVERLAPS the class) + monster 200k silhouette + mountain ridge chunks
+  (p25r .75-.78). Population table in it72 artifacts README.
+  (b) bend-radius INFLATION: pizza box corners are drawn small-radius ARCS
+  (k6-turn 11-62deg, localization fails) — corner pinning can't reach; win-11
+  pre-fit smoothing + ribbon re-smooth + fit tolerance inflate the radius;
+  needs curvature-adaptive smoothing. (c) elephant has ZERO stroke chains
+  (purple ink lum 68 spread 84 fails near-neutral rule; renders via fills —
+  scores fine, note only). (d) METRIC FLOOR pattern: it70 +0.0002 / it71
+  +0.0004 / it72 +0.0006 all verified-safe eye-loud wins 2.5-7x under
+  MIN_GAIN — tilecmp@40 dilutes 1-3px quality; riders accumulate (pool
+  +0.0012); if run-73 (bar-scale) also lands sub-bar, surface the regime
+  question to USER.
+
 ## CLOSED
 
 - ~~Monster teeth scalloped/half-height~~ — runs 21+22 compound (tall AND sharp).

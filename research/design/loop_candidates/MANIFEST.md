@@ -21,6 +21,16 @@ already shipped and their labels were stale).
   loosening re-admits a measured must-not). Rider pool with it70 = +0.0006.
   Cut from HEAD 90a71fb. NOTE: overlaps it70 rider on contour_lines.py —
   apply it70 FIRST, then this (both extend _reanchor area; verify combined).
+- it72_widthgrade_corners_+0.0006_rider.diff (2026-07-13): per-chain width
+  grading (dev>=0.44 keeps own constant width; thin chains stop rendering as
+  leech tadpoles, thick stop dipping) + drawn-corner pinning for non-band
+  strokes (80deg/0.80 localization; organic stems fire zero). Eye-LOUD
+  (pizza separators thin, corners sharp on shield/chopchop/rabbit) but
+  tilecmp-quiet (+0.0006; 1-3px corrections dilute at 40x40 tiles). All
+  channels clean, must-nots hold, REVIEW flag: chopchop goggle ring bolder
+  (closer to src, heavier than Recraft). Touches contours_exp.py+strokes.py
+  (DIFFERENT area than it70/it71 riders — apply after them; verify combined).
+  RIDER POOL now it70+it71+it72 ~= +0.0012. Cut from HEAD 90a71fb.
 
 ## Consumed/void (kept for history only — do NOT re-apply)
 - it3_localsplit, it6_rampband, it7_transmud: SHIPPED pre-quant-13 cut.

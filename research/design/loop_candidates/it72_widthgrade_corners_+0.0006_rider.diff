@@ -1,0 +1,171 @@
+diff --git a/models/quant-11/src/contours_exp.py b/models/quant-11/src/contours_exp.py
+index a5d86ae..769cbb8 100644
+--- a/models/quant-11/src/contours_exp.py
++++ b/models/quant-11/src/contours_exp.py
+@@ -53,6 +53,27 @@ from strokes import (_STRUCT8, _luminance, _skeleton_branches,
+ 
+ _DEBUG: dict = {}    # diagnostic capture (pend snapshot); no pipeline effect
+ 
++# Per-chain width grading (it72): a chain whose own calibrated width sits
++# DECISIVELY off the network's global width (by at least this fraction of
++# gw, either side) keeps its own constant width at emission (see the
++# grading block in extract_contour_strokes). Population (341 chains, 11
++# stems): thin hairline cohort at dev <= -0.47 vs uniform-pen scatter
++# >= -0.41 (gap at 0.44); thick plank/rim cohort at dev >= +0.46 vs
++# scatter <= +0.38 (gap at 0.44 again) — one constant covers both sides.
++_WIDTH_GRADE_DEV: float = 0.44
++
++# Drawn-corner pinning for non-band strokes (it72): raw-chain k=6 turn
++# threshold (shipped fill detector, _fill_edge_corners) + a TIGHTER
++# two-scale localization bar than the fill rule's 0.7. Population (341
++# chains, 11 stems): true drawn corners localize at ratio >= 0.80
++# (chopchop V-notches/planks 0.83-1.00, rabbit bag corners 0.83-0.91,
++# monster-teeth fill precedent ~0.83); the 0.70-0.78 zone is soft bends
++# (pizza checker separator 0.73, rounded box corners) where a pin mints a
++# spike on an intentionally-soft line — eye-verified before tightening.
++# 17 fire sites at 80deg/0.80; organic chains (fox/mountain/crystals) 0.
++_STROKE_CORNER_DEG: float = 80.0
++_STROKE_CORNER_LOC: float = 0.80
++
+ 
+ def _medial_axis_crop(mask: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+     """medial_axis(mask, return_distance=True, rng=0) on the component's
+@@ -1444,9 +1465,39 @@ def extract_contour_strokes(labels: np.ndarray, centers: np.ndarray,
+         seg, segw = pb["pts"], np.asarray(pb["widths"], float)
+         # drop floating stubs: an isolated snippet shorter than ~1.5 widths
+         # renders as a lone dot (label-map break debris), worse than nothing
++        # (kept on the NETWORK width even for graded thin chains below —
++        # the debris-size policy belongs to the drawing, not the hairline)
+         if (pb["head_free"] and pb["tail_free"]
+                 and len(seg) < stub_factor * w_body):
+             continue
++        # ---- per-chain width grading (it72, FITTER family / ledger
++        # it66-leads "leech blobs"). One global pen width misfits drawings
++        # whose line weights genuinely differ, in both directions:
++        #  * a 2px lid-crease hairline drawn at the network's 3.6px turns
++        #    into a chain of tapered tadpoles (the taper/swell crutches
++        #    compare its EDT profile to a baseline ~2x its true weight
++        #    and "repair" it into lumps);
++        #  * a 12px plank/rim drawn from the 4.7px baseline oscillates
++        #    2-3x in width (the swell crutch follows noisy EDT above the
++        #    1.3x bar and the junction clamp forces dips back to the
++        #    global width — pinch-necked planks; measured prof p10 3.9 /
++        #    p90 13.8 on one shield chain).
++        # A chain whose own calibrated width sits DECISIVELY off the
++        # network width keeps its own constant width instead; every
++        # downstream profile gate (swell 1.3x, taper 0.8x/0.95x) then
++        # keys off the true baseline — thin chains quiesce, thick chains
++        # stop dipping. Population-measured (it72, all 11 stems, 341
++        # chains): hairline cohort dev <= -0.47 (2.0-2.8px vs gw 3.6-7.0;
++        # 45 chains) vs uniform-pen scatter >= -0.41; plank cohort
++        # dev >= +0.46 (16 chains) vs scatter <= +0.38 — 0.44 splits both
++        # gaps. Bands keep the network width (their w_med pools at
++        # serration notches); the stub drop above already ran on the
++        # network width, so which chains SHIP is unchanged.
++        if width_mode == "global" and not pb.get("band"):
++            w_cal = pb["w_med"] * (gw / max(info["median_width"], 1e-9))
++            if abs(w_cal - gw) >= _WIDTH_GRADE_DEV * gw:
++                w_body = max(w_cal * width_scale, 0.75)
++                info["width_graded"] = info.get("width_graded", 0) + 1
+         # ---- straight-chain lock: TLS-straight raw chains render as exact
+         # lines (fit-tol bows + end-dips erased; swell suppressed below —
+         # a drawn ruler line is uniform weight, its mid-span EDT bulges are
+@@ -1481,6 +1532,34 @@ def extract_contour_strokes(labels: np.ndarray, centers: np.ndarray,
+                                 "kind": "stroke", "join": "miter"})
+                 info["band_strokes"] = info.get("band_strokes", 0) + 1
+             continue
++        # ---- drawn-corner pinning for NON-band strokes (it72, FITTER
++        # family / it67 culprit "old stroke layer's outline smoothing").
++        # A drawn sharp corner mid-chain (box corner, plank corner) is a
++        # degree-2 skeleton point, so the branch runs straight through it
++        # and the win-11 moving average rounds it off BEFORE the fitter
++        # ever sees it (staged strips: raw chain tracks the corner, the
++        # smoothed chain is an inflated arc; corner_deg=75 then finds
++        # nothing to pin). Bands solved exactly this in run 10 by
++        # detecting corners on the RAW chain and smoothing with corners
++        # pinned — apply the same cure with the FILL layer's shipped
++        # detector (run 21: _fill_edge_corners k=6, 80deg; a tight smooth
++        # arc reads high turn at k=6 but does NOT localize, so organic
++        # curves stay round) at a TIGHTER localization bar (0.80 vs the
++        # fill rule's 0.70 — see _STROKE_CORNER_LOC: the 0.70-0.78 zone
++        # is soft drawn bends where a pin mints a spike; eye-verified).
++        # Population (it72, 341 chains, 11 stems): 17 sites >=80deg/0.80
++        # — chopchop 11, rabbit 4, pizza 1, shield 2, ALL drawn corners
++        # by eye; fox/mountain/crystals organic chains 0 fires. Locked
++        # chains are straight (no corners); closed loops are left to the
++        # closed fit.
++        pin_corners: List[int] = []
++        if not pb["closed"] and not locked:
++            pin_corners = _fill_edge_corners(
++                seg, k=6, min_turn_deg=_STROKE_CORNER_DEG,
++                loc_ratio=_STROKE_CORNER_LOC)
++            if pin_corners:
++                info["stroke_corners"] = (info.get("stroke_corners", 0)
++                                          + len(pin_corners))
+         # ---- constant-baseline width profile.  The drawn line is w_body
+         # everywhere EXCEPT where the ink genuinely departs: local swells
+         # (calligraphic joints, junction pooling — sm_w >> w_body) rise with
+@@ -1528,17 +1607,32 @@ def extract_contour_strokes(labels: np.ndarray, centers: np.ndarray,
+             prof = _smooth1d(prof, 5)
+             # same aggressive centerline smoothing as strokes get (_ribbon
+             # itself only smooths win-5; skeleton staircase would leak back)
+-            seg = _smooth_open(seg, stroke_smooth)
+-            dr = _ribbon(seg, prof * width_scale / 2.0, stroke_tol,
+-                         head_tip_r=pb.get("head_tip"),
+-                         tail_tip_r=pb.get("tail_tip"))
++            if pin_corners:
++                # corners pinned through the smooth; _ribbon must not
++                # re-smooth (win-5 would re-round the pinned vertex)
++                seg = _smooth_open_corners(seg, stroke_smooth, pin_corners)
++                dr = _ribbon(seg, prof * width_scale / 2.0, stroke_tol,
++                             head_tip_r=pb.get("head_tip"),
++                             tail_tip_r=pb.get("tail_tip"), smooth_win=0)
++            else:
++                seg = _smooth_open(seg, stroke_smooth)
++                dr = _ribbon(seg, prof * width_scale / 2.0, stroke_tol,
++                             head_tip_r=pb.get("head_tip"),
++                             tail_tip_r=pb.get("tail_tip"))
+             if dr:
+                 strokes.append({"d": dr, "width": 0.0,
+                                 "color": pb["color"], "kind": "ribbon"})
+                 info["ribbons"] = info.get("ribbons", 0) + 1
+                 continue
+-        d = _fit_branch(seg, stroke_tol, corner_deg, stroke_smooth,
+-                        pb["closed"])
++        if pin_corners:
++            import svgcore
++            sm = _smooth_open_corners(seg, stroke_smooth, pin_corners)
++            flat = [float(v) for p in sm for v in p]
++            d = _cubics_to_d(svgcore.fit_open(flat, stroke_tol, corner_deg),
++                             False)
++        else:
++            d = _fit_branch(seg, stroke_tol, corner_deg, stroke_smooth,
++                            pb["closed"])
+         if d:
+             strokes.append({"d": d, "width": w_body, "color": pb["color"],
+                             "kind": "stroke"})
+diff --git a/models/quant-11/src/strokes.py b/models/quant-11/src/strokes.py
+index c71cb1c..7fc2461 100644
+--- a/models/quant-11/src/strokes.py
++++ b/models/quant-11/src/strokes.py
+@@ -415,7 +415,8 @@ def _cap_subpath(center: np.ndarray, n_unit: np.ndarray, t_unit: np.ndarray,
+ 
+ def _ribbon(pts: np.ndarray, halfw: np.ndarray, tol: float,
+             head_tip_r: Optional[float] = None,
+-            tail_tip_r: Optional[float] = None) -> str:
++            tail_tip_r: Optional[float] = None,
++            smooth_win: int = 5) -> str:
+     """Variable-width ribbon fill: symmetric offsets of the SAME centerline
+     (so width is smooth and symmetric by construction — no independent-side
+     waver). Ends with tip_r set get a pointed apex extended by that leftover
+@@ -427,7 +428,9 @@ def _ribbon(pts: np.ndarray, halfw: np.ndarray, tol: float,
+     strokes."""
+     import svgcore
+ 
+-    pts = _smooth_open(np.asarray(pts, float), 5)
++    pts = np.asarray(pts, float)
++    if smooth_win > 1:      # 0 = caller already smoothed (corner-pinned)
++        pts = _smooth_open(pts, smooth_win)
+     halfw = np.maximum(_smooth1d(np.asarray(halfw, float), 5), 0.35)
+     tang = _tangents(pts)
+     norm = np.stack([-tang[:, 1], tang[:, 0]], 1)
