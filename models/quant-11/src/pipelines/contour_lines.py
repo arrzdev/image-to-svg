@@ -310,6 +310,129 @@ def _band_split_ramps(labels: np.ndarray, centers: np.ndarray,
     return out, np.stack(new_centers).astype(centers.dtype)
 
 
+# --- Component-tone re-anchor (auto-loop it69, UNDER-RESOLVE) ---------------
+# A light minority CONNECTED COMPONENT one-clustered into a bigger fill label
+# paints with the label's tone and vanishes against its surroundings — the
+# crystals pale-cyan facet strip (src ~(200,247,247)) absorbed by the WHITE
+# background label at k=16 renders white-on-white (region dE-to-source 10-18
+# where Recraft sits at 1.5). The merge happens AT _quantize (global k has no
+# centroid for the tint), so no merge/split gate downstream can see it; the
+# per-LABEL source re-anchor (_source_region_colors) is dominated by the
+# label's majority component. Cure: after the label chain settles, give each
+# large FLAT component whose own source tone genuinely differs from the tone
+# emission will paint a fresh label carrying its own trimmed source mean.
+# Geometry is untouched (components already trace as their own loops); only
+# the minority component's fill tone changes — toward the source, which on
+# every population-checked instance is also toward Recraft (crystals facets,
+# rabbit bag mint rim, mountain teal peak, shield rivets, app-asset glyph).
+#
+# Population-measured 2026-07-12 on all 11 gate targets (comps >=300px of
+# fill-grade labels, quant-12 params):
+#   fire  (eye-verified matches Recraft): dE 12.38-33.91, span 2.18-12.03 —
+#         crystals facet/tint family (22), rabbit bag rim (1, dE 16.57),
+#         mountain teal peak (1, 27.60), shield rivets (4, 19.75-22.70),
+#         app-asset icon glyph (1, 12.97)
+#   hold  (flat must-not ceiling): fox 7.14, chopchop 6.77, rabbit 7.62,
+#         elephant 8.95 (span 16.4 besides), monster 0.36, logo-geo none,
+#         pizza-box all < 12 -> elephant/fox/chopchop/pizza/monster/logo see
+#         ZERO fires; margin 12.0/7.14 = 1.7x
+#   span  (ramp fragments stay banded/band-split territory): true fires reach
+#         span 17.85 (crystals pink-gem faces dE 18.5-21.3, eye-verified:
+#         Recraft paints them the comp's peach tone); the blocked ramp
+#         population starts at 21.58 (crystals L12) -> gate 18.5 sits ~1.17x
+#         under it. Everything a wider span admits corpus-wide at dE>=12 is
+#         on crystals; must-not stems stay dE-blocked (elephant max 8.95 at
+#         span 16.4 keeps the 12.0/8.95 = 1.34x dE margin).
+_REANC_DE = 12.0          # CIEDE2000(comp trimmed tone, label emission tone)
+_REANC_SPAN = 18.5        # interior dominant-Lab-axis p92-p8 flatness cap
+_REANC_MIN_FRAC = 0.00028  # comp area >= this fraction of frame (300px@1024^2)
+_REANC_DOM = 0.9          # skip the label's dominant component (it IS the tone)
+_REANC_LUM = 96.0         # fill-grade guard, both parent center AND minted
+                          # tone (= emission dark_lum default): stroke-grade
+                          # labels and stroke-grade tones stay untouched so
+                          # the line network never changes
+_REANC_TRIM = 40.0        # RGB trim radius for the robust tone (=_FILLC_TRIM)
+
+
+def _reanchor_component_tones(labels: np.ndarray, centers: np.ndarray,
+                              raw: np.ndarray,
+                              protect: np.ndarray = None) -> tuple:
+    """Mint source-toned labels for mis-toned flat minority components.
+
+    Runs LAST in the label chain (after struct-split) so it sees final
+    geometry; evidence measured on the RAW source. Returns (labels, centers)
+    with new labels appended — the component keeps its exact pixel mask, so
+    fills keep their shapes and only the painted tone moves to the source."""
+    from skimage.color import rgb2lab, deltaE_ciede2000
+
+    from contours_exp import _source_region_colors
+
+    h, w = labels.shape
+    frame = float(h * w)
+    min_area = _REANC_MIN_FRAC * frame
+    fillc = _source_region_colors(labels, centers, raw)
+    lab_fill = rgb2lab(fillc.reshape(1, -1, 3) / 255.0)[0]
+    out = labels
+    new_centers = list(centers)
+    n_orig = len(centers)
+    slab = None                     # lazy full-frame Lab of the raw source
+    for li in range(n_orig):
+        c = centers[li].astype(np.float32)
+        if 0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2] < _REANC_LUM:
+            continue                # stroke-candidate label: hands off
+        m = labels == li
+        tot = int(m.sum())
+        if tot < min_area:
+            continue
+        ncc, cc, st, _ = cv2.connectedComponentsWithStats(
+            m.astype(np.uint8), connectivity=8)
+        for ci in range(1, ncc):
+            area = float(st[ci, 4])
+            if area < min_area or area > _REANC_DOM * tot:
+                continue
+            x, y, ww, hh = (int(v) for v in st[ci, :4])
+            sub = cc[y:y + hh, x:x + ww] == ci
+            if protect is not None and \
+                    (protect[y:y + hh, x:x + ww] & sub).sum() > 0.3 * area:
+                continue            # gradflat-idealized: deliberately ONE tone
+            dist = cv2.distanceTransform(sub.astype(np.uint8), cv2.DIST_L2, 3)
+            interior = dist > 1.5   # keep boundary AA out of the tone vote
+            if interior.sum() < max(48, 0.2 * area):
+                continue
+            pix = raw[y:y + hh, x:x + ww][interior].reshape(-1, 3) \
+                .astype(np.float64)
+            med = np.median(pix, axis=0)
+            keep = pix[((pix - med) ** 2).sum(1) < _REANC_TRIM * _REANC_TRIM]
+            tone = keep.mean(0) if len(keep) >= 0.5 * len(pix) else med
+            if 0.299 * tone[0] + 0.587 * tone[1] + 0.114 * tone[2] \
+                    < _REANC_LUM:
+                continue            # minted label must stay fill-grade too
+            tl = rgb2lab(tone[None, None, :] / 255.0)[0, 0]
+            de = float(deltaE_ciede2000(tl[None, None, :],
+                                        lab_fill[li][None, None, :])[0, 0])
+            if de < _REANC_DE:
+                continue            # tone family: the label paint is right
+            if slab is None:
+                slab = rgb2lab(raw.astype(np.float64) / 255.0)
+            P = slab[y:y + hh, x:x + ww][interior]
+            if len(P) < 9:
+                continue
+            mu = P.mean(0)
+            ax = np.linalg.eigh(np.cov((P - mu).T))[1][:, -1]
+            dint = (P - mu) @ ax
+            span = float(np.percentile(dint, 92) - np.percentile(dint, 8))
+            if span > _REANC_SPAN:
+                continue            # internal ramp/texture: not a flat tint
+            if out is labels:
+                out = labels.copy()
+            out[y:y + hh, x:x + ww][sub] = len(new_centers)
+            new_centers.append(np.clip(np.round(tone), 0, 255)
+                               .astype(centers.dtype))
+    if out is labels:
+        return labels, centers
+    return out, np.stack(new_centers).astype(centers.dtype)
+
+
 def _sharpen_prepass(img: np.ndarray, amount: float,
                      up: int = None, radius: float = 2.0) -> np.ndarray:
     """USER-validated blur-killer prepass (GAP_LEDGER 0e, it22 A-sharpen).
@@ -547,6 +670,15 @@ class ContourLinesPipeline(Pipeline):
                 _protect |= _m
         labels, centers = _split_structured_regions(labels, centers, qimg,
                                                     protect=_protect)
+
+        # Component-tone re-anchor (UNDER-RESOLVE): light flat minority
+        # components one-clustered into a bigger fill label (crystals pale
+        # facet in the white bg label) get their own source-toned label.
+        # Last in the chain so it sees final geometry; flat art skipped
+        # (conservatism precedent: sharpen skip / band-split / wander).
+        if _stats["kind"] != "flat":
+            labels, centers = _reanchor_component_tones(labels, centers, raw,
+                                                        protect=_protect)
 
         # Wander erasure only for non-flat scenes: flat art's boundaries are
         # drawn ink (no quantizer ramp for an iso-line to wander through) —
