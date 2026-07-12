@@ -1114,3 +1114,6 @@ See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
 - Result: corpus 0.2487 → 0.2457 (−1.2%). New best.
 - Insight: (a) ALWAYS sweep the wrapper engine the gate froze (quant-12), not the raw tree entry — the retuned DEFAULTS + straighten post-pass shift all channels ~0.001-0.009. (b) A stash label's gain can survive tree drift exactly when its domain is disjoint from the drift (it9 = fitter-input polyline; shipped trio = label-map ops). (c) Baseline-from-candidate-sweep is a legitimate freeze when the ship is byte-identical to the swept worktree.
 - Next: run 66 = color campaign (--brief targeting COLOR; color 0.1784 is the best channel absolute but the largest Recraft-gap mode share). Then [graft-strokes] from BACKLOG.
+
+### Run 66 side-note (while it66 agent runs): [edge11-grayscale] RETRACTED
+- Population-measured the wall-ink hypothesis (monster/elephant/chopchop): refuted — monster walls are LIGHTER than their cells (p50 −103; ink forms CELLS, not walls). Stage rasters eyeballed: monster-flat-line is a black silhouette; edge-11's 8-path output is structurally correct. Original backlog item was a number-inferred misdiagnosis (path count, no render) — the ban on number-only verdicts applies to benchmark tables too. BACKLOG corrected; graft plan (run 67) not blocked.
