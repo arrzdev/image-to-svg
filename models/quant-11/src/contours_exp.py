@@ -2531,6 +2531,25 @@ def contour_svg(labels: np.ndarray, centers: np.ndarray,
     # Fill palette anchored to the source pixels each region covers; strokes
     # keep the original centroids (their dark_lum / join-colour decisions).
     fill_centers = _source_region_colors(labels, centers, color_img)
+    # Structural-line rescue (edge-11 graft, it67): thin dark structural
+    # lines the label chain LOST (pizza-box grid separators absorbed into
+    # the cell fills) are re-detected from the source raster and
+    # synthesized as strokes painted last; their px join the absorb mask
+    # so fills tuck underneath. Components the old stroke layer claimed
+    # are excluded by construction, and where a completed line re-draws a
+    # half-kept dashed one, the old dash strokes are suppressed — nothing
+    # emits twice.
+    if color_img is not None and color_img.ndim == 3:
+        from stroke_graft import graft_structural_strokes, \
+            suppress_old_strokes
+        graft, graft_claim, corridors, ginfo = graft_structural_strokes(
+            labels, centers, stroke_mask, color_img, fill_centers)
+        info.update(ginfo)
+        if graft:
+            strokes, ndrop = suppress_old_strokes(strokes, corridors)
+            info["graft_suppressed"] = ndrop
+            stroke_mask = stroke_mask | graft_claim
+            strokes = strokes + graft
     new_labels = absorb_mask(labels, stroke_mask)
     capsules: List[dict] = []
     src_img = kw.get("src_img")
