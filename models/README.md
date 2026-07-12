@@ -143,6 +143,14 @@ version vs the previous **and vs Recraft**.
   vectorark-1 paper-fusion challenger parked at 0.367). Loop machinery:
   research/design/autoresearch_loop.py; run ledger:
   research/design/autoresearch_loop_ledger.jsonl.
+- **quant-17** (cut 2026-07-12; frozen `quant-17/src`; `staged` → here): quant-16
+  + it69 component-tone re-anchor — flat minority components mis-anchored inside
+  another label's tone get their own source-toned label (crystals apex facet was
+  white-on-white; k=16 had no centroid for the tint). Pure recolor, geometry
+  unchanged. **vs quant-16:** corpus 0.2411 (color 0.1725→0.1677); crystals
+  −0.0135; 6 stems byte-identical; every fire eye-verified toward Recraft.
+  Shipped on the keep law — the UR mode-share sub-criterion is arithmetically
+  unreachable for recolors (share_math.out in research/it69 artifacts).
 - **quant-16** (cut 2026-07-12; frozen `quant-16/src`; `staged` → here): quant-15
   + it67 graft-strokes — the edge-11 structural-stroke layer grafted onto quant
   fills (stroke_graft.py: blackhat lost-line re-detection, stacked evidence
