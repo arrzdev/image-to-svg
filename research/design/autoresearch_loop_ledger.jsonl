@@ -11,3 +11,5 @@
 {"verdict": "KEEP", "mode": "UNDER-RESOLVE", "files": ["models/quant-11/src/straighten.py"], "sha": "02d1771", "t": 1783721649}
 {"verdict": "DISCARD", "reason": "gate-fail", "mode": "FITTER", "files": ["models/quant-11/src/contours_exp.py", "models/quant-11/src/pipelines/contour_lines.py"], "t": 1783721752}
 {"verdict":"KEEP","mode":"FITTER","files":["models/quant-11/src/contours_exp.py","models/quant-11/src/pipelines/contour_lines.py"],"sha":"298ee06","note":"it9 wander-erasure shipped by orchestrator run 65 after re-validation + eye audit; gate recalibrated 0.004->0.0015 to measured noise floor","t":1783876064}
+{"verdict": "KEEP", "mode": "UNDER-RESOLVE", "files": ["models/quant-11/src/pipelines/quantize_contours.py"], "sha": "70d43aa", "t": 1783878853}
+{"verdict":"KEEP","mode":"UNDER-RESOLVE","files":["models/quant-11/src/contours_exp.py","models/quant-11/src/stroke_graft.py"],"sha":"b611582","note":"it67 graft-strokes: orchestrator-integrated combination gate +0.0016 (wave-2 per-piece sagitta + curved rescue earned the margin after run-67 near-miss); pizza-only fire, 10 stems byte-identical","t":1783882681}
