@@ -1011,7 +1011,27 @@ def _resnap_fill_boundaries(labels: np.ndarray, centers: np.ndarray,
 _SPLIT_EDGE_MAG = 12.0     # Sobel/4 per-px magnitude that counts as drawn edge
 _SPLIT_MIN_PX = 500        # component must be big enough to hold >1 shape
 _SPLIT_MIN_INTERIOR = 100  # need a real interior sample after 2px erosion
-_SPLIT_EDGE_FRAC = 0.075   # interior drawn-edge density gate (see populations)
+_SPLIT_EDGE_FRAC = 0.03    # interior drawn-edge density ENTRY gate. Lowered
+                           # 0.075 -> 0.03 (it66): this is only the entry —
+                           # a low-ef survivor must prove itself on the
+                           # OUTCOME axes instead (maxde >= _SPLIT_RESCUE_DE
+                           # below). Population re-measured 2026-07-12 on all
+                           # 11 gate targets, ef in [0.02, 0.075):
+                           #   fire (maxde >= 17 & bnd >= 0.6): crystals teal
+                           #     streaks maxde 19.7-27.1 bnd 1.0, crystals
+                           #     dark-red 17.1/1.0, chopchop trunk knot
+                           #     25.3/1.0, mountain terrain band 18.8/0.955
+                           #     — all drawn structure by eye
+                           #   refused: fox inner-ear 16.4 (gate-measured
+                           #     census regression — Recraft keeps ONE tone),
+                           #     app-asset purple shadow moat (bnd .66, maxde
+                           #     6.7), elephant shading pockets (maxde <=
+                           #     11.6), shield tans (<= 12.1), rabbit (9.5),
+                           #     fox body shading (14.5-15.8), chopchop
+                           #     fronds (bnd 0.396) — weak on the dE axis or
+                           #     boundary off the drawn edges
+_SPLIT_EDGE_SOLID = 0.075  # the original ef floor = the solid-evidence band;
+                           # below it the rescue-dE bar applies
 _SPLIT_BND_FRAC = 0.60     # sub-boundary px must sit ON drawn edges
 _SPLIT_MERGE_DE = 9.0      # fold near-duplicate local k-means sub-centers
 _SPLIT_MIN_DE = 12.0       # surviving sub-regions must be this separated
@@ -1041,6 +1061,42 @@ _SPLIT_PASSES = 2          # recurse once into just-split regions: a facet
                            # elephant/shield fire 1-5 single-pocket splits,
                            # crystals fires 42 mosaic splits)
 _SPLIT_PROTECT_OVL = 0.3   # never split gradflat-stamped regions
+# Ink-skip refinement (UNDER-RESOLVE, it66): "ink is sacred" now uses the
+# SAME candidacy test as the stroke layer (contours_exp._stroke_elements):
+# a label can only become ink when truly dark (lum < 60 — colored ink like
+# rabbit navy) or dark AND near-neutral (spread <= 45). A mid-dark SATURATED
+# label (60 <= lum < DARK_LINE_LUM, spread > 45) is by that same rule a
+# colored glyph/gem FILL (pizza letterforms lum~76 spr 151, crystals gem
+# fills spr 118-164) — the stroke layer refuses it, so the splitter
+# protecting it as "ink" only suppressed drawn facet structure. Measured on
+# the crystals defect region x[.52-.62] y[.50-.60]: the dark-red wave labels
+# rgb(154,23,7) lum 60.3 spr 147 PASS all three evidence gates (ef .238/.103,
+# bnd 1.0/.99, maxde 17.3/24.0) and were blocked ONLY by the old blanket
+# lum<96 skip; true-ink labels (chopchop outlines lum 9-49 near-neutral,
+# rabbit navy lum<60) remain skipped via the two arms below.
+_SPLIT_INK_LUM = 60.0      # truly-dark arm (any hue may be colored ink)
+_SPLIT_INK_SPREAD = 45     # mid-dark arm: near-neutral RGB spread = ink
+_SPLIT_DARK_SPREAD = 70    # ... truly-dark ESCAPE: measured colored-ink tops
+                           # out at RGB spread 59 (rabbit navy 19,3,62 — the
+                           # corpus' only exemplar); truly-dark gem/glyph
+                           # fills sit at 85-94 (crystals maroon-purple l6
+                           # spr 85, shield rust l10 spr 94). Beyond 70 the
+                           # label is a saturated FILL, splittable under the
+                           # SAME evidence gates as every other label. No
+                           # extra dE bar for this class: measured corpus
+                           # fires are crystals l6 19.4/28.9 (facet mosaics;
+                           # low-ef so the joint gate demands >= 16 anyway)
+                           # and shield l10 13.6/14.9 (ef-STRONG .178/.213
+                           # rim structure — measured shield overall -0.0008,
+                           # census -0.0023, flow -0.0015; a >= 16 bar was
+                           # costing that win for no measured protection).
+_SPLIT_RESCUE_DE = 17.0    # low-ef rescue band (ef < _SPLIT_EDGE_SOLID)
+                           # demands stronger colour proof than the joint
+                           # gate's 16: fires 17.1/18.8/19.7/25.3/27.1
+                           # (crystals dark-red + teals, mountain terrain,
+                           # chopchop knot) vs refused 16.4 (fox inner-ear —
+                           # source-real but Recraft draws ONE tone there;
+                           # gate-measured fox census +0.004) and 16.3
 
 
 def _split_structured_regions(labels: np.ndarray, centers: np.ndarray,
@@ -1056,10 +1112,13 @@ def _split_structured_regions(labels: np.ndarray, centers: np.ndarray,
     detail Recraft draws. Three independent evidence gates (constants above)
     keep this strictly local and kill the over-split failure mode:
     interior edge density, sub-boundary/edge coincidence, sub-center
-    separation. Dark (ink) labels and gradflat-stamped regions are untouched.
+    separation. Possible-ink labels (the stroke layer's candidacy class:
+    truly dark, or dark and near-neutral — see _SPLIT_INK_LUM/_SPLIT_INK_SPREAD)
+    and gradflat-stamped regions are untouched.
     """
     n0 = len(centers)
     lum = [_luminance(c) for c in centers]
+    spread = [int(max(c)) - int(min(c)) for c in centers]
     from skimage.color import rgb2lab
 
     mag = np.zeros(img.shape[:2], np.float32)
@@ -1077,8 +1136,14 @@ def _split_structured_regions(labels: np.ndarray, centers: np.ndarray,
     for _pass in range(_SPLIT_PASSES):
         touched = []
         for ci in worklist:
+            # possible ink is sacred (stroke-layer candidacy + saturation
+            # escape for truly-dark fills — constants above)
             if lum[ci] < DARK_LINE_LUM:
-                continue                        # ink is sacred
+                if lum[ci] < _SPLIT_INK_LUM:
+                    if spread[ci] <= _SPLIT_DARK_SPREAD:
+                        continue        # truly dark, plausibly colored ink
+                elif spread[ci] <= _SPLIT_INK_SPREAD:
+                    continue            # mid-dark near-neutral = ink
             mask = (out == ci).astype(np.uint8)
             ncomp, comp, stats, _ = cv2.connectedComponentsWithStats(mask, 8)
             for k in range(1, ncomp):
@@ -1186,6 +1251,11 @@ def _split_structured_regions(labels: np.ndarray, centers: np.ndarray,
                 # shading pocket, not drawn structure (constants above)
                 if maxde < _SPLIT_STRONG_DE and ef < _SPLIT_STRONG_EF:
                     continue
+                # low-ef rescue-band entries (below the original solid
+                # floor) need STRONG colour proof — populations in the
+                # constants block
+                if ef < _SPLIT_EDGE_SOLID and maxde < _SPLIT_RESCUE_DE:
+                    continue
                 # apply: largest sub-region keeps ci, the rest get new labels
                 order = sorted(keep, key=lambda s: -sizes[s])
                 wout = out[y0:y1, x0:x1]
@@ -1199,6 +1269,7 @@ def _split_structured_regions(labels: np.ndarray, centers: np.ndarray,
                                    0, 255).astype(centers.dtype)
                     new_centers.append(cnew)
                     lum.append(_luminance(cnew))
+                    spread.append(int(max(cnew)) - int(min(cnew)))
                     touched.append(nid)
                 touched.append(ci)              # remainder may split again
         if not touched:
