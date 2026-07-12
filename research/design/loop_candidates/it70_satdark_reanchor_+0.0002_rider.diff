@@ -1,0 +1,59 @@
+diff --git a/models/quant-11/src/pipelines/contour_lines.py b/models/quant-11/src/pipelines/contour_lines.py
+index d45de6a..6cbb3f0 100644
+--- a/models/quant-11/src/pipelines/contour_lines.py
++++ b/models/quant-11/src/pipelines/contour_lines.py
+@@ -347,11 +347,23 @@ _REANC_DE = 12.0          # CIEDE2000(comp trimmed tone, label emission tone)
+ _REANC_SPAN = 18.5        # interior dominant-Lab-axis p92-p8 flatness cap
+ _REANC_MIN_FRAC = 0.00028  # comp area >= this fraction of frame (300px@1024^2)
+ _REANC_DOM = 0.9          # skip the label's dominant component (it IS the tone)
+-_REANC_LUM = 96.0         # fill-grade guard, both parent center AND minted
+-                          # tone (= emission dark_lum default): stroke-grade
+-                          # labels and stroke-grade tones stay untouched so
+-                          # the line network never changes
++_REANC_LUM = 96.0         # fill-grade guard on the PARENT center (= emission
++                          # dark_lum default): stroke-grade labels stay
++                          # untouched so the line network never changes.
++                          # Minted TONES below it are admitted only in the
++                          # saturated mid-dark class (see it70 block below).
+ _REANC_TRIM = 40.0        # RGB trim radius for the robust tone (=_FILLC_TRIM)
++# Stroke-grade minted tones (it70): a mis-toned component whose OWN source
++# tone is dark used to be dropped wholesale (unmeasured stroke-system
++# coupling). The coupling is the `dark` candidacy list in
++# extract_contour_strokes — `lum < dark_lum AND (lum < 60 OR RGB spread
++# <= 45)` — which feeds centerline stroking + global width calibration.
++# A SATURATED MID-DARK center (lum >= 60, spread > 45) fails that clause
++# under EVERY dark_lum setting (the run-26 taxonomy: saturated mid-dark =
++# colored glyph FILL), so minting one provably never perturbs the stroke
++# network. Near-neutral mid-darks and true ink (lum < 60) stay excluded.
++_REANC_DARK_LUM = 60.0    # extract_contour_strokes' ink floor (mirror)
++_REANC_DARK_SPREAD = 45   # its mid-dark saturation gate (mirror)
+ 
+ 
+ def _reanchor_component_tones(labels: np.ndarray, centers: np.ndarray,
+@@ -406,7 +418,25 @@ def _reanchor_component_tones(labels: np.ndarray, centers: np.ndarray,
+             tone = keep.mean(0) if len(keep) >= 0.5 * len(pix) else med
+             if 0.299 * tone[0] + 0.587 * tone[1] + 0.114 * tone[2] \
+                     < _REANC_LUM:
+-                continue            # minted label must stay fill-grade too
++                # Stroke-grade tone: admit ONLY saturated mid-darks — the
++                # class extract_contour_strokes itself refuses to stroke-ify
++                # (see _REANC_DARK_* block above). Tested on the ROUNDED mint
++                # (what the stroke layer's centers array will hold, exact
++                # mirror). Population 2026-07-12, all 11 gate targets,
++                # quant-12 params: admits exactly 2 comps, both eye-verified
++                # Recraft-drawn — crystals deep-blue edge facet (L12 comp,
++                # 2454px, tone (9,90,154) lum 73 spread 145, dE 18.4) and
++                # shield strap rivet surround (L1, 380px, tone (135,50,48)
++                # lum 75 spread 87, dE 21.7). Near-neutral/ink-dark
++                # candidates corpus-wide: ZERO; must-nots (elephant/fox
++                # shading, chopchop kept-ink, rabbit, mountain, pizza-box,
++                # app-asset) fire nothing new — their outputs stay
++                # byte-identical.
++                cm = np.clip(np.round(tone), 0, 255)
++                if 0.299 * cm[0] + 0.587 * cm[1] + 0.114 * cm[2] \
++                        < _REANC_DARK_LUM \
++                        or int(cm.max()) - int(cm.min()) <= _REANC_DARK_SPREAD:
++                    continue        # would enter ink candidacy: hands off
+             tl = rgb2lab(tone[None, None, :] / 255.0)[0, 0]
+             de = float(deltaE_ciede2000(tl[None, None, :],
+                                         lab_fill[li][None, None, :])[0, 0])
