@@ -1,0 +1,122 @@
+diff --git a/models/quant-11/src/contours_exp.py b/models/quant-11/src/contours_exp.py
+index a5d86ae..668362b 100644
+--- a/models/quant-11/src/contours_exp.py
++++ b/models/quant-11/src/contours_exp.py
+@@ -53,6 +53,12 @@ from strokes import (_STRUCT8, _luminance, _skeleton_branches,
+ 
+ _DEBUG: dict = {}    # diagnostic capture (pend snapshot); no pipeline effect
+ 
++# it73 network exemption: only TRUE-INK outline networks flip to strokes;
++# midtone near-neutral shading labels (fox inner-ear fur wisps, lum ~95)
++# stay fills. Mirrors the lum<60 "truly dark" branch of the dark selection.
++_NET_LUM_MAX = 60.0
++_NET_AS_BAND = True   # band semantics (constant width, miter, corner-pinned)
++
+ 
+ def _medial_axis_crop(mask: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+     """medial_axis(mask, return_distance=True, rng=0) on the component's
+@@ -665,7 +671,33 @@ def extract_contour_strokes(labels: np.ndarray, centers: np.ndarray,
+             # drawn SHAPE — the fill pipeline renders it faithfully; any
+             # centerline decomposition (or blob-patch + stroke mix) is lumpy.
+             wp0 = dist[skel] * 2.0
++            # --- it73 routing probe (diagnostics only, active iff the caller
++            # seeded _DEBUG["route_probe"]; pure reads, no pipeline effect) ---
++            _rp = None
++            if "route_probe" in _DEBUG:
++                _skel_px = int(skel.sum())
++                _deg = ndimage.convolve(skel.astype(np.uint8),
++                                        np.ones((3, 3), np.uint8),
++                                        mode="constant") - 1
++                _deg[~skel] = 0
++                _rp = {
++                    "label": li, "color": color, "area": area,
++                    "med_w": med_w, "skel_px": _skel_px,
++                    "p90r": float(np.percentile(wp0, 90)) / max(med_w, 1e-6),
++                    "p25r": float(np.percentile(wp0, 25)) / max(med_w, 1e-6),
++                    "p99r": float(np.percentile(wp0, 99)) / max(med_w, 1e-6),
++                    "cov": area / max(_skel_px * med_w, 1.0),
++                    "elong": _skel_px / max(med_w, 1.0),
++                    "deep_frac": float(np.mean(dist[mask] > 0.75 * med_w)),
++                    "wide_skel_frac": float(np.mean(wp0 > blob_factor * med_w)),
++                    "junc": int((skel & (_deg >= 3)).sum()),
++                    "dim": int(max(labels.shape)),
++                    "bbox": [int(_sl[0].start), int(_sl[0].stop),
++                             int(_sl[1].start), int(_sl[1].stop)],
++                }
++                _DEBUG["route_probe"].append(_rp)
+             is_band = False
++            is_net = False
+             if float(np.percentile(wp0, 90)) > shape_p90 * med_w:
+                 # outline-BAND exemption (run-7 design): serrated outline
+                 # fragments are drawn LINES whose p90 is inflated by notch
+@@ -687,8 +719,36 @@ def extract_contour_strokes(labels: np.ndarray, centers: np.ndarray,
+                 # tapered 2px glyphs (fox fur flicks) masquerade as bands.
+                 if med_w >= 3.0 and cov < 1.4 and elong > 6 and p25r > 0.8:
+                     is_band = True
++                # ---- line-NETWORK exemption (it73): a junction-rich drawn
++                # OUTLINE network pools ink at every crossing (p90 inflated,
++                # firing this gate) while its EDT-quantized p25 sits one-two
++                # levels under the median at 3-8px widths (4.0/5.66 = 0.71),
++                # so p25r>0.8 is unsatisfiable for exactly the class the
++                # stroke system exists for — the fill fitter then reproduces
++                # the label-map wobble with independently-fitted sides
++                # (crystals apex dE 24 vs Recraft 7). Signature, population-
++                # measured across the 11-target corpus (research/it73):
++                # ribbon-like body (deep_frac: almost no pixel deeper than
++                # 0.75*med_w — fire class <=0.217; fox 115k silhouette 0.36,
++                # monster 0.26), VERY elongated (fire >=76; mountain ridge
++                # wedges <=35, app-asset glyphs <=43, tapered swooshes low),
++                # true dark ink (lum<60 like the dark-selection's ink branch;
++                # keeps fox's midtone-gray ear fur-shading label, lum 95,
++                # a fill), moderate p25 (fire 0.63-0.71; fox body 0.42,
++                # monster 0.47 — genuine tapers sit below 0.5), and network-
++                # scale area (fire <=4.9k; silhouettes 115k/200k).
++                elif (med_w >= 3.0 and cov < 1.4 and elong >= 60
++                        and p25r > 0.5 and area <= 30000
++                        and _luminance(color) < _NET_LUM_MAX
++                        and float(np.mean(dist[mask] > 0.75 * med_w))
++                        <= 0.25):
++                    is_band = _NET_AS_BAND
++                    is_net = True
++                    info["network_bands"] = info.get("network_bands", 0) + 1
+                 else:
+                     info["shape_fills"] = info.get("shape_fills", 0) + 1
++                    if _rp is not None:
++                        _rp["decision"] = "shape_fill"
+                     continue
+ 
+             # ---- wide-band gate: a UNIFORM thick band (shield rim ~36px,
+@@ -699,9 +759,17 @@ def extract_contour_strokes(labels: np.ndarray, centers: np.ndarray,
+             max_w = max(12.0, 0.014 * max(labels.shape))
+             if med_w > max_w:
+                 info["band_fills"] = info.get("band_fills", 0) + 1
++                if _rp is not None:
++                    _rp["decision"] = "wide_fill"
+                 continue
++            if _rp is not None:
++                _rp["decision"] = "band" if is_band else "stroke"
+ 
+             # ---- blob split: solid patches are fills, not strokes
++            # (it73 probe: tightening blob_factor to 1.5 for network-exempt
++            # components carved line-width EDT bumps into shrapnel fills —
++            # crystals overall +0.0061 vs prev, REVERTED; networks keep the
++            # shipped factor.)
+             blob_skel = skel & (dist * 2.0 > blob_factor * med_w)
+             if blob_skel.any():
+                 _, (iy, ix) = ndimage.distance_transform_edt(
+@@ -720,7 +788,14 @@ def extract_contour_strokes(labels: np.ndarray, centers: np.ndarray,
+                 # constant width (same color — the overlap is invisible).
+                 # Measured separation on chopchop: pools extent <= ~3.8x
+                 # med_w; genuine glyph blobs (trunk knots) >= 6x.
+-                if keep:
++                # it73: network-exempt components SKIP the exemption — their
++                # 4-6px junctions pool REAL ink wedges (Recraft keeps them
++                # solid); leaving them to round-cap stroke overlap punched
++                # pinholes and poked lollipop stub-arms at the crystals gem
++                # corners (tilecmp flow regressions concentrated exactly
++                # there). Carved to fills they render solid, and the re-
++                # skeleton loses the pool's fake spur arms too.
++                if keep and not is_net:
+                     deg0 = ndimage.convolve(skel.astype(np.uint8),
+                                             np.ones((3, 3), np.uint8),
+                                             mode="constant") - 1

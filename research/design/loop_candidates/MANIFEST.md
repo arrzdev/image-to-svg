@@ -31,6 +31,15 @@ already shipped and their labels were stale).
   (closer to src, heavier than Recraft). Touches contours_exp.py+strokes.py
   (DIFFERENT area than it70/it71 riders — apply after them; verify combined).
   RIDER POOL now it70+it71+it72 ~= +0.0012. Cut from HEAD 90a71fb.
+- it73_shaperoute_EYEONLY_notarider.diff (2026-07-13): **NOT A RIDER — do
+  not auto-ship.** Network exemption in the shape gate (crystals outline
+  networks -> band strokes) + junction-pool skip. Eye-verified BETTER on all
+  15 fire sites (wobbly fill pairs -> uniform Recraft-weight strokes), 10
+  stems byte-identical, but tilecmp reads −0.0001 (junction-knot tiles score
+  worse; crystals tiles relabel toward FITTER). The sharpest eye/metric
+  divergence of the four metric-floor data points. Ships only on a USER
+  regime decision (eye co-gate / batch bar) or after the junction-emission
+  lead fixes its knot tiles. Cut from HEAD 90a71fb.
 
 ## Consumed/void (kept for history only — do NOT re-apply)
 - it3_localsplit, it6_rampband, it7_transmud: SHIPPED pre-quant-13 cut.

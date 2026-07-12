@@ -273,6 +273,16 @@
   +0.0012); if run-73 (bar-scale) also lands sub-bar, surface the regime
   question to USER.
 
+- **[it73-leads, 2026-07-13] Junction emission for stroked networks + metric-floor CASE 4**
+  (run-73): (a) junction-pool emission is the remaining defect of stroke-routed
+  networks (apex-shoulder S-curl + pinhole: pools <1.9x med_w evade blob split;
+  _prune_and_merge merges pool spurs into fake through-branches; probes
+  rejected plain-stroke semantics + blob_factor 1.5 with data). (b) rabbit ink
+  network is ALREADY stroke-routed at this HEAD — it72's table was read at a
+  different stage; always re-verify routing AT HEAD. (c) METRIC-FLOOR CASE 4:
+  eye-better/metric-negative (−0.0001) — tilecmp junction tiles penalize the
+  new stroke topology the eye prefers. Regime question formally OPEN for USER.
+
 ## CLOSED
 
 - ~~Monster teeth scalloped/half-height~~ — runs 21+22 compound (tall AND sharp).
