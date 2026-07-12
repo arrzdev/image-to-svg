@@ -1,0 +1,70 @@
+diff --git a/models/quant-11/src/pipelines/contour_lines.py b/models/quant-11/src/pipelines/contour_lines.py
+index d45de6a..9e58925 100644
+--- a/models/quant-11/src/pipelines/contour_lines.py
++++ b/models/quant-11/src/pipelines/contour_lines.py
+@@ -352,6 +352,39 @@ _REANC_LUM = 96.0         # fill-grade guard, both parent center AND minted
+                           # labels and stroke-grade tones stay untouched so
+                           # the line network never changes
+ _REANC_TRIM = 40.0        # RGB trim radius for the robust tone (=_FILLC_TRIM)
++# Saturated mid-dark admission (it74): the lum-only guard above skips every
++# label/tone below 96 wholesale, but the stroke system's OWN candidacy rule
++# (extract_contour_strokes: lum < dark_lum AND (lum < 60 OR RGB spread <=
++# 45)) REFUSES saturated mid-darks under every dark_lum — a saturated
++# mid-dark is a colored FILL (run-26 taxonomy: pizza letterforms, crystals
++# gem facets), never ink. So admitting that class on BOTH ends of the
++# re-anchor (parent center and minted tone) provably cannot perturb the
++# line network, while un-skipping exactly the mis-toned mid-dark facet
++# family: crystals' crimson band (parent (163,45,86) lum 85 spread 118 —
++# whole label previously untouchable) painted 17.8 dE too purple.
++# Population 2026-07-13, all 11 gate targets, quant-12 params: the extended
++# admission fires on exactly 3 comps corpus-wide, every one eye-verified
++# toward source AND Recraft — crystals crimson band (L11 comp, 2390px, tone
++# (196,46,53), dE 17.77, span 3.38), crystals deep-blue edge facet (L12
++# comp, 2454px, tone (9,90,154), dE 18.40, span 2.40), shield strap rivet
++# surround (L1, 380px, tone (135,50,48), dE 21.69, span 14.70). In-class
++# miss ceiling dE 10.55 vs fire floor 17.77 (1.68x margin); near-neutral /
++# ink-dark (lum < 60 or spread <= 45) candidates corpus-wide: ZERO admitted
++# by construction; the other 8 non-flat stems fire nothing — outputs
++# byte-identical (measured). Shipped dE/span/area/dominance gates unchanged.
++_REANC_DARK_LUM = 60.0    # extract_contour_strokes' ink floor (mirror)
++_REANC_DARK_SPREAD = 45   # its mid-dark near-neutral gate (mirror)
++
++
++def _reanc_admissible(rgb) -> bool:
++    """True iff rgb is provably outside stroke/ink candidacy: fill-grade
++    (lum >= _REANC_LUM) or saturated mid-dark (lum >= 60, spread > 45 —
++    the exact complement of extract_contour_strokes' dark clause)."""
++    l = 0.299 * float(rgb[0]) + 0.587 * float(rgb[1]) + 0.114 * float(rgb[2])
++    if l >= _REANC_LUM:
++        return True
++    return l >= _REANC_DARK_LUM and \
++        int(np.max(rgb)) - int(np.min(rgb)) > _REANC_DARK_SPREAD
+ 
+ 
+ def _reanchor_component_tones(labels: np.ndarray, centers: np.ndarray,
+@@ -377,9 +410,8 @@ def _reanchor_component_tones(labels: np.ndarray, centers: np.ndarray,
+     n_orig = len(centers)
+     slab = None                     # lazy full-frame Lab of the raw source
+     for li in range(n_orig):
+-        c = centers[li].astype(np.float32)
+-        if 0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2] < _REANC_LUM:
+-            continue                # stroke-candidate label: hands off
++        if not _reanc_admissible(centers[li]):
++            continue                # possible stroke candidate: hands off
+         m = labels == li
+         tot = int(m.sum())
+         if tot < min_area:
+@@ -404,9 +436,10 @@ def _reanchor_component_tones(labels: np.ndarray, centers: np.ndarray,
+             med = np.median(pix, axis=0)
+             keep = pix[((pix - med) ** 2).sum(1) < _REANC_TRIM * _REANC_TRIM]
+             tone = keep.mean(0) if len(keep) >= 0.5 * len(pix) else med
+-            if 0.299 * tone[0] + 0.587 * tone[1] + 0.114 * tone[2] \
+-                    < _REANC_LUM:
+-                continue            # minted label must stay fill-grade too
++            if not _reanc_admissible(np.clip(np.round(tone), 0, 255)):
++                continue            # minted tone must stay outside ink
++                                    # candidacy too (tested on the ROUNDED
++                                    # mint — what the centers array will hold)
+             tl = rgb2lab(tone[None, None, :] / 255.0)[0, 0]
+             de = float(deltaE_ciede2000(tl[None, None, :],
+                                         lab_fill[li][None, None, :])[0, 0])

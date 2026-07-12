@@ -4,14 +4,18 @@ re-applying anything here (2026-07-12 lesson: 3 of 5 stashed diffs were
 already shipped and their labels were stale).
 
 ## Stashed, NOT shipped (riders awaiting a batch that clears MIN_GAIN 0.0015)
-- it70_satdark_reanchor_+0.0002_rider.diff (2026-07-13): extends it69
-  _reanchor_component_tones to SATURATED MID-DARK minted tones (lum>=60 &
-  spread>45 — provably outside ink candidacy, mirrors extract_contour_strokes'
-  refusal clause). Fires on exactly 2 comps corpus-wide (crystals deep-blue
-  edge strip, shield strap rivet-1 surround), both eye-verified wins, 9
-  targets byte-identical, stroke-coupling measured zero. +0.0002 corpus
-  (crystals -0.0014, shield -0.0009). SHIP as rider on any future keep:
-  apply, verify combined sweep, credit noted. Cut from HEAD 90a71fb.
+- it74_satdark_parent_+0.0003_rider.diff (2026-07-13): SUPERSEDES it70
+  (deleted — same hunks, this is the superset). Shared _reanc_admissible
+  predicate (fill-grade OR saturated-mid-dark, exact complement of
+  extract_contour_strokes' ink clause) applied to BOTH parent center and
+  minted tone in _reanchor_component_tones. Fires 3 comps corpus-wide
+  (crystals crimson band dE 17.8 + deep-blue strip + shield rivet surround),
+  eye-verified dramatic, 9 stems byte-identical, COLOR mode-share criterion
+  PASSED (+0.0003 only fails the 0.0015 bar). Family provably mined out at
+  dE>=12. Cut from HEAD 90a71fb.
+  RIDER POOL: it74+it71+it72 ~= +0.0013 — ONE more small clean win tips the
+  batch over 0.0015; then apply order it74 -> it71 -> it72, combined sweep,
+  ship as one gated keep.
 - it71_darkring_carve_+0.0004_rider.diff (2026-07-13): _carve_dark_ribbons —
   thin dark ribbon sub-components minted from fill-grade parents (local
   masked-mean baseline, blend veto, ENCLOSURE gate = the must-not killer;
