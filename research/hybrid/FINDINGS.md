@@ -52,3 +52,22 @@ Recraft-like property — idealisation (clean arcs, minimal paths) — comes wit
 hallucination. The Recraft-class recipe (VectorArk: conservative outline-
 normalised vectorization + learned cleanup, 5M-SVG training) exists only
 closed. Artifacts: research/omnisvg_test/ (weights + clone gitignored).
+
+## C. Curve-pair mining census (2026-07-12) — training data EXISTS
+Mined quant-13-vs-Recraft matched curve pairs across all 11 images (pathflow
+matcher, 8x8 tile grid, dE<=60, >=30px, turning<=1.2 after ORIENTATION/START
+canonicalization — winding direction was 81% of raw mismatch):
+**1,311 unique usable pairs** (~2.2k natural crops, ~42k augmented), quality
+p50 turning 0.51, 78% closed fills. Dump: research/curveprior/pairs.jsonl.
+
+TWO KEY FINDINGS:
+1. **No cubic-count gap on matched curves** (ours 2.41 vs theirs 2.61 per
+   100px, ratio 0.96). Recraft's edge is control-point PLACEMENT (smooth
+   flow), not budget — an idealizer learns geometry regularization, not
+   compression. (Confirms auto-loop it9: wander, not count.)
+2. **31.8% of Recraft's paths (13.3% by arclength) have NO counterpart** in
+   our output — micro-detail shards + invented content. No curve model
+   touches that; it is the hard ceiling of this route.
+Risks: diversity concentrated (chopchop+crystals+mountain = 66% of pairs);
+corpus biased to smooth organic contours (aligned with where quant is
+weakest). Hold-image-out eval mandatory.
