@@ -143,6 +143,13 @@ version vs the previous **and vs Recraft**.
   vectorark-1 paper-fusion challenger parked at 0.367). Loop machinery:
   research/design/autoresearch_loop.py; run ledger:
   research/design/autoresearch_loop_ledger.jsonl.
+- **quant-15** (cut 2026-07-12; frozen `quant-15/src`; `staged` → here): quant-14
+  + it66 structured-split recalibration (dark-skip → ink-rule + saturation
+  escape; ef floor 0.03 behind maxde≥17 rescue bar). **vs quant-14:** tilecmp
+  corpus 0.2442 (census −0.0016, color −0.0033, flow +0.0004 < eps);
+  UNDER-RESOLVE share 20.0%→18.8%; crystals facet/wave recovery eye-verified
+  by orchestrator renders. Known cost: pizza lid-crease leech blob
+  (GAP_LEDGER it66-leads). First worktree-agent keep of segment 3 (70d43aa).
 - **quant-14** (cut 2026-07-12; frozen `quant-14/src`; `staged` → here): quant-13
   + it9 wander-erasure — band-limited removal of the 6-30px quantizer-boundary
   wander before fitting (coarse-reference high-pass split, corner-protected,
