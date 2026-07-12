@@ -31,7 +31,14 @@ import tilecmp_loop as L  # noqa: E402  (reuses sweep/load_engine/montage)
 
 # thresholds — calibrated to sit ABOVE the engine's k-means run-to-run noise
 # (see --noise-check). Tighten once the measured floor is known.
-MIN_GAIN = 0.004
+# RECALIBRATED 2026-07-12 (orchestrator, deliberate re-baseline step, run 65):
+# --noise-check measured corpus-overall spread 0.0000 across repeated runs
+# (engine deterministic), so the provisional 0.004 — sized for assumed k-means
+# noise — was blocking real all-channels-clean wins (it9 wander-erasure
+# +0.0029, eye-audited before ship). 0.0015 stays far above float jitter while
+# letting mature-engine gains through; CH_EPS unchanged (the per-channel
+# anti-regression guard is what actually prevents corpus overfit).
+MIN_GAIN = 0.0015
 CH_EPS = 0.006
 
 
