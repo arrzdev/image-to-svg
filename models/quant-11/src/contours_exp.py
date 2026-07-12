@@ -626,6 +626,7 @@ def extract_contour_strokes(labels: np.ndarray, centers: np.ndarray,
                 flecks_absorbed += 1
 
     stroke_mask = np.zeros(labels.shape, bool)
+    skel_union = np.zeros(labels.shape, bool)   # it75: pen-coverage proxy
     strokes: List[dict] = []
     pend: List[dict] = []          # branch records awaiting global width
     tot_area = tot_skel = 0
@@ -964,6 +965,7 @@ def extract_contour_strokes(labels: np.ndarray, centers: np.ndarray,
                 info["wlens"].append(len(br["pix"]))
                 info["branches"] += 1
             stroke_mask |= mask
+            skel_union |= skel
             tot_area += int(mask.sum())
             tot_skel += int(skel.sum())
 
@@ -976,6 +978,89 @@ def extract_contour_strokes(labels: np.ndarray, centers: np.ndarray,
     # reproduces the drawn coverage (EDT medians sit a half-pixel low on
     # antialiased quantized masks)
     gw = tot_area / max(tot_skel, 1)
+    # ---- it75 source-anchored pen calibration (COLOR family, run 75).
+    # DIAGNOSIS (research/it75): on ink-heavy stems the emitted pen
+    # (w_body = 0.85 * gw) systematically under-covers the source's own
+    # dark-ink footprint — chopchop missed 12.3% of the source's dark px
+    # (Recraft: 2.4%) as a 1-3px "fringe" along every stroke, and tilecmp
+    # charges the lightened tile means as COLOR error (excess 0.2247).
+    # The 0.85 default was eye-tuned against Recraft's ELEPHANT in the v4
+    # era — and elephant no longer routes ANY ink through the stroke
+    # system (it72 verified), so the calibration target is gone.
+    # MECHANISM: measure the source's ink mass over the stroke-owned
+    # region (per dark label: its kept components' mask px + their 1px
+    # ring owned by light labels, counted at that label's own darkness
+    # threshold) and, where the planned pen demonstrably under-covers it,
+    # emit at the source-mass width gw_src instead of 0.85*gw.
+    # FIRE GATE (population-measured, research/it75 table): the two stems
+    # widening provably hurts (pizza-box: close parallel pairs pinch shut,
+    # eye-verified; rabbit: pen already spills, extra 23.7% > miss) are
+    # exactly the stems with NO fringe deficit and huge overhang — three
+    # independent guards with margins hold them out.
+    it75_eff = width_scale        # effective emission scale (unfired: as-is)
+    if src_img is not None and pend:
+        _g = (src_img.astype(np.float32) @ np.array([0.299, 0.587, 0.114],
+                                                    np.float32)
+              if src_img.ndim == 3 else src_img.astype(np.float32))
+        _lut = np.array([_luminance(c) for c in centers], np.float32)
+        _light_owner = _lut[labels] >= dark_lum
+        # source-ink mass per dark label at the label's own threshold
+        # (lum+24, clipped to [80,110]): a mid-dark label (fox 95, shield
+        # 95) needs a higher cut for its own soft core, but must not drag
+        # tan shading into a BLACK network's count (global-T landmine:
+        # shield's global T=110 inflated R to 1.20).
+        darkS = np.zeros(labels.shape, bool)
+        for li in dark:
+            lm = (labels == li) & stroke_mask
+            if not lm.any():
+                continue
+            T_li = float(np.clip(_lut[li] + 24.0, 80.0, 110.0))
+            ring = (ndimage.binary_dilation(lm, structure=_STRUCT8)
+                    & ~stroke_mask & _light_owner)
+            darkS |= (lm | ring) & (_g < T_li)
+        src_mass = int(darkS.sum())
+        gw_src = src_mass / max(tot_skel, 1)
+        # planned-pen coverage proxy: distance from the skeleton union
+        D = ndimage.distance_transform_edt(~skel_union)
+        r0 = 0.5 * gw * width_scale
+        cov = D <= r0 + 0.5
+        nearmiss = int((darkS & ~cov & (D <= r0 + 3.0)).sum())
+        region3 = ndimage.binary_dilation(stroke_mask, structure=_STRUCT8,
+                                          iterations=3)
+        # overhang: planned-pen px that are decisively NOT ink in the
+        # source (luma > 125 = the darkest per-label cut + 45). A pen that
+        # already spills must never be widened.
+        overhang = int((cov & region3 & (_g > 125.0)).sum())
+        nm_area = nearmiss / max(tot_area, 1)
+        ovh_area = overhang / max(tot_area, 1)
+        # fire iff (population table, research/it75, 8 stroke stems):
+        #  * the fringe deficit is substantial — nm_area >= 0.033
+        #    (must-not-fire pizza 0.0126 / rabbit 0.0103 sit 2.6x/3.2x
+        #    BELOW; the firing cohort's min, shield 0.0497, is 1.5x above);
+        #  * the pen does not already spill — ovh_area <= 0.19 (pizza
+        #    0.274 / rabbit 0.415 sit 1.44x/2.2x ABOVE; firing max
+        #    crystals 0.159);
+        #  * the network is statistically real — tot_area >= 2000 px
+        #    (app-asset 346, a 46px-fringe fleck, 5.8x below; firing min
+        #    mountain 4381, 2.2x above).
+        # Fired scale: the source-mass width, never below the shipped
+        # default and never beyond the mask evidence — fired cohort today
+        # lands at cal 0.927..0.969 (chopchop 0.950, crystals 0.946, fox
+        # 0.927, mountain 0.965, shield 0.969), inside the corpus band
+        # measured at width_scale 0.90/0.95 (all channels clean).
+        if (nm_area >= 0.033 and ovh_area <= 0.19 and tot_area >= 2000
+                and gw > 0):
+            it75_eff = float(np.clip(gw_src / gw, width_scale, 1.0))
+        info["it75_stats"] = {"gw_src": round(gw_src, 3),
+                              "nm_area": round(nm_area, 4),
+                              "ovh_area": round(ovh_area, 4),
+                              "tot_area": int(tot_area),
+                              "cal": round(it75_eff, 4)}
+        import os as _os
+        if _os.environ.get("IT75_CALIB"):
+            import json as _json, sys as _sys
+            print("IT75_CALIB " + _json.dumps(info["it75_stats"]),
+                  file=_sys.stderr)
     lo, hi = np.percentile(np.repeat(w, l.astype(int)), (10, 90))
     info["global_width"] = float(gw)
     info["median_width"] = float(np.average(w, weights=l))
@@ -1440,12 +1525,16 @@ def extract_contour_strokes(labels: np.ndarray, centers: np.ndarray,
 
     for pb in pend:
         base = gw if width_mode == "global" else pb["w_med"]
-        w_body = max(base * width_scale, 0.75)
+        # it75: fired source-anchored calibration re-levels the pen; the
+        # stub-drop below stays on the UNCALIBRATED width so WHICH chains
+        # ship is untouched by calibration (debris policy != pen width).
+        w_stub = max(base * width_scale, 0.75)
+        w_body = max(base * it75_eff, 0.75)
         seg, segw = pb["pts"], np.asarray(pb["widths"], float)
         # drop floating stubs: an isolated snippet shorter than ~1.5 widths
         # renders as a lone dot (label-map break debris), worse than nothing
         if (pb["head_free"] and pb["tail_free"]
-                and len(seg) < stub_factor * w_body):
+                and len(seg) < stub_factor * w_stub):
             continue
         # ---- straight-chain lock: TLS-straight raw chains render as exact
         # lines (fit-tol bows + end-dips erased; swell suppressed below —
@@ -1529,7 +1618,7 @@ def extract_contour_strokes(labels: np.ndarray, centers: np.ndarray,
             # same aggressive centerline smoothing as strokes get (_ribbon
             # itself only smooths win-5; skeleton staircase would leak back)
             seg = _smooth_open(seg, stroke_smooth)
-            dr = _ribbon(seg, prof * width_scale / 2.0, stroke_tol,
+            dr = _ribbon(seg, prof * it75_eff / 2.0, stroke_tol,
                          head_tip_r=pb.get("head_tip"),
                          tail_tip_r=pb.get("tail_tip"))
             if dr:

@@ -352,6 +352,39 @@ _REANC_LUM = 96.0         # fill-grade guard, both parent center AND minted
                           # labels and stroke-grade tones stay untouched so
                           # the line network never changes
 _REANC_TRIM = 40.0        # RGB trim radius for the robust tone (=_FILLC_TRIM)
+# Saturated mid-dark admission (it74): the lum-only guard above skips every
+# label/tone below 96 wholesale, but the stroke system's OWN candidacy rule
+# (extract_contour_strokes: lum < dark_lum AND (lum < 60 OR RGB spread <=
+# 45)) REFUSES saturated mid-darks under every dark_lum — a saturated
+# mid-dark is a colored FILL (run-26 taxonomy: pizza letterforms, crystals
+# gem facets), never ink. So admitting that class on BOTH ends of the
+# re-anchor (parent center and minted tone) provably cannot perturb the
+# line network, while un-skipping exactly the mis-toned mid-dark facet
+# family: crystals' crimson band (parent (163,45,86) lum 85 spread 118 —
+# whole label previously untouchable) painted 17.8 dE too purple.
+# Population 2026-07-13, all 11 gate targets, quant-12 params: the extended
+# admission fires on exactly 3 comps corpus-wide, every one eye-verified
+# toward source AND Recraft — crystals crimson band (L11 comp, 2390px, tone
+# (196,46,53), dE 17.77, span 3.38), crystals deep-blue edge facet (L12
+# comp, 2454px, tone (9,90,154), dE 18.40, span 2.40), shield strap rivet
+# surround (L1, 380px, tone (135,50,48), dE 21.69, span 14.70). In-class
+# miss ceiling dE 10.55 vs fire floor 17.77 (1.68x margin); near-neutral /
+# ink-dark (lum < 60 or spread <= 45) candidates corpus-wide: ZERO admitted
+# by construction; the other 8 non-flat stems fire nothing — outputs
+# byte-identical (measured). Shipped dE/span/area/dominance gates unchanged.
+_REANC_DARK_LUM = 60.0    # extract_contour_strokes' ink floor (mirror)
+_REANC_DARK_SPREAD = 45   # its mid-dark near-neutral gate (mirror)
+
+
+def _reanc_admissible(rgb) -> bool:
+    """True iff rgb is provably outside stroke/ink candidacy: fill-grade
+    (lum >= _REANC_LUM) or saturated mid-dark (lum >= 60, spread > 45 —
+    the exact complement of extract_contour_strokes' dark clause)."""
+    l = 0.299 * float(rgb[0]) + 0.587 * float(rgb[1]) + 0.114 * float(rgb[2])
+    if l >= _REANC_LUM:
+        return True
+    return l >= _REANC_DARK_LUM and \
+        int(np.max(rgb)) - int(np.min(rgb)) > _REANC_DARK_SPREAD
 
 
 def _reanchor_component_tones(labels: np.ndarray, centers: np.ndarray,
@@ -377,9 +410,8 @@ def _reanchor_component_tones(labels: np.ndarray, centers: np.ndarray,
     n_orig = len(centers)
     slab = None                     # lazy full-frame Lab of the raw source
     for li in range(n_orig):
-        c = centers[li].astype(np.float32)
-        if 0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2] < _REANC_LUM:
-            continue                # stroke-candidate label: hands off
+        if not _reanc_admissible(centers[li]):
+            continue                # possible stroke candidate: hands off
         m = labels == li
         tot = int(m.sum())
         if tot < min_area:
@@ -404,9 +436,10 @@ def _reanchor_component_tones(labels: np.ndarray, centers: np.ndarray,
             med = np.median(pix, axis=0)
             keep = pix[((pix - med) ** 2).sum(1) < _REANC_TRIM * _REANC_TRIM]
             tone = keep.mean(0) if len(keep) >= 0.5 * len(pix) else med
-            if 0.299 * tone[0] + 0.587 * tone[1] + 0.114 * tone[2] \
-                    < _REANC_LUM:
-                continue            # minted label must stay fill-grade too
+            if not _reanc_admissible(np.clip(np.round(tone), 0, 255)):
+                continue            # minted tone must stay outside ink
+                                    # candidacy too (tested on the ROUNDED
+                                    # mint — what the centers array will hold)
             tl = rgb2lab(tone[None, None, :] / 255.0)[0, 0]
             de = float(deltaE_ciede2000(tl[None, None, :],
                                         lab_fill[li][None, None, :])[0, 0])
@@ -428,6 +461,208 @@ def _reanchor_component_tones(labels: np.ndarray, centers: np.ndarray,
             out[y:y + hh, x:x + ww][sub] = len(new_centers)
             new_centers.append(np.clip(np.round(tone), 0, 255)
                                .astype(centers.dtype))
+    if out is labels:
+        return labels, centers
+    return out, np.stack(new_centers).astype(centers.dtype)
+
+
+# --- Dark thin-ribbon carve (UNDER-RESOLVE, run-71 dark-ring candidate) -----
+# Family (GAP_LEDGER it70-leads, premise re-verified run 71): a thin DARK
+# drawn detail sitting on a fill region — rivet ring/shadow, thin streak —
+# whose tone k-means never minted (globally rare) quantizes INTO the parent
+# fill label's dominant component. No component-level pass can reach it
+# (_reanchor_component_tones fires on whole components; the ribbon is
+# interior). Corrected premise: shield rivet-2's ring lives in the fill-grade
+# TAN STRAP label L1 (lum 104) + a 21px L10 shard — NOT in dark L3 as the
+# ledger guessed, so extending _resnap_fill_boundaries (which moves px
+# between two EXISTING labels) is structurally the wrong shape: there is no
+# second label to re-vote. The fix is a CARVE that MINTS.
+#
+# Detector: per fill-grade parent component, seed = px whose smoothed Lab is
+# >= _CARVE_SEED_DE from a LOCAL masked-mean baseline (window _CARVE_BASE_W;
+# a GLOBAL comp tone failed on the shaded strap — probe v1), then connected
+# seed comps pass evidence gates measured on the 9-lineart-target population
+# (386 loose candidates, run-71 sweep; every threshold sits between the
+# fire population and its nearest must-not):
+#   * area [48, 2500]: fires 56-381; nearest excluded 46/40px flecks.
+#   * thin: mean halfwidth <= 3.2, max <= 5.0 (fires 1.0-1.9 / <=4.1).
+#   * dark-side dL <= -4.0: fires -4.3..-16.8; light-streak must-nots
+#     (shield glare +15, fox +18, rabbit +11..15, crystals +10) excluded.
+#   * flat tone: dominant-axis p92-p8 span <= 18.5 (= _REANC_SPAN); fires
+#     8.3-15.8; crystals texture shards 18.8-52 excluded.
+#   * local evidence dE >= 10.5 vs collar plateau: fires 11.0-15.8 (the
+#     rivet-ring family's floor is the 92px arc at 11.0); collar-noise
+#     comp-means sit <= ~6.
+#   * AA/blend veto: refuse if the comp tone lies within segd <= 6.0 of the
+#     plateau<->dominant-neighbor Lab segment at t in [-0.2, 1.2] — AA
+#     fringes ARE blends (elephant ink halos segd 2.8-4.5); true drawn
+#     details are off-segment (fires segd 7.3-14.6, rivet ring 11.9).
+#   * ENCLOSURE (the load-bearing must-not killer): every non-parent
+#     component the comp's 1px shell touches must be fully enclosed by the
+#     parent window and <= _CARVE_KNOB_MAX px (the knob the ring wraps;
+#     rivets 916-1185). Halo ribbons hugging big region/ink boundaries
+#     (pizza lid tmax 268k, elephant ink 5.8k-297k, rabbit bg 342k, fox
+#     86k) all fail; margin to the nearest must-not (elephant 2262) 1.5x.
+#   * mint safety: exact it70 satdark mirror — a rounded minted tone below
+#     fill-grade lum 96 is admitted only if lum >= 60 AND spread > 45
+#     (extract_contour_strokes' own refusal clause), so the stroke network
+#     and its global width calibration provably never see these labels.
+# Fires corpus-wide (2026-07-13 population): shield x4 (all four rivet-ring
+# pieces; the fully-lost rivet-2 ring 381px + right-rivet 315+92px arcs +
+# bottom-right 56px arc) and mountain x1 (dropped blue ridge streak 234px,
+# Recraft draws it crisply). Everything else in 386 candidates is refused.
+_CARVE_BASE_W = 31        # local baseline window, px (@1024 working res)
+_CARVE_SEED_DE = 8.0      # per-px seed threshold vs local baseline
+_CARVE_PAR_MIN = 1500     # parent comp min area, px
+_CARVE_MIN, _CARVE_MAX = 48, 2500   # ribbon comp area window, px
+_CARVE_MEAN_HW = 3.2      # mean halfwidth cap (thin)
+_CARVE_MAX_HW = 5.0       # max halfwidth cap
+_CARVE_DARK_DL = -4.0     # Lab L(comp) - L(plateau) must be <= this
+_CARVE_DE = 10.5          # comp-mean evidence dE vs collar plateau
+_CARVE_SPAN = 18.5        # tone-coherence cap (= _REANC_SPAN)
+_CARVE_SEGD = 6.0         # blend veto: Lab distance to plateau<->nb segment
+_CARVE_KNOB_MAX = 1500    # max area of an enclosed knob the ribbon may wrap
+
+
+def _carve_dark_ribbons(labels: np.ndarray, centers: np.ndarray,
+                        raw: np.ndarray,
+                        protect: np.ndarray = None) -> tuple:
+    """Mint source-toned labels for thin dark drawn ribbons swallowed whole
+    by a fill-grade parent label (rivet rings, dropped dark streaks).
+
+    Runs LAST in the label chain (after _reanchor_component_tones) so it sees
+    final geometry; evidence measured on the RAW source. Returns
+    (labels, centers) with new labels appended; parent geometry outside the
+    carved ribbon is untouched."""
+    from skimage.color import rgb2lab, deltaE_ciede2000
+
+    h, w = labels.shape
+    lab_smooth = rgb2lab(cv2.blur(raw[..., :3].astype(np.float32),
+                                  (3, 3)) / 255.0)
+    k3 = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
+    out = labels
+    new_centers = list(centers)
+    n_orig = len(centers)
+    for li in range(n_orig):
+        c = centers[li].astype(np.float32)
+        if 0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2] < 96.0:
+            continue                  # stroke-candidate parent: hands off
+        m = labels == li
+        if int(m.sum()) < _CARVE_PAR_MIN:
+            continue
+        ncc, cc, st, _ = cv2.connectedComponentsWithStats(
+            m.astype(np.uint8), connectivity=8)
+        for ci in range(1, ncc):
+            if st[ci, 4] < _CARVE_PAR_MIN:
+                continue
+            x, y, ww, hh = (int(v) for v in st[ci, :4])
+            pad = 12
+            y0, y1 = max(0, y - pad), min(h, y + hh + pad)
+            x0, x1 = max(0, x - pad), min(w, x + ww + pad)
+            sub = cc[y0:y1, x0:x1] == ci
+            wlab = lab_smooth[y0:y1, x0:x1]
+            wl = labels[y0:y1, x0:x1]
+            wraw = raw[y0:y1, x0:x1]
+            # local masked-mean baseline over the parent comp only
+            mf = sub.astype(np.float32)
+            num = cv2.blur(wlab * mf[..., None], (_CARVE_BASE_W, _CARVE_BASE_W))
+            den = cv2.blur(mf, (_CARVE_BASE_W, _CARVE_BASE_W))[..., None]
+            de = deltaE_ciede2000(wlab, num / np.maximum(den, 1e-6))
+            seed = sub & (de >= _CARVE_SEED_DE)
+            if not seed.any():
+                continue
+            nk, kk, kst, _ = cv2.connectedComponentsWithStats(
+                seed.astype(np.uint8), connectivity=8)
+            for ki in range(1, nk):
+                karea = int(kst[ki, 4])
+                if karea < _CARVE_MIN or karea > _CARVE_MAX:
+                    continue
+                K = kk == ki
+                if protect is not None and \
+                        (protect[y0:y1, x0:x1] & K).any():
+                    continue          # gradflat-idealized: deliberately flat
+                kd = cv2.distanceTransform(K.astype(np.uint8), cv2.DIST_L2, 3)
+                if float(kd.max()) > _CARVE_MAX_HW or \
+                        float(kd[K].mean()) > _CARVE_MEAN_HW:
+                    continue          # not a thin ribbon
+                # collar plateau (parent px near K, outside K)
+                dk2 = cv2.dilate(K.astype(np.uint8), k3,
+                                 iterations=2).astype(bool)
+                dk8 = cv2.dilate(K.astype(np.uint8), k3,
+                                 iterations=8).astype(bool)
+                collar = sub & dk8 & ~dk2
+                if int(collar.sum()) < 30:
+                    continue
+                plat = wlab[collar].mean(0)
+                ktone = wlab[K].mean(0)
+                if float(ktone[0] - plat[0]) > _CARVE_DARK_DL:
+                    continue          # not a DARK detail
+                if float(deltaE_ciede2000(ktone[None, None, :],
+                                          plat[None, None, :])[0, 0]) \
+                        < _CARVE_DE:
+                    continue          # local evidence too weak
+                P = wlab[K]
+                if len(P) >= 9:
+                    mu = P.mean(0)
+                    ax = np.linalg.eigh(np.cov((P - mu).T))[1][:, -1]
+                    dint = (P - mu) @ ax
+                    if float(np.percentile(dint, 92)
+                             - np.percentile(dint, 8)) > _CARVE_SPAN:
+                        continue      # textured, not a flat drawn tone
+                # blend veto vs dominant non-parent neighbor
+                shell = cv2.dilate(K.astype(np.uint8), k3).astype(bool) \
+                    & ~K & ~sub
+                if shell.sum() >= 8:
+                    u, cn = np.unique(wl[shell], return_counts=True)
+                    nb = int(u[cn.argmax()])
+                    nbm = (wl == nb) & cv2.dilate(
+                        K.astype(np.uint8), k3, iterations=6).astype(bool) \
+                        & ~dk2
+                    if nbm.sum() >= 12:
+                        nlab = wlab[nbm].mean(0)
+                        ab = nlab - plat
+                        L2 = float(ab @ ab)
+                        if L2 > 1e-9:
+                            t = float((ktone - plat) @ ab / L2)
+                            segd = float(np.linalg.norm(
+                                ktone - (plat + t * ab)))
+                            if segd <= _CARVE_SEGD and -0.2 <= t <= 1.2:
+                                continue    # AA/blend fringe, not drawn
+                # ENCLOSURE: shell may only touch small knobs the parent
+                # (plus the ribbon) fully encloses — halos along big
+                # region/ink boundaries are refused here
+                if shell.any():
+                    nonpar = (~sub) & (~K)
+                    _, npcc = cv2.connectedComponents(
+                        nonpar.astype(np.uint8), connectivity=8)
+                    ids = np.unique(npcc[shell & nonpar])
+                    bad = False
+                    for i in ids:
+                        if i == 0:
+                            continue
+                        cm = npcc == i
+                        if int(cm.sum()) > _CARVE_KNOB_MAX or cm[0, :].any() \
+                                or cm[-1, :].any() or cm[:, 0].any() \
+                                or cm[:, -1].any():
+                            bad = True
+                            break
+                    if bad:
+                        continue
+                # minted tone (trimmed, = reanchor) + it70 satdark mirror
+                pix = wraw[K].reshape(-1, 3).astype(np.float64)
+                med = np.median(pix, axis=0)
+                keep = pix[((pix - med) ** 2).sum(1)
+                           < _REANC_TRIM * _REANC_TRIM]
+                tone = keep.mean(0) if len(keep) >= 0.5 * len(pix) else med
+                cm_ = np.clip(np.round(tone), 0, 255)
+                lum = 0.299 * cm_[0] + 0.587 * cm_[1] + 0.114 * cm_[2]
+                if lum < 96.0 and (lum < 60.0
+                                   or int(cm_.max()) - int(cm_.min()) <= 45):
+                    continue          # would enter ink candidacy: hands off
+                if out is labels:
+                    out = labels.copy()
+                out[y0:y1, x0:x1][K] = len(new_centers)
+                new_centers.append(cm_.astype(centers.dtype))
     if out is labels:
         return labels, centers
     return out, np.stack(new_centers).astype(centers.dtype)
@@ -679,6 +914,15 @@ class ContourLinesPipeline(Pipeline):
         if _stats["kind"] != "flat":
             labels, centers = _reanchor_component_tones(labels, centers, raw,
                                                         protect=_protect)
+
+        # Dark thin-ribbon carve (UNDER-RESOLVE, run 71): thin dark drawn
+        # details swallowed WHOLE by a fill label's dominant component
+        # (rivet rings, dropped ridge streaks) get their own source-toned
+        # label. Same scene gate as the re-anchor (flat art untouched —
+        # monster/logos structurally excluded); gradflat stamps protected.
+        if _stats["kind"] != "flat":
+            labels, centers = _carve_dark_ribbons(labels, centers, raw,
+                                                  protect=_protect)
 
         # Wander erasure only for non-flat scenes: flat art's boundaries are
         # drawn ink (no quantizer ramp for an iso-line to wander through) —
