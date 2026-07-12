@@ -143,6 +143,16 @@ version vs the previous **and vs Recraft**.
   vectorark-1 paper-fusion challenger parked at 0.367). Loop machinery:
   research/design/autoresearch_loop.py; run ledger:
   research/design/autoresearch_loop_ledger.jsonl.
+- **quant-16** (cut 2026-07-12; frozen `quant-16/src`; `staged` → here): quant-15
+  + it67 graft-strokes — the edge-11 structural-stroke layer grafted onto quant
+  fills (stroke_graft.py: blackhat lost-line re-detection, stacked evidence
+  gates, constant-width synthesis, dash completion + old-dash suppression,
+  curved rescue behind a scene-context gate). **vs quant-15:** corpus 0.2426
+  (all channels improve); pizza-box 0.3159→0.2982 (edge-11 whole-engine ref
+  0.2949) with checker separators + apex diagonal + underline bar restored
+  (eye-verified); 10/10 other stems byte-identical. Run-67 near-miss (+0.0014
+  vs 0.0015 bar) converted by an agent wave-2 (+0.0020 standalone) rather than
+  bending the gate.
 - **quant-15** (cut 2026-07-12; frozen `quant-15/src`; `staged` → here): quant-14
   + it66 structured-split recalibration (dark-skip → ink-rule + saturation
   escape; ef floor 0.03 behind maxde≥17 rescue bar). **vs quant-14:** tilecmp
