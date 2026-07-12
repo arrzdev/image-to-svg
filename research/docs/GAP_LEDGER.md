@@ -221,6 +221,16 @@
   structured split (its dE regime starts ~12); needs a _band_split_ramps-style
   local band treatment. [leads for a next iteration]
 
+- **[it69-leads, 2026-07-12] Apex outline warp + stroke-grade mis-toned comps**
+  (run-69, orchestrator-verified): (a) crystals apex OUTLINE is warped/locally
+  fat where Recraft has a clean uniform bend — fitter/stroke-geometry family,
+  dominates the region's residual dE (24.1 vs Recraft 7.5); untouchable by
+  color. (b) STROKE-GRADE mis-toned components (tone lum<96) deliberately
+  excluded from it69's re-anchor: crystals deep-blue edge strip (L12 comp,
+  2454px, dE 18.4, lum 73), shield strap piece — recovering these AS STROKES
+  is the direct UNDER-RESOLVE-share lever (adds arc; flips ink<0.35 tiles)
+  and pairs naturally with the shipped re-anchor. = run-70 candidate.
+
 ## CLOSED
 
 - ~~Monster teeth scalloped/half-height~~ — runs 21+22 compound (tall AND sharp).
