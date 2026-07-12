@@ -1100,3 +1100,10 @@ See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
   14-target artifacts in research/it25/candidates/D-shadowideal/.
 - NOT integrated (USER budget stop) — next session's first action per
   iteration.json. D's worktree preserved.
+
+### Run 64: edge-11 corpus benchmark (first ever) — tilecmp=0.2487 live / edge-11 0.3376 (DISCARD, measurement)
+- Timestamp: 2026-07-12 (segment 3 opens: goal = never stop improving; tilecmp gate regime)
+- What changed: nothing in the engine — measured models/edge-11 across all 11 paired stems vs the quant-13 gate baseline (research/design/bench_edge11.py, artifacts research/edge11_bench/).
+- Result: edge-11 loses 10/11 stems, corpus 0.3376 vs 0.2487. Channel autopsy: color +0.163 (RAG merge ΔE22, no palette idealization = the disease), census +0.062, flow +0.042. WINS: pizza-box overall −0.020 (census −0.036, flow −0.058), app-asset flow −0.065. Robust: 11/11 ran, 2-5 s/stem. monster-flat-line collapsed to 8 paths (grayscale kills the line detector).
+- Insight: the USER's stroke-synthesis architecture wins exactly where structural straight lines dominate (pizza box text/edges, app-asset arrows) — digitally-perfect strokes beat traced ones there. As a whole engine it's not a competitor (color/fragmentation).
+- Next: (a) graft lead → BACKLOG: quant-13 fills + edge-11 synthesized-stroke layer; (b) run 65 = adjudicate the 5 stashed sub-bar patches as a BATCH (batching resolves the gate-recalibration question without touching the locked gate).

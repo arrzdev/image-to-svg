@@ -344,3 +344,8 @@ at the affected spots.
   (measured: rabbit cheek fluff t=.84/segd=3.0 overlaps pizza must-die
   t=.81-.87/segd=1.1-1.3). Needs geometry signal (inside-ribbon vs
   along-ribbon position) or E8 per-shape layering. Do NOT retry color gates.
+
+## From run 64 (edge-11 benchmark, 2026-07-12)
+- **[graft-strokes] Hybrid: quant-13 fills + edge-11 synthesized-stroke layer.** Evidence: edge-11 beats quant-13 outright on pizza-box (0.2949 vs 0.3152; census −0.036, flow −0.058) and wins app-asset flow (−0.065) — structural straights/text is where stroke synthesis pays. Integration: detect structural lines (edge-11 _classify_lines) on quant's label map, synthesize strokes, let quant fills tuck under. Big change — worktree candidate.
+- **[edge11-grayscale] edge-11 line detector dies on L-mode images** (monster-flat-line → 8 paths). Suspect Lab conversion/uniformity gate on single-channel input. Small fix, matters only for edge lineage.
+- **[edge11-color] edge-11 color channel 0.34 vs quant 0.18** — RAG merge has no palette idealization; port quant's palette stage if edge lineage is ever revived whole.
