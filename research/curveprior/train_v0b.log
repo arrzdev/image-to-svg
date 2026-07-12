@@ -1,0 +1,79 @@
+/Users/arrz/Documents/Github/image-to-svg/research/curveprior/train_idealizer.py:361: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /Users/runner/work/pytorch/pytorch/pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:836.)
+  tot += float(loss); nb += 1
+pairs total=1311 train=805 val=142 (dropped 121 train-stem pairs with align_l2>1.0) holdout=243 (['elephant', 'fox', 'shield'])
+params: 142,466
+ep   0 train 0.12182 val-L2 0.38041
+ep  20 train 0.11385 val-L2 0.36714
+ep  40 train 0.11111 val-L2 0.37105
+ep  60 train 0.10959 val-L2 0.36903
+early stop at ep 62 (best ep 21)
+training took 71s; best val-L2 0.36589 @ ep 21
+
+=== holdout_all (n=243, normalized frame) ===
+B0 identity          m1=0.4225  m2=0.5979  (~26.16px)
+B1 best(m1) (3, 3.0)  m1=0.4224  m2=0.5849  (~26.16px)
+B1 best(m2) (5, 2.0)  m1=0.4227  m2=0.5783
+model                m1=0.4543  m2=0.6515  (~29.85px)
+
+=== holdout_clean (n=213, normalized frame) ===
+B0 identity          m1=0.2471  m2=0.4738  (~17.50px)
+B1 best(m1) (3, 3.0)  m1=0.2469  m2=0.4617  (~17.49px)
+B1 best(m2) (5, 2.0)  m1=0.2473  m2=0.4550
+model                m1=0.2876  m2=0.5341  (~22.24px)
+per-stem (clean): {
+ "elephant": {
+  "n": 63,
+  "B0": [
+   0.11316530923093698,
+   0.22646532062857852
+  ],
+  "B1_m1best": [
+   0.11474321931012112,
+   0.23290043365275653
+  ],
+  "model": [
+   0.19825687520725285,
+   0.3537165621393569
+  ]
+ },
+ "fox": {
+  "n": 91,
+  "B0": [
+   0.3363039999260792,
+   0.6715072029284473
+  ],
+  "B1_m1best": [
+   0.3353911042052425,
+   0.6524498596015629
+  ],
+  "model": [
+   0.35121442118532337,
+   0.7432833056751552
+  ]
+ },
+ "shield": {
+  "n": 59,
+  "B0": [
+   0.25251625947521283,
+   0.43311039874844587
+  ],
+  "B1_m1best": [
+   0.2517036465820927,
+   0.4117502940376035
+  ],
+  "model": [
+   0.284804780769408,
+   0.4041931922036256
+  ]
+ }
+}
+runtime: {'mps_single': 3.847980499267578, 'mps_batch512': 0.013026595115661621, 'cpu_single': 0.9981822967529298}
+Traceback (most recent call last):
+  File "/Users/arrz/Documents/Github/image-to-svg/research/curveprior/train_idealizer.py", line 548, in <module>
+    main()
+  File "/Users/arrz/Documents/Github/image-to-svg/research/curveprior/train_idealizer.py", line 499, in main
+    make_overlays(model, hold, m1_model, m1_b0, clean, dev, args.tag)
+  File "/Users/arrz/Documents/Github/image-to-svg/research/curveprior/train_idealizer.py", line 536, in make_overlays
+    res = json.load(open(os.path.join(HERE, f"results_{tag}.json")))
+FileNotFoundError: [Errno 2] No such file or directory: '/Users/arrz/Documents/Github/image-to-svg/research/curveprior/results_win.json'

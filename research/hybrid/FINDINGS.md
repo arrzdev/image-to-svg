@@ -71,3 +71,26 @@ TWO KEY FINDINGS:
 Risks: diversity concentrated (chopchop+crystals+mountain = 66% of pairs);
 corpus biased to smooth organic contours (aligned with where quant is
 weakest). Hold-image-out eval mandatory.
+
+## D. Curve idealizer v0 (trained on mined pairs) — LOSES TO GEOMETRY, closed
+142K-param offset model, N=64 resampled curves, image-holdout (fox/shield/
+elephant). Result: model LOSES to identity on both metrics on unseen images
+(m1 0.450 vs 0.4225; m2 0.711 vs 0.598); oracle-tuned geometric smoothing
+itself only improves turning by ~4% over identity. Autopsy (the real finding):
+given shape ALONE, Recraft's redraw is mostly irreducible — the matched-pair
+differences are either genuine route changes (unlearnable pointwise) or noise
+that edge-10's smooth_closed already removes. A memorization control confirms
+the trainer works; the supervision has ~no learnable signal. Also found+fixed:
+pairs.jsonl their_pts were not canonicalized (re-canonicalize in any future
+loader; corr(L2, centroid offset)=0.995 before fix).
+
+TRIANGULATION ACROSS A-D: shape-alone learned mappings are exhausted — the
+classical pipeline already extracts nearly all shape-level signal. The two
+doors left open (untested): (1) SYNTHETIC-CORRUPTION training — corrupt
+Recraft's clean curves with OUR pipeline's noise model, learn the inverse
+(pixel-perfect supervision, unlimited data, no correspondence problem);
+(2) IMAGE-CONDITIONED idealization — give the model the raster context so it
+can locate the true edge instead of regressing shapes to the mean (subsumes
+the earlier boundary-prior U-Net idea). Both are half-session experiments.
+Artifacts: research/curveprior/ (model_v0*.pt, REPORT.md, train_idealizer.py,
+overlays).
