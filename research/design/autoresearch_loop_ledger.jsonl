@@ -10,3 +10,4 @@
 {"verdict": "DISCARD", "reason": "gate-fail", "mode": "FITTER", "files": ["models/quant-11/src/pipelines/quantize_contours.py"], "t": 1783720015}
 {"verdict": "KEEP", "mode": "UNDER-RESOLVE", "files": ["models/quant-11/src/straighten.py"], "sha": "02d1771", "t": 1783721649}
 {"verdict": "DISCARD", "reason": "gate-fail", "mode": "FITTER", "files": ["models/quant-11/src/contours_exp.py", "models/quant-11/src/pipelines/contour_lines.py"], "t": 1783721752}
+{"verdict":"KEEP","mode":"FITTER","files":["models/quant-11/src/contours_exp.py","models/quant-11/src/pipelines/contour_lines.py"],"sha":"298ee06","note":"it9 wander-erasure shipped by orchestrator run 65 after re-validation + eye audit; gate recalibrated 0.004->0.0015 to measured noise floor","t":1783876064}
