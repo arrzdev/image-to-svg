@@ -143,6 +143,14 @@ version vs the previous **and vs Recraft**.
   vectorark-1 paper-fusion challenger parked at 0.367). Loop machinery:
   research/design/autoresearch_loop.py; run ledger:
   research/design/autoresearch_loop_ledger.jsonl.
+- **quant-14** (cut 2026-07-12; frozen `quant-14/src`; `staged` → here): quant-13
+  + it9 wander-erasure — band-limited removal of the 6-30px quantizer-boundary
+  wander before fitting (coarse-reference high-pass split, corner-protected,
+  0.9px leash, flat-art scene gate). **vs quant-13:** tilecmp corpus 0.2487 →
+  0.2457 (census −0.0068, flow −0.0027, color +0.0007 < eps); eye audit: shield
+  rim wobble gone, app-asset shadow-fringe teeth gone, chopchop lateral. First
+  keep under the gate recalibration to the measured 0.0000 noise floor
+  (MIN_GAIN 0.004 → 0.0015; research/design/tilecmp_gate.py, run 65).
 - **edge-10** (cut 2026-07-11; `edge-10/src/pipeline.py`; the Edge Lab web tab
   runs THIS module in-process — lab tinkering IS model behaviour): the
   boundary-first lineage resurrected via the interactive Edge Lab. Two
