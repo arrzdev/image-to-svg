@@ -2100,6 +2100,143 @@ def _smooth_poly(p, win, closed):
     return out
 
 
+# Wander erasure (FITTER, auto-loop 2026-07-11 — the change under test).
+# MEASURED: the FITTER lumpiness is NOT the 1px crack staircase (raw-vs-
+# smoothed residual is ~0.5px p95 on every stretch = pure alias, absorbed by
+# the parsimony fitter's ±0.5px band) but a 6-30px-wavelength, ~1-2px-
+# amplitude WANDER of the label boundary — the iso-line a quantizer draws
+# through a soft ramp has no pixel-exact home, so it wanders, the wander's
+# lumps localize and mint their own >=25deg anchors, and the fitter
+# faithfully reproduces the lot as lumpy curves. Fix at the polyline, band-
+# limited: fit a REFERENCE curve with coordinates SHRUNK by _LI_IDEAL_SCALE
+# (potrace's polygon band is lattice-fixed, so the shrunk band is
+# 1/scale px in real units — sub-2px wander cannot create polygon segments
+# and vanishes from the reference), then remove from the raw polyline ONLY
+# the HIGH-FREQUENCY part of its signed residual about the reference. The
+# low-frequency residual (moving average, _LI_IDEAL_LOWIN points) is kept,
+# so everywhere the coarse reference is WRONG about real shape — arc
+# sagitta, genuine dents, slow curvature — the error cancels out and the
+# geometry survives; only the oscillatory wander band is erased. Raw >=25deg
+# localized kinks are protected (correction tapered to zero around them) and
+# every correction is leash-clamped. Downstream anchor/line-span/fit logic
+# then runs UNCHANGED on the cleaned polyline.
+_LI_IDEAL_SCALE: float = 0.5     # coordinate shrink for the reference fit
+                                 # (0 = off; band = 1/scale px real units)
+_LI_IDEAL_LOWIN: int = 21        # low-pass window (points ~ px of arc):
+                                 # residual wavelengths shorter than this
+                                 # are wander/alias and get removed
+_LI_IDEAL_CLAMP: float = 0.9     # max px correction per point (leash)
+_LI_IDEAL_PROT: int = 3          # points around a raw kink anchor with the
+                                 # correction tapered to zero (corner guard)
+_LI_IDEAL_MIN_PTS: int = 40      # pieces shorter than this keep baseline
+                                 # (small drawn shapes — eyes, teeth, glyph
+                                 # bowls — must never be re-idealized;
+                                 # ungated probe: monster color +0.033)
+_LI_IDEAL_EXC: float = 0.7       # excursion floor px for wander EVIDENCE:
+                                 # above the crack-lattice alias (~0.5) —
+                                 # a boundary whose hf residual never
+                                 # exceeds this is clean and stays baseline
+_LI_IDEAL_FLIPS: int = 6         # min alternating >EXC excursions: one dent
+                                 # is a feature, oscillation is wander
+_LI_WANDER_ON: bool = True       # scene gate (set per-run by contour_svg):
+                                 # FLAT art has no quantizer ramps to wander
+                                 # through — its boundaries are drawn ink and
+                                 # every sub-px re-idealization is pure risk
+                                 # (measured: monster color +0.033 from
+                                 # benign-looking <=1px moves). Same
+                                 # precedent as the flat-art sharpen/band-
+                                 # split skips in pipelines/contour_lines.
+
+
+def _li_wander_erase(p: np.ndarray, parsimony: float,
+                     seam_free: bool = False) -> np.ndarray:
+    """Remove the wander band from one fill-edge piece polyline (see block
+    comment above). Returns the cleaned polyline (same length/indexing) or
+    the input unchanged when no reference fit is available.
+
+    seam_free: the piece is a closed loop whose endpoints are an arbitrary
+    seam, NOT a junction/corner — wraparound low-pass, seam unpinned. A
+    self-loop edge anchored at a real junction must pass False."""
+    import svgcore
+    c = _LI_IDEAL_SCALE
+    n = len(p)
+    flat = [float(v) * c for xy in p for v in xy]
+    cs = svgcore.fit_open_parsimony(flat, 1.0, parsimony * c)
+    if not cs:
+        return p
+    chain = [tuple(v / c for v in cs[k:k + 8]) for k in range(0, len(cs), 8)]
+    qs = []                          # sample the reference at ~1px
+    for (x0, y0, x1, y1, x2, y2, x3, y3) in chain:
+        npts = max(4, int(np.hypot(x3 - x0, y3 - y0)) + 2)
+        t = np.linspace(0.0, 1.0, npts)[:, None]
+        p0 = np.array([x0, y0]); p1 = np.array([x1, y1])
+        p2 = np.array([x2, y2]); p3 = np.array([x3, y3])
+        qs.append(((1 - t) ** 3) * p0 + 3 * ((1 - t) ** 2) * t * p1
+                  + 3 * (1 - t) * (t ** 2) * p2 + (t ** 3) * p3)
+    Q = np.vstack(qs)
+    if len(Q) < 3:
+        return p
+    d2 = ((p[:, None, :] - Q[None, :, :]) ** 2).sum(2)
+    near = d2.argmin(1)
+    tang = np.gradient(Q, axis=0)
+    tq = tang[near]
+    tn = np.hypot(tq[:, 0], tq[:, 1])
+    tn[tn < 1e-9] = 1.0
+    nrm = np.stack([tq[:, 1], -tq[:, 0]], 1) / tn[:, None]  # unit normals
+    s = ((p - Q[near]) * nrm).sum(1)          # signed offset about reference
+    closed = seam_free and bool(np.hypot(*(p[0] - p[-1])) < 1e-6)
+    # low-pass along the piece: keep everything the coarse reference got
+    # wrong at long wavelengths; remove only the wander band. A seam-free
+    # CLOSED loop low-passes with WRAParound — reflect-padding at the
+    # arbitrary seam removes real geometry there and mints a seam kink.
+    w = min(_LI_IDEAL_LOWIN, n if n % 2 == 1 else n - 1)
+    if w >= 3 and closed:
+        core = s[:-1]
+        pad = w // 2
+        s_pad = np.concatenate([core[-pad:], core, core[:pad]])
+        s_lo = np.convolve(s_pad, np.ones(w) / w, "valid")
+        s_lo = np.concatenate([s_lo, s_lo[:1]])
+    elif w >= 3:
+        pad = w // 2
+        s_pad = np.concatenate([s[pad:0:-1], s, s[-2:-pad - 2:-1]])
+        s_lo = np.convolve(s_pad, np.ones(w) / w, "valid")
+    else:
+        s_lo = s
+    hf_raw = s - s_lo
+    # wander EVIDENCE gate: the high-frequency residual must OSCILLATE with
+    # amplitude above the alias floor. Pure staircase alias (<=~0.5px) needs
+    # no fixing (the fitter's own band absorbs it), and a single deep
+    # excursion is a real feature — both keep the piece byte-identical.
+    exc = np.abs(hf_raw) > _LI_IDEAL_EXC
+    sig = np.sign(hf_raw[exc])
+    flips = int((sig[1:] != sig[:-1]).sum()) if len(sig) > 1 else 0
+    if flips < _LI_IDEAL_FLIPS:
+        return p
+    hf = np.clip(hf_raw, -_LI_IDEAL_CLAMP, _LI_IDEAL_CLAMP)
+    # corner guard: raw localized kinks (>=25deg) keep their exact geometry
+    # — but ONLY those sitting ON the reference (|s| <= 0.5px). A kink whose
+    # tip is 1-2px OFF the reference is one the wander itself minted (the
+    # lump localizes and passes the anchor test); protecting it would re-pin
+    # the very lump being erased.
+    if _LI_IDEAL_PROT > 0:
+        kinks = _fill_edge_corners(p, k=6, min_turn_deg=_LI_ANCHOR_DEG,
+                                   loc_ratio=0.7, closed=False)
+        for ki in kinks:
+            if abs(float(s[ki])) > 0.5:
+                continue              # wander-minted lump kink: erase it
+            a = max(0, ki - _LI_IDEAL_PROT)
+            b = min(n, ki + _LI_IDEAL_PROT + 1)
+            hf[a:b] = 0.0
+    out = p - hf[:, None] * nrm
+    if closed:
+        # a seam-free loop has no junction: keep it closed, seam unpinned
+        out[-1] = out[0]
+    else:
+        out[0] = p[0]                 # junction/corner endpoints stay exact
+        out[-1] = p[-1]
+    return out
+
+
 def _li_fit_piece(seg: np.ndarray, parsimony: float, head_anchored: bool,
                   tail_anchored: bool, stats: Optional[dict] = None,
                   labels: Optional[np.ndarray] = None,
@@ -2120,8 +2257,11 @@ def _li_fit_piece(seg: np.ndarray, parsimony: float, head_anchored: bool,
         _closed = len(seg) > 3 and float(np.hypot(*(seg[0] - seg[-1]))) < 1e-6
         seg = _smooth_poly(seg, SCHNEIDER_SMOOTH, _closed)
 
-    def _fit_curved(pts):
-        """Fit a curved (already corner-split) stretch to the fewest cubics."""
+    def _fit_curved(pts, gate_pts=None):
+        """Fit a curved (already corner-split) stretch to the fewest cubics.
+        gate_pts: the pre-erase polyline for the same stretch — G1 repair's
+        real-kink gate must read RAW turns (the cleaned polyline reads a
+        real 25-30deg kink below the 20deg gate and the corner is lost)."""
         if SCHNEIDER_TOL is not None:
             import schneider_fit
             arr = np.asarray(pts, float)
@@ -2132,7 +2272,8 @@ def _li_fit_piece(seg: np.ndarray, parsimony: float, head_anchored: bool,
         flat = [float(v) for xy in pts for v in xy]
         cs = svgcore.fit_open_parsimony(flat, 1.0, parsimony)
         chain = [tuple(cs[k:k + 8]) for k in range(0, len(cs), 8)]
-        return _li_g1_repair(chain, np.asarray(pts, float))
+        gp = pts if gate_pts is None else gate_pts
+        return _li_g1_repair(chain, np.asarray(gp, float))
 
     npts = len(seg)
     q0, q1 = seg[0], seg[-1]
@@ -2150,6 +2291,27 @@ def _li_fit_piece(seg: np.ndarray, parsimony: float, head_anchored: bool,
                 stats["li_run29"] = stats.get("li_run29", 0) + 1
             return [_li_line_cubic(q0, q1)]
 
+    # Piece-level wander erasure BEFORE anchor detection: deep label-
+    # boundary wander (1-2px lumps) turns ~50deg over a 6px chord and
+    # LOCALIZES, so it mints its own 25deg anchors — the piece is then
+    # chopped at the lumps and no inter-anchor treatment can ever see a full
+    # wander period (measured: shield outer edge, wobble tiles unchanged by
+    # stretch-level smoothing). Cleaning the polyline first removes the
+    # lumps AND their minted anchors; real kinks survive (corner guard +
+    # low-pass keeps all long-wavelength geometry) and everything below
+    # runs UNCHANGED on the cleaned polyline.
+    raw_seg = None
+    if SCHNEIDER_TOL is None and _LI_WANDER_ON and _LI_IDEAL_SCALE > 0 \
+            and npts >= _LI_IDEAL_MIN_PTS:
+        raw_seg = np.asarray(seg, float)
+        seg = _li_wander_erase(raw_seg, parsimony,
+                               seam_free=not head_anchored
+                               and not tail_anchored)
+        if seg is raw_seg:
+            raw_seg = None               # evidence gate skipped this piece
+        elif stats is not None:
+            stats["li_wander"] = stats.get("li_wander", 0) + 1
+
     anchors = _li_anchors(seg, head_anchored, tail_anchored)
     # classify each consecutive anchor span; merge non-line stretches
     line_spans: List[Tuple[int, int]] = []
@@ -2158,7 +2320,7 @@ def _li_fit_piece(seg: np.ndarray, parsimony: float, head_anchored: bool,
             line_spans.append((a, b))
     if not line_spans:
         # no ruler evidence: whole piece = curve fit (parsimony or Schneider)
-        return _fit_curved(seg)
+        return _fit_curved(seg, raw_seg)
 
     cubics: List[Tuple[float, ...]] = []
     pos = 0
@@ -2166,7 +2328,8 @@ def _li_fit_piece(seg: np.ndarray, parsimony: float, head_anchored: bool,
         if pos < i:                      # curved stretch before the line
             gap = seg[pos:i + 1]
             if len(gap) >= 2:
-                cubics += _fit_curved(gap)
+                cubics += _fit_curved(
+                    gap, None if raw_seg is None else raw_seg[pos:i + 1])
         if j is None:
             break
         if stats is not None:
@@ -2344,6 +2507,7 @@ def contour_svg(labels: np.ndarray, centers: np.ndarray,
                 fill_tol: float = 2.5, fill_smooth: int = 9,
                 fill_corner_deg: float = 60.0, fill_parsimony: float = 0.0,
                 color_img: Optional[np.ndarray] = None,
+                fill_wander: bool = True,
                 **kw) -> Tuple[str, dict]:
     """Full width-constant emission: absorbed fills + stroke network on top.
 
@@ -2353,8 +2517,15 @@ def contour_svg(labels: np.ndarray, centers: np.ndarray,
 
     color_img (source raster, optional): re-derives the FILL palette from the
     actual source pixels each region covers (source-anchored ΔEc), leaving the
-    stroke palette on the original centroids."""
+    stroke palette on the original centroids.
+
+    fill_wander: enables the parsimony fills' wander-erasure prepass
+    (_li_wander_erase). Pass False for FLAT art — no quantizer ramps, drawn
+    boundaries only (see _LI_WANDER_ON)."""
     import boundary
+
+    global _LI_WANDER_ON
+    _LI_WANDER_ON = bool(fill_wander)
 
     strokes, stroke_mask, info = extract_contour_strokes(labels, centers, **kw)
     # Fill palette anchored to the source pixels each region covers; strokes

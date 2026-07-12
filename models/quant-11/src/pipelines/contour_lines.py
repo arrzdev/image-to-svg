@@ -548,10 +548,14 @@ class ContourLinesPipeline(Pipeline):
         labels, centers = _split_structured_regions(labels, centers, qimg,
                                                     protect=_protect)
 
+        # Wander erasure only for non-flat scenes: flat art's boundaries are
+        # drawn ink (no quantizer ramp for an iso-line to wander through) —
+        # same scene gate as the sharpen skip above (run 38 precedent).
         svg, _info = contour_svg(labels, centers, fill_tol=p["fill_tol"],
                                  fill_smooth=p["fill_smooth"],
                                  fill_parsimony=p["fill_parsimony"],
                                  dark_lum=p["dark_lum"],
                                  width_scale=p["width_scale"],
-                                 src_img=img, color_img=raw)
+                                 src_img=img, color_img=raw,
+                                 fill_wander=_stats["kind"] != "flat")
         return svg
