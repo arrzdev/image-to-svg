@@ -143,6 +143,13 @@ version vs the previous **and vs Recraft**.
   vectorark-1 paper-fusion challenger parked at 0.367). Loop machinery:
   research/design/autoresearch_loop.py; run ledger:
   research/design/autoresearch_loop_ledger.jsonl.
+- **quant-18** (cut 2026-07-13; frozen `quant-18/src`; `staged` → here): quant-17
+  + the run-75 batch — pen calibration (width_scale was tracking elephant,
+  which has zero strokes at HEAD: all ink was 15% thin; now source-anchored
+  per image, evidence-gated) + tone re-anchor parent admission + dark-ring
+  carve. **vs quant-17:** 0.2387 (+0.0024; color 0.1677→0.1610); chopchop
+  −0.0195 (largest single-stem win of the segment); shield rivet compound win
+  (ring+tone+pen); 6 stems byte-identical. Segment 3 running total: −4.0%.
 - **quant-17** (cut 2026-07-12; frozen `quant-17/src`; `staged` → here): quant-16
   + it69 component-tone re-anchor — flat minority components mis-anchored inside
   another label's tone get their own source-toned label (crystals apex facet was
