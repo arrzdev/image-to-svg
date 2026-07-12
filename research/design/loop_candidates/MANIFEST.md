@@ -12,6 +12,15 @@ already shipped and their labels were stale).
   targets byte-identical, stroke-coupling measured zero. +0.0002 corpus
   (crystals -0.0014, shield -0.0009). SHIP as rider on any future keep:
   apply, verify combined sweep, credit noted. Cut from HEAD 90a71fb.
+- it71_darkring_carve_+0.0004_rider.diff (2026-07-13): _carve_dark_ribbons —
+  thin dark ribbon sub-components minted from fill-grade parents (local
+  masked-mean baseline, blend veto, ENCLOSURE gate = the must-not killer;
+  it70 satdark mint mirror). Fires 5 comps (shield rivet rings x4 -0.0034,
+  mountain streak -0.0006), 9 stems byte-identical, eye-verified. +0.0004
+  corpus, population-exhausted (~1100 carveable px at safe thresholds; every
+  loosening re-admits a measured must-not). Rider pool with it70 = +0.0006.
+  Cut from HEAD 90a71fb. NOTE: overlaps it70 rider on contour_lines.py —
+  apply it70 FIRST, then this (both extend _reanchor area; verify combined).
 
 ## Consumed/void (kept for history only — do NOT re-apply)
 - it3_localsplit, it6_rampband, it7_transmud: SHIPPED pre-quant-13 cut.

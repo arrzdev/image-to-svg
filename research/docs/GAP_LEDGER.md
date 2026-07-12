@@ -241,6 +241,17 @@
   tone differs from parent interior). TRUE arc-adder (UR lever). = run-71
   candidate. Also: strap texture streaks (label-chain shrapnel family) persist.
 
+- **[it71-leads, 2026-07-13] Partial-streak completion + ring-closure prior**
+  (run-71, mechanism verified, stashed as rider): (a) thin details whose OTHER
+  HALF is already drawn (mountain long streak, fox whisker (360,397), fox
+  corner shadow (372,203), rabbit crescent (761,657)) — missing fragments are
+  blend-adjacent or hug big comps; right shape = label EXTENSION (grow an
+  existing thin label into its off-tone continuation), not minting. (b) all 4
+  shield rivets now have arcs; Recraft draws FULL circles — a fit-stage
+  closed-ring completion for annular fills would close the class. (c) probe
+  process rule: label attributions in ledger entries must name label id AND
+  center rgb+lum (run-70's "L3 maroon background" misread cost a probe cycle).
+
 ## CLOSED
 
 - ~~Monster teeth scalloped/half-height~~ — runs 21+22 compound (tall AND sharp).
