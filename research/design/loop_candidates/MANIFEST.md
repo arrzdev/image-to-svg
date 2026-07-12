@@ -4,7 +4,7 @@ re-applying anything here (2026-07-12 lesson: 3 of 5 stashed diffs were
 already shipped and their labels were stale).
 
 ## Stashed, NOT shipped (riders awaiting a batch that clears MIN_GAIN 0.0015)
-- it74_satdark_parent_+0.0003_rider.diff (2026-07-13): SUPERSEDES it70
+- [SHIPPED run 75 batch, 30fd4d9] it74_satdark_parent_+0.0003_rider.diff (2026-07-13): SUPERSEDES it70
   (deleted — same hunks, this is the superset). Shared _reanc_admissible
   predicate (fill-grade OR saturated-mid-dark, exact complement of
   extract_contour_strokes' ink clause) applied to BOTH parent center and
@@ -13,10 +13,8 @@ already shipped and their labels were stale).
   eye-verified dramatic, 9 stems byte-identical, COLOR mode-share criterion
   PASSED (+0.0003 only fails the 0.0015 bar). Family provably mined out at
   dE>=12. Cut from HEAD 90a71fb.
-  RIDER POOL: it74+it71+it72 ~= +0.0013 — ONE more small clean win tips the
-  batch over 0.0015; then apply order it74 -> it71 -> it72, combined sweep,
-  ship as one gated keep.
-- it71_darkring_carve_+0.0004_rider.diff (2026-07-13): _carve_dark_ribbons —
+  RIDER POOL: CLEARED 2026-07-13 (it74+it71 shipped with it75 as run-75 batch).
+- [SHIPPED run 75 batch, 30fd4d9] it71_darkring_carve_+0.0004_rider.diff (2026-07-13): _carve_dark_ribbons —
   thin dark ribbon sub-components minted from fill-grade parents (local
   masked-mean baseline, blend veto, ENCLOSURE gate = the must-not killer;
   it70 satdark mint mirror). Fires 5 comps (shield rivet rings x4 -0.0034,
@@ -25,7 +23,7 @@ already shipped and their labels were stale).
   loosening re-admits a measured must-not). Rider pool with it70 = +0.0006.
   Cut from HEAD 90a71fb. NOTE: overlaps it70 rider on contour_lines.py —
   apply it70 FIRST, then this (both extend _reanchor area; verify combined).
-- it72_widthgrade_corners_+0.0006_rider.diff (2026-07-13): per-chain width
+- [NEEDS SEMANTIC REBASE onto it75 pen calibration: conflicts at contours_exp.py:1444 + ribbon hunk; its grading line must become w_cal*it75_eff, then re-verify + re-eye chopchop goggle ring at the combination] it72_widthgrade_corners_+0.0006_rider.diff (2026-07-13): per-chain width
   grading (dev>=0.44 keeps own constant width; thin chains stop rendering as
   leech tadpoles, thick stop dipping) + drawn-corner pinning for non-band
   strokes (80deg/0.80 localization; organic stems fire zero). Eye-LOUD

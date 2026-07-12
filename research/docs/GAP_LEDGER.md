@@ -283,6 +283,18 @@
   eye-better/metric-negative (−0.0001) — tilecmp junction tiles penalize the
   new stroke topology the eye prefers. Regime question formally OPEN for USER.
 
+- **[it75-leads, 2026-07-13] Post-pen-calibration families**: (a) RIBBON
+  DOUBLE-SCALE BUG (found, not fixed): ribbon baselines emit at width_scale^2
+  (w_body carries width_scale, then prof*width_scale/2 re-applies) — varying-
+  width chains are extra-thin at 0.72x gw. A real bug; fixing changes unfired
+  stems -> its own gated candidate = run-76. (b) far-missing dark lines
+  (chopchop slat dividers quantized into wood fills, 4.8% of source ink,
+  oracle 0.1618): label-chain ownership family, sibling of it67/it71.
+  (c) pizza pinch sites: separator pairs converge near corners — FITTER
+  geometry that thin pens were masking; width can't idealize until the fit
+  is fixed. (d) shield lost yellow highlight circle + panel sawtooth
+  (batch eye grid row 4): lost-detail + boundary families, untargeted.
+
 ## CLOSED
 
 - ~~Monster teeth scalloped/half-height~~ — runs 21+22 compound (tall AND sharp).
