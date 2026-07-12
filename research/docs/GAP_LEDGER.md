@@ -208,6 +208,19 @@
    shades / shadow merge. Fix idea: anchor final region colors to the
    ORIGINAL region mean (post-assignment re-tint). [next segment]
 
+- **[it66-leads, 2026-07-12] Leech-blob strokes + low-contrast facet residual**
+  (from run-66 crystals UNDER-RESOLVE candidate, orchestrator-verified):
+  (a) LEECH: thin dark sub-labels that enter the stroke layer render as lumpy
+  tapered blobs with wandering width (pizza-box lid crease, new sub-label
+  rgb(84,40,23) 67px — orchestrator eye-confirmed worse than prev locally;
+  net pizza still −0.0043). Culprit stage: stroke synthesis/width profile on
+  short thin fills. Fix shape: width-profile floor or route sub-N-px thin
+  labels to constant-width stroke emit.
+  (b) crystals red-face interior waves (lbl 35) + blue-face streaks: sub-9ΔE
+  tonal families, ONE-CLUSTER at local merge scale — unreachable by the
+  structured split (its dE regime starts ~12); needs a _band_split_ramps-style
+  local band treatment. [leads for a next iteration]
+
 ## CLOSED
 
 - ~~Monster teeth scalloped/half-height~~ — runs 21+22 compound (tall AND sharp).
