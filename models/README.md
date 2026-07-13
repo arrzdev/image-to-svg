@@ -143,6 +143,11 @@ version vs the previous **and vs Recraft**.
   vectorark-1 paper-fusion challenger parked at 0.367). Loop machinery:
   research/design/autoresearch_loop.py; run ledger:
   research/design/autoresearch_loop_ledger.jsonl.
+- **quant-22** (cut 2026-07-13; frozen `quant-22/src`; `staged` → here): quant-21
+  + fill_tol 2.5→3.5 — looser fill fit cuts cubics ~25% toward Recraft (app-asset
+  1585→1180, pizza-box 568→432, shield 1331→1145; Recraft 629/377/751) at zero
+  tilecmp cost (0.2334, worst stem 0.0); straightness win preserved. Fewer/better
+  cubics = Recraft's economy, smaller SVG. Metric-verified.
 - **quant-21** (cut 2026-07-13; frozen `quant-21/src`; `staged` → here): quant-20
   + speck drop. struct_compare found Recraft emits ~0 tiny paths while we emitted
   80-155/image (74-77% of our paths were sub-2000px shrapnel). `_drop_specks`
