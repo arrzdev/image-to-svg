@@ -1247,3 +1247,8 @@ See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
 - Corpus 0.2315->0.2246 (+0.0069, 4.6x bar); chopchop +0.0272 (16k->28k pts=Recraft 23k, 246->456KB=398KB, over-smoothing GONE), crystals +0.0490; 9 stems byte-identical. Metric AND fidelity verified. Didn't need to override the benchmark — matching Recraft's fidelity IS what tilecmp wanted. Cost: hi-fi ~4x slower (2 images).
 - KEY LESSON: the whole session's path/cubic REDUCTION (speck-drop etc.) was right for over-fragmenters but I'd missed that detailed art is UNDER-detailed (over-smoothed) — opposite direction. edge-density gates fidelity like sld gates straightening/merging. Both axes now adaptive.
 - NEXT: graduated resolution (fox ed 0.065 under-detailed 6k vs 10k but overshoots at full 2048; mountain 4k vs 6.6k) — map edge-density -> target resolution to hit Recraft's budget per image.
+
+### quant-hifi graduated-res extension — LIMITED (fox/mountain), don't chase
+- fox: MORE resolution overshoots point budget (dim1300 16k vs Recraft 10k) AND regresses tilecmp (−0.015 to −0.038). fox's Recraft detail is structurally different (fine fur → noise at higher res, not matching structure). fox stays 1024.
+- mountain: dim1300 is a clean +0.0083 (7074 pts ≈ Recraft 6644) BUT its edge-density 0.037 == elephant/rabbit (already point-matched), so no inference-time signal catches mountain without over-detailing them. Not cleanly gatable.
+- quant-hifi correctly limits to chopchop+crystals (the two clearly-detailed, cleanly-gated images). Session's biggest single win stands: +0.0069, over-smoothing fixed there. Per-image fidelity calibration to Recraft's exact budget (without the target) is the open frontier.
