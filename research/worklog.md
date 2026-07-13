@@ -1252,3 +1252,7 @@ See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
 - fox: MORE resolution overshoots point budget (dim1300 16k vs Recraft 10k) AND regresses tilecmp (−0.015 to −0.038). fox's Recraft detail is structurally different (fine fur → noise at higher res, not matching structure). fox stays 1024.
 - mountain: dim1300 is a clean +0.0083 (7074 pts ≈ Recraft 6644) BUT its edge-density 0.037 == elephant/rabbit (already point-matched), so no inference-time signal catches mountain without over-detailing them. Not cleanly gatable.
 - quant-hifi correctly limits to chopchop+crystals (the two clearly-detailed, cleanly-gated images). Session's biggest single win stands: +0.0069, over-smoothing fixed there. Per-image fidelity calibration to Recraft's exact budget (without the target) is the open frontier.
+
+### quant-hifi robustness fix (autonomous, 2026-07-14): hi-fi upper bound
+- Robustness-verified the shipped fork on all 18 inputs: 18/18 run clean (no crashes, valid SVG). BUT busy/textured non-benchmark images blew up at hi-fi: files-pile 4740p/2.4MB/5.5min, game-assets 2283p/1.1MB/59s (edge-density 0.10-0.15 = texture/noise, not clean drawn lines).
+- Fix: hi-fi gate now [0.065, 0.095) — clean detailed illustrations only. ed>=0.095 → std/quant-24 (1024). files-pile→381KB/18s, game-assets→413KB/13s; chopchop(0.085)/crystals(0.078) still hi-fi, +0.0069 corpus win preserved. Every output now <=~730KB / <1min.
