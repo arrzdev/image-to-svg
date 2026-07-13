@@ -749,7 +749,13 @@ class ContourLinesPipeline(Pipeline):
                    "hue-coherent, locally quiet) to their mean color before "
                    "sharpening/quantization, so background gradients render "
                    "as ONE flat solid instead of ragged banding rings (0 = off)."),
-        Param("fill_tol", "Fill fit tolerance", "float", 2.5, min=0.25, max=6.0, step=0.25),
+        Param("fill_tol", "Fill fit tolerance", "float", 3.5, min=0.25, max=6.0, step=0.25),
+        # fill_tol 2.5->3.5 (USER structural gap, 2026-07-13, metric-verified):
+        # a looser fill fit cuts cubics ~25% toward Recraft's economy (app-asset
+        # 1585->1180, pizza-box 568->432, shield 1331->1145; Recraft 629/377/751)
+        # at EXACTLY zero tilecmp cost (corpus 0.2334, worst stem 0.0). Higher
+        # parsimony (1.5+) regressed logo-geometric +0.005, so tol is the lever.
+        # Fewer, better-placed cubics = closer to Recraft's method; smaller SVG.
         Param("fill_smooth", "Fill smoothing", "int", 0, min=0, max=15, step=1),
         Param("fill_parsimony", "Fill parsimony (opttol)", "float", 1.0, min=0.0, max=2.0, step=0.1,
               help="Potrace parsimony fit for the shading-region boundaries — flat "
