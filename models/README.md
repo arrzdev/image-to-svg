@@ -143,6 +143,12 @@ version vs the previous **and vs Recraft**.
   vectorark-1 paper-fusion challenger parked at 0.367). Loop machinery:
   research/design/autoresearch_loop.py; run ledger:
   research/design/autoresearch_loop_ledger.jsonl.
+- **quant-19** (cut 2026-07-13; frozen `quant-19/src`; `staged` → here): quant-18
+  + fill-coverage seal widen 1.0→2.0 (USER feedback: white sliver between colour
+  and outline in glasses/tail). Hidden-side-only seal → closes the gap with no
+  visible weight change. **EYE-GATED** ship: tilecmp neutral (0.2387, bit-identical
+  — blind to a 1px seal), corpus-verified by eye + KB-flat. First eye-gated keep
+  of the coverage class (USER made the eye the authority here 2026-07-13).
 - **quant-18** (cut 2026-07-13; frozen `quant-18/src`; `staged` → here): quant-17
   + the run-75 batch — pen calibration (width_scale was tracking elephant,
   which has zero strokes at HEAD: all ink was 15% thin; now source-anchored
