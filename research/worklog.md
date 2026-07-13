@@ -1198,3 +1198,12 @@ See **docs/BACKLOG.md** — the single idea queue, ranked by visual impact.
   5. Runtime: chopchop 7.9->8.3s this segment (+5%, from tone/carve passes) — small.
 - FIX LANDED: quant-19 = coverage seal 1.0->2.0, eye-gated. First keep of the eye-gated coverage class.
 - OPEN (USER priorities, honest difficulty): merging=architectural(redraw); straight-round + paw polygonal/round-inconsistency = FITTER (medium, it72 stash relevant); residual inset-fill gap = AA/fit.
+
+### USER structural-gap goal (2026-07-13): metric-driven path-count fixes → quant-20, quant-21
+- USER: "still so far from recraft"; goal = close path/cubic/method gap. VERIFY BY METRICS ONLY (vision untrusted; autoresearch.md top + memory updated).
+- Built research/tools/struct_compare.py (path/cubic/L counts, long-L, per-tile modes vs Recraft) — the structural verification tool.
+- MEASURED corpus gap (struct_compare --all): (a) pizza "curly" = ours L-frac MATCHES Recraft (60.8 vs 62%) but Recraft has 2x LONG straight lines (86 vs 43) — our straight edges FRAGMENT; (b) universal: Recraft paths 2-8x LONGER (rabbit avg 106 vs 828, app-asset 108 vs 607); (c) worst over-fragmenters app-asset 3.78x, pizza 2.71x, shield 2.28x paths; (d) the excess is TINY specks — Recraft emits ~0 sub-100px-bbox paths, we emit 80-155 (74-77% of our paths).
+- SHIPPED quant-20 (adaptive straightening, 505726a): image-Hough sld signal gates aggressive L-collapse to geometric art only (pizza sld 0.69 vs fox 0.03; global bump regressed fox +0.044); bow-gate keeps arcs. Corpus 0.2387→0.2379, pizza −0.0087 (long-L 43→50), 9 stems byte-identical.
+- SHIPPED quant-21 (speck drop, e569f7b): _drop_specks removes paths bbox max-dim < 0.6% canvas (painter's-order emit reveals shape beneath = absorption); corpus-swept optimum. Corpus 0.2379→0.2334 (+0.0045, ALL channels, worst regression +0.0003); path counts→Recraft: app-asset 261→109, pizza 198→137, shield 198→128, rabbit 367→152. Biggest structural win of segment.
+- Segment 3 total: 0.2487 → 0.2334 (−6.1%).
+- NEXT: remaining path excess is MEDIUM fragments (tone-band over-split) + CUBIC excess (fitter parsimony: pizza 568 vs 377, app-asset 1585 vs 629, shield 1331 vs 751). Measure post-drop gap, attack cubic count / medium-fragment merge, metric-verify each.
