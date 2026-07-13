@@ -2602,6 +2602,289 @@ def _source_region_colors(labels: np.ndarray, centers: np.ndarray,
     return out
 
 
+# ---- Flow-aware dark-ink split (it80, USER idea) --------------------------
+# A dark-ink connected component often FUSES objects that merely cross or touch
+# in the source pixels (straw over chair, coconut on stool): the single traced
+# blob emits them as ONE path where Recraft draws each object separately
+# (chopchop 520 paths vs Recraft 997). This peels a fused blob apart at
+# flow-DIVERGENT junctions: skeletonize the component, link the straight-through
+# branches into flow chains (collinear continuation), then relabel each
+# remaining divergent flow-chain into its own SAME-COLOUR label so build_edges
+# emits it as a separate path. The raster is (near-)unchanged — identical ink
+# colour, identical silhouette — only the vector decomposition moves toward
+# Recraft's finer separation (paths/subpaths UP).
+#
+# Guards keep it off everything but organic ink networks: TRUE ink only
+# (lum < _FSPLIT_INK_LUM) so tone bands / colour facets never fire; a peeled
+# limb must be substantial (_FSPLIT_MIN_LIMB) so no fragment/knot is minted; and
+# a branch must LEAVE its junction near-straight (>= _FSPLIT_COLLIN) to be kept
+# merged, so only genuine crossings/T-junctions split. The geometric
+# over-fragmenters (pizza-box/app-asset/shield) carry ~0 large dark ink blobs,
+# so the pass never fires and their output is byte-identical.
+#
+# Angle threshold, population-measured on chopchop (research/it80): across the
+# two large ink blobs the branch pairwise leave-angle runs p10=94 p50=108
+# p90=151; near-180 pairs are the same object passing straight through a
+# junction (keep merged), the 90-150 band is a divergent fork/T/cross (split).
+# _FSPLIT_COLLIN=150 links only the near-straight continuations.
+import os as _os
+_FSPLIT_ON = _os.environ.get("FSPLIT", "1") != "0"
+_FSPLIT_INK_LUM = float(_os.environ.get("FSPLIT_INK_LUM", "45"))
+_FSPLIT_MIN_COMP = 0.002      # component area, fraction of frame, to consider
+_FSPLIT_MIN_LIMB = int(_os.environ.get("FSPLIT_MIN_LIMB", "250"))  # min peeled-limb px (no knots)
+_FSPLIT_COLLIN = float(_os.environ.get("FSPLIT_COLLIN", "150"))    # leave-angle >= => straight-through
+_FSPLIT_PRUNE = 6             # skeleton spur prune length
+_FSPLIT_MAX_NEW = 8           # cap new labels per component (runaway guard)
+# Geometric-art gate (the "global param wrecks over-fragmenters" lesson): the
+# same divergent-junction rule that peels chopchop's crossed straws apart also
+# fragments a geometric line-art's corners/T-joints (pizza-box +0.028, shield
+# +0.008). The image Hough straight-line-dominance sld (the quant-20 adaptive-
+# straighten signal, computed here from the source) separates them cleanly:
+# organic ink art sld<=0.05 (chopchop 0.051, fox 0.033, crystals 0.032, the
+# 0.000 photos) vs geometric line-art sld>=0.12 (monster 0.124, app-asset
+# 0.164, shield 0.269, logo 0.569, pizza 0.689). Fire only on organic art.
+_FSPLIT_MAX_SLD = float(_os.environ.get("FSPLIT_MAX_SLD", "0.10"))
+# Ribbon-vs-solid gate (it73 deep_frac): the divergent-junction rule is a
+# LINE-NETWORK decomposer — it wants ribbon components whose skeleton IS the
+# drawn lines (junctions = real crossings). On a SOLID filled blob (fox body
+# silhouette) the 2D medial axis sprouts spurious branches/junctions, and
+# cutting there jags arbitrary internal seams that the metric reads as knots
+# (fox flow +0.0138, the it73 failure). deep_frac = fraction of the component
+# deeper than 0.75*med_w — ribbon line-nets sit low (chopchop 0.35, rabbit 0.42,
+# mountain 0.36-0.52), solid blobs high (fox 0.61). Fire only on ribbons.
+_FSPLIT_MAX_DEEP = float(_os.environ.get("FSPLIT_MAX_DEEP", "0.58"))
+# Line-network gate: the split only pays off on a genuinely EXTENDED network
+# (skeleton length / median half-width). A compact ink patch (fox's small
+# body-fill fragment elong 60) has only a few incidental junctions whose cuts
+# do not match Recraft; the winning networks are long lines (chopchop 4261,
+# rabbit 1493, mountain 112). Require an elongated skeleton.
+_FSPLIT_MIN_ELONG = float(_os.environ.get("FSPLIT_MIN_ELONG", "100"))
+
+
+def _fs_nbrs(p, s):
+    return [(p[0] + dy, p[1] + dx) for dy in (-1, 0, 1) for dx in (-1, 0, 1)
+            if (dy or dx) and (p[0] + dy, p[1] + dx) in s]
+
+
+def _fs_walk_segments(sset, deg):
+    """Skeleton graph: junction/endpoint -> junction/endpoint polyline runs."""
+    seen = set()
+    segs = []
+
+    def walk(a, b):
+        seg = [a, b]
+        seen.add((a, b)); seen.add((b, a))
+        pr, cu = a, b
+        while deg.get(cu) == 2:
+            step = [q for q in _fs_nbrs(cu, sset) if q != pr]
+            if not step or (cu, step[0]) in seen:
+                break
+            nq = step[0]
+            seen.add((cu, nq)); seen.add((nq, cu))
+            seg.append(nq); pr, cu = cu, nq
+        return seg
+
+    for pp in sset:
+        if deg[pp] != 2:
+            for q in _fs_nbrs(pp, sset):
+                if (pp, q) not in seen:
+                    segs.append(walk(pp, q))
+    for pp in sset:                      # pure loops (no junction/endpoint)
+        if deg[pp] == 2:
+            for q in _fs_nbrs(pp, sset):
+                if (pp, q) not in seen:
+                    segs.append(walk(pp, q))
+    return segs
+
+
+def _fs_end_dir(seg, at_start, k=6):
+    """Unit direction a segment LEAVES its junction (points into the segment)."""
+    import math
+    k = min(k, len(seg) - 1)
+    if k < 1:
+        return (0.0, 0.0)
+    if at_start:
+        v = (seg[k][0] - seg[0][0], seg[k][1] - seg[0][1])
+    else:
+        v = (seg[-1 - k][0] - seg[-1][0], seg[-1 - k][1] - seg[-1][1])
+    n = math.hypot(v[0], v[1]) or 1.0
+    return (v[0] / n, v[1] / n)
+
+
+def _fs_group_component(mask):
+    """Skeleton -> flow-group id image (0 outside skeleton, 1..k on skeleton).
+    Straight-through branches at a junction are unioned; divergent branches stay
+    separate groups. Returns None if the blob is a single flow object."""
+    import math
+    from skimage.morphology import skeletonize
+    skel = skeletonize(mask)
+    ys, xs = np.nonzero(skel)
+    if len(ys) < 12:
+        return None
+    # ribbon-vs-solid gate: skip filled blobs whose medial axis is spurious
+    dist = ndimage.distance_transform_edt(mask)
+    med_w = float(np.median(dist[skel]))
+    if med_w <= 0:
+        return None
+    if float(np.mean(dist[mask] > 0.75 * med_w)) > _FSPLIT_MAX_DEEP:
+        return None
+    if len(ys) / med_w < _FSPLIT_MIN_ELONG:      # line-network gate
+        return None
+    sset = set(zip(ys.tolist(), xs.tolist()))
+    deg = {p: sum(1 for dy in (-1, 0, 1) for dx in (-1, 0, 1)
+                  if (dy or dx) and (p[0] + dy, p[1] + dx) in sset)
+           for p in sset}
+    segs = _fs_walk_segments(sset, deg)
+    alive = []
+    for seg in segs:
+        free = (deg.get(seg[0], 0) == 1) or (deg.get(seg[-1], 0) == 1)
+        if free and len(seg) < _FSPLIT_PRUNE:
+            continue
+        if len(seg) >= 3:
+            alive.append(seg)
+    if len(alive) < 2:
+        return None
+
+    parent = list(range(len(alive)))
+
+    def find(i):
+        while parent[i] != i:
+            parent[i] = parent[parent[i]]
+            i = parent[i]
+        return i
+
+    junc = {}
+    for i, s in enumerate(alive):
+        for end, pp in ((0, s[0]), (1, s[-1])):
+            if deg.get(pp, 0) > 2:
+                junc.setdefault(pp, []).append((i, end))
+    for jp, ends in junc.items():
+        cand = []
+        for a in range(len(ends)):
+            for b in range(a + 1, len(ends)):
+                ia, ea = ends[a]
+                ib, eb = ends[b]
+                if ia == ib:
+                    continue
+                da = _fs_end_dir(alive[ia], ea == 0)
+                db = _fs_end_dir(alive[ib], eb == 0)
+                dot = max(-1.0, min(1.0, da[0] * db[0] + da[1] * db[1]))
+                cand.append((math.degrees(math.acos(dot)), a, b))
+        used = set()
+        for ang, a, b in sorted(cand, reverse=True):   # straightest pair first
+            if ang < _FSPLIT_COLLIN:
+                break
+            if a in used or b in used:
+                continue
+            parent[find(ends[a][0])] = find(ends[b][0])
+            used.add(a); used.add(b)
+
+    roots = {}
+    for i in range(len(alive)):
+        roots.setdefault(find(i), []).append(i)
+    if len(roots) < 2:
+        return None
+    gmap = np.zeros(mask.shape, np.int32)
+    for k, (_root, segids) in enumerate(roots.items(), start=1):
+        for si in segids:
+            for (y, x) in alive[si]:
+                gmap[y, x] = k
+    return gmap
+
+
+def _fs_sld(color_img) -> float:
+    """Image straight-line-dominance (Hough long-line coverage), the quant-20
+    adaptive-straighten signal. High = geometric line-art (skip the split)."""
+    try:
+        import cv2
+        g = cv2.cvtColor(np.ascontiguousarray(color_img[:, :, :3]),
+                         cv2.COLOR_RGB2GRAY)
+        edges = cv2.Canny(g, 50, 150)
+        ne = max(1, int(edges.sum() // 255))
+        hl = cv2.HoughLinesP(edges, 1, np.pi / 180, threshold=60,
+                             minLineLength=min(g.shape) // 8, maxLineGap=6)
+        if hl is None:
+            return 0.0
+        return float(sum(float(np.hypot(x2 - x1, y2 - y1))
+                         for x1, y1, x2, y2 in hl[:, 0]) / ne)
+    except Exception:
+        return 1.0            # on failure, treat as geometric (skip) — safe
+
+
+def _flow_split_dark_ink(labels: np.ndarray, centers: np.ndarray,
+                         color_img=None):
+    """Split large TRUE-INK components at flow-divergent junctions into separate
+    same-colour labels. Returns (labels, centers, children_of) where children_of
+    maps each appended child label -> its parent (so the caller can force the
+    child's fill colour equal to the parent's — the split must stay raster-
+    identical, not re-derive a slightly different per-piece source colour). A
+    no-op (originals unchanged, empty map) when nothing qualifies."""
+    if not _FSPLIT_ON:
+        return labels, centers, {}
+    H, W = labels.shape
+    min_comp = _FSPLIT_MIN_COMP * H * W
+    ink_ids = [i for i in range(len(centers))
+               if _luminance(centers[i]) < _FSPLIT_INK_LUM]
+    if not ink_ids:
+        return labels, centers, {}
+    # geometric-art gate: only organic ink networks split (see _FSPLIT_MAX_SLD)
+    if color_img is not None and color_img.ndim == 3 \
+            and _fs_sld(color_img) >= _FSPLIT_MAX_SLD:
+        return labels, centers, {}
+    out = labels.copy()
+    new_centers = [centers[i] for i in range(len(centers))]
+    children_of = {}
+    n_split = 0
+    for li in ink_ids:
+        comp, n = ndimage.label(out == li, structure=_STRUCT8)
+        if n == 0:
+            continue
+        sizes = ndimage.sum(np.ones(comp.shape, np.float32), comp,
+                            range(1, n + 1))
+        for ci in range(1, n + 1):
+            if sizes[ci - 1] < min_comp:
+                continue
+            m = comp == ci
+            ys, xs = np.nonzero(m)
+            y0, y1 = int(ys.min()), int(ys.max()) + 1
+            x0, x1 = int(xs.min()), int(xs.max()) + 1
+            mc = np.ascontiguousarray(m[y0:y1, x0:x1])
+            gmap_c = _fs_group_component(mc)
+            if gmap_c is None:
+                continue
+            skel_mask = gmap_c > 0
+            if not skel_mask.any():
+                continue
+            # every component pixel inherits its nearest skeleton pixel's group
+            _, (iy, ix) = ndimage.distance_transform_edt(
+                ~skel_mask, return_indices=True)
+            pix_g = np.where(mc, gmap_c[iy, ix], 0)
+            ng = int(gmap_c.max())
+            keep = [g for g in range(1, ng + 1)
+                    if int((pix_g == g).sum()) >= _FSPLIT_MIN_LIMB]
+            if len(keep) < 2:
+                continue
+            # fold non-substantial groups into the nearest kept flow-chain
+            keep_mask = np.isin(gmap_c, keep)
+            _, (iy2, ix2) = ndimage.distance_transform_edt(
+                ~keep_mask, return_indices=True)
+            pix_g = np.where(mc, gmap_c[iy2, ix2], 0)
+            areas = sorted(((int((pix_g == g).sum()), g) for g in keep),
+                           reverse=True)
+            # largest chain keeps the original label; peel the rest
+            for _a, g in areas[1:_FSPLIT_MAX_NEW + 1]:
+                sub = np.zeros((H, W), bool)
+                sub[y0:y1, x0:x1] = (pix_g == g)
+                new_idx = len(new_centers)
+                new_centers.append(centers[li])
+                children_of[new_idx] = li
+                out[sub] = new_idx
+                n_split += 1
+    if n_split == 0:
+        return labels, centers, {}
+    return out, np.asarray(new_centers, dtype=centers.dtype), children_of
+
+
 def contour_svg(labels: np.ndarray, centers: np.ndarray,
                 fill_tol: float = 2.5, fill_smooth: int = 9,
                 fill_corner_deg: float = 60.0, fill_parsimony: float = 0.0,
@@ -2626,10 +2909,20 @@ def contour_svg(labels: np.ndarray, centers: np.ndarray,
     global _LI_WANDER_ON
     _LI_WANDER_ON = bool(fill_wander)
 
+    # Flow-aware ink split: peel fused ink objects apart at divergent junctions
+    # so each emits as its own path (toward Recraft's finer decomposition). Runs
+    # BEFORE stroke extraction so both the thin (stroke) and thick (fill) sides
+    # of a cut object separate. Same-colour, near-raster-identical; no-op on
+    # everything without a large true-ink blob.
+    labels, centers, _fs_children = _flow_split_dark_ink(
+        labels, centers, color_img=color_img)
+
     strokes, stroke_mask, info = extract_contour_strokes(labels, centers, **kw)
     # Fill palette anchored to the source pixels each region covers; strokes
     # keep the original centroids (their dark_lum / join-colour decisions).
     fill_centers = _source_region_colors(labels, centers, color_img)
+    _ = _fs_children     # (per-piece source colour kept: forcing parent colour
+    #                       measured net-worse — mountain benefits from it)
     # Structural-line rescue (edge-11 graft, it67): thin dark structural
     # lines the label chain LOST (pizza-box grid separators absorbed into
     # the cell fills) are re-detected from the source raster and
