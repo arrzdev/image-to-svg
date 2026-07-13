@@ -2518,8 +2518,18 @@ def _fill_svg_corner_pinned(labels: np.ndarray, centers: np.ndarray,
     # paint-order seal strokes. Fit logic above is untouched — this only
     # changes how the fitted chains are assembled into paths.
     from boundary_split import emit_regions_layered
+    # seal_width 2.0 (USER coverage feedback 2026-07-13): the 1.0 sibling seal
+    # left a ~1px background sliver between a fill and its neighbour/ink where
+    # the two independently-fitted boundaries didn't quite coincide (visible
+    # as white gaps inside the glasses lens, beaver tail). The seal grows only
+    # the HIDDEN side (inner half over the lower fill = same colour; outer half
+    # under the upper fill), so widening closes the sliver with no change to
+    # visible line weight — verified corpus-wide by eye (5 diverse images
+    # full-frame identical) and KB (flat). Deep-zoom: lens/tail coverage gaps
+    # close. Does NOT address gaps whose cause is a genuinely inset fill
+    # contour (residual tail sliver) — that's an AA/fit issue, tracked separately.
     return emit_regions_layered(labels, centers, loops_by_region, fitted,
-                                edges)
+                                edges, seal_width=2.0)
 
 
 def _stroke_elements(strokes: List[dict]) -> str:
