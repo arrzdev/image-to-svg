@@ -143,6 +143,14 @@ version vs the previous **and vs Recraft**.
   vectorark-1 paper-fusion challenger parked at 0.367). Loop machinery:
   research/design/autoresearch_loop.py; run ledger:
   research/design/autoresearch_loop_ledger.jsonl.
+- **quant-21** (cut 2026-07-13; frozen `quant-21/src`; `staged` → here): quant-20
+  + speck drop. struct_compare found Recraft emits ~0 tiny paths while we emitted
+  80-155/image (74-77% of our paths were sub-2000px shrapnel). `_drop_specks`
+  removes paths with bbox max-dim < 0.6% of canvas (layered emit reveals the shape
+  beneath = absorption). **vs quant-20:** corpus 0.2379→0.2334 (+0.0045, all
+  channels, worst regression +0.0003); path counts → Recraft (app-asset 261→109,
+  pizza-box 198→137, shield 198→128, rabbit 367→152). Biggest structural win of
+  segment 3. Metric-verified (tilecmp + struct_compare).
 - **quant-20** (cut 2026-07-13; frozen `quant-20/src`; `staged` → here): quant-19
   + adaptive straightening (USER "curly straight lines"). Pipeline embeds an image
   Hough straight-line-dominance signal; straighten collapses aggressively (eps 2.5,
