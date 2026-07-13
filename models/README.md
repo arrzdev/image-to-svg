@@ -143,6 +143,14 @@ version vs the previous **and vs Recraft**.
   vectorark-1 paper-fusion challenger parked at 0.367). Loop machinery:
   research/design/autoresearch_loop.py; run ledger:
   research/design/autoresearch_loop_ledger.jsonl.
+- **quant-hifi** (FORK, 2026-07-14; `quant-hifi/src` + adaptive entry; `staged` → here):
+  the ADAPTIVE-FIDELITY fork (USER: "outputs too smoothed/simplified", authorized a
+  fork past the benchmark). Source edge-density (corr +0.83 w/ Recraft's point budget)
+  gates resolution: detailed art (chopchop/crystals, ed≥0.065) → native 2048 + finer
+  quant, closing the points/KB gap to Recraft (chopchop 16k→28k pts = Recraft 23k,
+  246→456KB); flat art delegates to quant-24 byte-identically. **vs quant-24:** corpus
+  0.2315→0.2246 (+0.0069); chopchop +0.0272, crystals +0.0490; 9 stems byte-identical.
+  Over-smoothing fixed on detailed art. Cost: hi-fi path ~4× slower (only 2 images).
 - **quant-24** (cut 2026-07-14; frozen `quant-24/src`; `staged` → here): quant-23
   + sld-gated adjacency-fill merge. Fuses touching near-same-colour fills into one
   path (no new seam); adaptive on the Hough sld signal so it fires only on geometric
