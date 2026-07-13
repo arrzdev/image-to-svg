@@ -1,0 +1,13 @@
+/Users/arrz/Documents/Github/image-to-svg/.venv/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Fetching 4 files:   0%|          | 0/4 [00:00<?, ?it/s]Downloading 'pytorch_model.bin' to 'research/omnisvg_test/weights/OmniSVG1.1_4B/.cache/huggingface/download/Q1p2l2BzM1m6P5jKvr8WTq1TUio=.39f36759fc677b329e01b5b34cf7c96a5b1922b659d65d80d565e3d782f5a6c4.incomplete'
+Downloading 'config.json' to 'research/omnisvg_test/weights/OmniSVG1.1_4B/.cache/huggingface/download/8_PA_wEVGiVa2goH2H4KQOQpvVY=.42b30ed384a05403ea7f8fb510852d81130cad29.incomplete'
+Downloading '.gitattributes' to 'research/omnisvg_test/weights/OmniSVG1.1_4B/.cache/huggingface/download/wPaCkH-WbT7GsmxMKKrNZTV4nSM=.a6344aac8c09253b3b630fb776ae94478aa0275b.incomplete'
+Downloading 'README.md' to 'research/omnisvg_test/weights/OmniSVG1.1_4B/.cache/huggingface/download/Xn7B-BWUGOee2Y6hCZtEhtFu4BE=.2a6fc63a96e64067c88eddab3a6ba8ad3577b468.incomplete'
+Download complete. Moving file to research/omnisvg_test/weights/OmniSVG1.1_4B/config.json
+Download complete. Moving file to research/omnisvg_test/weights/OmniSVG1.1_4B/.gitattributes
+Fetching 4 files:  25%|██▌       | 1/4 [00:00<00:02,  1.24it/s]Download complete. Moving file to research/omnisvg_test/weights/OmniSVG1.1_4B/README.md
+Fetching 4 files:  50%|█████     | 2/4 [00:01<00:00,  2.18it/s]Download complete. Moving file to research/omnisvg_test/weights/OmniSVG1.1_4B/pytorch_model.bin
+Fetching 4 files: 100%|██████████| 4/4 [02:05<00:00, 39.07s/it]Fetching 4 files: 100%|██████████| 4/4 [02:05<00:00, 31.28s/it]
+/Users/arrz/Documents/Github/image-to-svg/research/omnisvg_test/weights/OmniSVG1.1_4B
+EXIT:0

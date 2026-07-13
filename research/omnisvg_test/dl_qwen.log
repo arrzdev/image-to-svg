@@ -1,0 +1,33 @@
+/Users/arrz/Documents/Github/image-to-svg/.venv/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Fetching 14 files:   0%|          | 0/14 [00:00<?, ?it/s]Downloading 'model-00001-of-00002.safetensors' to 'research/omnisvg_test/weights/Qwen2.5-VL-3B-Instruct/.cache/huggingface/download/aoe4E07IMh7reFyUkVoVk040mQk=.41a8895c164b4d32bae6b302f4603fcbc1797f32dafa45c7e9bcda23c6755df8.incomplete'
+Downloading 'merges.txt' to 'research/omnisvg_test/weights/Qwen2.5-VL-3B-Instruct/.cache/huggingface/download/PtHk0z_I45atnj23IIRhTExwT3w=.20024bfe7c83998e9aeaf98a0cd6a2ce6306c2f0.incomplete'
+Downloading 'chat_template.json' to 'research/omnisvg_test/weights/Qwen2.5-VL-3B-Instruct/.cache/huggingface/download/BqEbVjUtvDkrcHAfaoo906xJg7Y=.732bd68bc5427d1fb6c06a59b3bf2456b2155d24.incomplete'
+Downloading 'generation_config.json' to 'research/omnisvg_test/weights/Qwen2.5-VL-3B-Instruct/.cache/huggingface/download/3EVKVggOldJcKSsGjSdoUCN1AyQ=.1dfafa23e24b68b694722c6211e7da36730e9917.incomplete'
+Downloading '.gitattributes' to 'research/omnisvg_test/weights/Qwen2.5-VL-3B-Instruct/.cache/huggingface/download/wPaCkH-WbT7GsmxMKKrNZTV4nSM=.a6344aac8c09253b3b630fb776ae94478aa0275b.incomplete'
+Downloading 'config.json' to 'research/omnisvg_test/weights/Qwen2.5-VL-3B-Instruct/.cache/huggingface/download/8_PA_wEVGiVa2goH2H4KQOQpvVY=.0ae1866f05ab0153ad293bdc92bb1b842c4d95b1.incomplete'
+Downloading 'README.md' to 'research/omnisvg_test/weights/Qwen2.5-VL-3B-Instruct/.cache/huggingface/download/Xn7B-BWUGOee2Y6hCZtEhtFu4BE=.d09bc2825f7d1dc394ee6766e2e95bcc59f47196.incomplete'
+Downloading 'LICENSE' to 'research/omnisvg_test/weights/Qwen2.5-VL-3B-Instruct/.cache/huggingface/download/DhCjcNQuMpl4FL346qr3tvNUCgY=.87f48cf86671d627b4dd4b8e5189b8e32ae11dd8.incomplete'
+Download complete. Moving file to research/omnisvg_test/weights/Qwen2.5-VL-3B-Instruct/config.json
+Download complete. Moving file to research/omnisvg_test/weights/Qwen2.5-VL-3B-Instruct/.gitattributes
+Download complete. Moving file to research/omnisvg_test/weights/Qwen2.5-VL-3B-Instruct/generation_config.json
+Fetching 14 files:   7%|▋         | 1/14 [00:00<00:09,  1.30it/s]Download complete. Moving file to research/omnisvg_test/weights/Qwen2.5-VL-3B-Instruct/README.md
+Downloading 'model-00002-of-00002.safetensors' to 'research/omnisvg_test/weights/Qwen2.5-VL-3B-Instruct/.cache/huggingface/download/Dr_lZJDwE1cnGAQMwA77jJEQIk8=.365531ff8752420e89dee707b79d021fb2d6e25abafe486f080555a4fe6972e4.incomplete'
+Download complete. Moving file to research/omnisvg_test/weights/Qwen2.5-VL-3B-Instruct/LICENSE
+Download complete. Moving file to research/omnisvg_test/weights/Qwen2.5-VL-3B-Instruct/chat_template.json
+Fetching 14 files:  14%|█▍        | 2/14 [00:01<00:05,  2.17it/s]Download complete. Moving file to research/omnisvg_test/weights/Qwen2.5-VL-3B-Instruct/merges.txt
+Fetching 14 files:  50%|█████     | 7/14 [00:01<00:00,  9.11it/s]Downloading 'preprocessor_config.json' to 'research/omnisvg_test/weights/Qwen2.5-VL-3B-Instruct/.cache/huggingface/download/PYH5dHjks7Ei0Yd3X0Z8xIwsCNQ=.7f3b746825e5eef53ed8ed57a91df9e86ee62c0a.incomplete'
+Downloading 'model.safetensors.index.json' to 'research/omnisvg_test/weights/Qwen2.5-VL-3B-Instruct/.cache/huggingface/download/yVzAsSxRSINSz-tQbpx-TLpfkLU=.7a3ec4f48662e38593f8cab48fe12a4f28003aba.incomplete'
+Downloading 'tokenizer.json' to 'research/omnisvg_test/weights/Qwen2.5-VL-3B-Instruct/.cache/huggingface/download/HgM_lKo9sdSCfRtVg7MMFS7EKqo=.443909a61d429dff23010e5bddd28ff530edda00.incomplete'
+Download complete. Moving file to research/omnisvg_test/weights/Qwen2.5-VL-3B-Instruct/model.safetensors.index.json
+Download complete. Moving file to research/omnisvg_test/weights/Qwen2.5-VL-3B-Instruct/preprocessor_config.json
+Downloading 'vocab.json' to 'research/omnisvg_test/weights/Qwen2.5-VL-3B-Instruct/.cache/huggingface/download/j3m-Hy6QvBddw8RXA1uSWl1AJ0c=.4783fe10ac3adce15ac8f358ef5462739852c569.incomplete'
+Downloading 'tokenizer_config.json' to 'research/omnisvg_test/weights/Qwen2.5-VL-3B-Instruct/.cache/huggingface/download/vzaExXFZNBay89bvlQv-ZcI6BTg=.91684ea3dc135a7d815e2c932054ce88c1aab41f.incomplete'
+Download complete. Moving file to research/omnisvg_test/weights/Qwen2.5-VL-3B-Instruct/tokenizer.json
+Download complete. Moving file to research/omnisvg_test/weights/Qwen2.5-VL-3B-Instruct/tokenizer_config.json
+Download complete. Moving file to research/omnisvg_test/weights/Qwen2.5-VL-3B-Instruct/vocab.json
+Fetching 14 files:  50%|█████     | 7/14 [00:20<00:00,  9.11it/s]Download complete. Moving file to research/omnisvg_test/weights/Qwen2.5-VL-3B-Instruct/model-00002-of-00002.safetensors
+Download complete. Moving file to research/omnisvg_test/weights/Qwen2.5-VL-3B-Instruct/model-00001-of-00002.safetensors
+Fetching 14 files:  57%|█████▋    | 8/14 [02:04<02:19, 23.26s/it]Fetching 14 files: 100%|██████████| 14/14 [02:04<00:00,  8.91s/it]
+/Users/arrz/Documents/Github/image-to-svg/research/omnisvg_test/weights/Qwen2.5-VL-3B-Instruct
+EXIT:0

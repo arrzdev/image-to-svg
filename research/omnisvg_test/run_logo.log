@@ -1,0 +1,24 @@
+/Users/arrz/Documents/Github/image-to-svg/.venv/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+[1/3] processor/tokenizer ...
+The image processor of type `Qwen2VLImageProcessor` is now loaded as a fast processor by default, even if the model checkpoint was saved with a slow processor. This is a breaking change and may produce slightly different outputs. To continue using the slow processor, instantiate this class with `use_fast=False`. Note that this behavior will be extended to all models in a future release.
+[2/3] SketchDecoder (Qwen2.5-VL-3B fp16, CPU) ...
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards: 100%|██████████| 2/2 [00:00<00:00, 16.65it/s]Loading checkpoint shards: 100%|██████████| 2/2 [00:00<00:00, 16.62it/s]
+The new embeddings will be initialized from a multivariate normal distribution that has old embeddings' mean and covariance. As described in this article: https://nlp.stanford.edu/~johnhew/vocab-expansion.html. To disable this, use `mean_resizing=False`
+    built in 10s
+[3/3] OmniSVG weights ...
+    remapped keys to transformers>=4.52 layout
+    loaded in 7s; missing=[] unexpected=[]
+    moved to mps in 2s
+prompt tokens: 317
+    128 tok      10s  13.35 tok/s
+    256 tok      19s  13.44 tok/s
+    384 tok      29s  13.21 tok/s
+    512 tok      41s  12.64 tok/s
+    640 tok      54s  11.87 tok/s
+GENERATION: 676 steps x 2 seq in 62s (10.94 steps/s); aborted=None
+candidate 0: 4 paths, 243 tokens, saved -> /Users/arrz/Documents/Github/image-to-svg/research/omnisvg_test/logo-geometric.svg
+candidate 1: 7 paths, 675 tokens, saved -> /Users/arrz/Documents/Github/image-to-svg/research/omnisvg_test/logo-geometric_cand1.svg
+DONE saved=2 gen_wall=62s tok_s=10.94
+EXIT:0
