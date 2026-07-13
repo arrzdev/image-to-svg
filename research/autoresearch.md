@@ -3,8 +3,31 @@
      2026-07-09: milestones backfilled v6/v7/v8; LIVE tree is now models/v11/src (v5-v7 frozen).
      Root SYMLINKS (autoresearch.{md,jsonl,focus,sh}, experiments->research) keep the
      plugin hooks working — do not remove them. -->
-<!-- Lines 1–15 = SessionStart rehydration window (sed 1,15p): keep objective+focus+best+EYE-gate here. -->
+<!-- Lines 1–15 = SessionStart rehydration window (sed 1,15p): keep objective+focus+best here. -->
 Mission: **research/docs/PROJECT_SPEC.md** · Work: **research/docs/BACKLOG.md** · Trigger: `/autoresearch <objective>` — $ARGUMENTS states the current objective (this file + spec carry detail; empty args = objective below). If `research/autoresearch.iteration.json` phase≠idle: execute its **next_action** field.
+
+## ⚠⚠ VERIFY BY METRICS, NOT BY EYE (USER MANDATE 2026-07-13 — OVERRIDES ALL EYE-GATE TEXT BELOW)
+The agent's VISUAL judgment of rendered crops is UNRELIABLE and repeatedly wrong
+(USER: "your visual capabilities can't be trusted"; shipped a bit-identical
+"coverage fix" claiming a visual win — metric proved it changed nothing). From
+now on, keep/discard, "is it fixed?", and every diagnosis are decided by
+NUMBERS ONLY:
+  * **tilecmp** (`research/design/tilecmp*.py`) — corpus + per-tile overall/
+    census/flow/color + mode shares (FITTER/OVER-FRAGMENT/…). The gate.
+  * **`research/tools/struct_compare.py`** — ours-vs-Recraft STRUCTURAL counts:
+    path count, cubic (C) / line (L) counts, LONG-straight-line count
+    (>100/200/300px = the "curly straight edges" signal — Recraft draws a
+    straight edge as ONE long L, fragmentation breaks it into short pieces),
+    L-length fraction, per-tile modes. Run this to diagnose + verify EVERY
+    change vs `data/targets/<stem>.svg`.
+  * path/cubic counts, per-tile grid comparison (tilecmp n=20/40).
+Do NOT render a crop and "look" to decide anything. Do NOT claim a defect is
+fixed without a metric delta (tilecmp move OR a struct_compare count moving
+toward Recraft). A change that is tilecmp-neutral AND moves no structural count
+toward Recraft is a NO-OP — do not ship it as a fix. Every "verify by looking",
+"ZOOM OR IT DIDN'T HAPPEN", "the eye is the gate", "vision verdict" instruction
+below is SUPERSEDED and INVERTED by this block: those describe a prior regime;
+under the current mandate they mean the opposite (metrics decide, not the eye).
 
 ## Objective — rehydrate from here
 - 🔄 **REGIME CHANGE (USER 2026-07-10): FULL-AUTO tilecmp GATE.** Keep/revert is

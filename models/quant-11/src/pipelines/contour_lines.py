@@ -934,4 +934,25 @@ class ContourLinesPipeline(Pipeline):
                                  width_scale=p["width_scale"],
                                  src_img=img, color_img=raw,
                                  fill_wander=_stats["kind"] != "flat")
+
+        # Straight-line-dominance signal for ADAPTIVE straightening (USER
+        # 2026-07-13, metric-verified). Globally-long straight edges (pizza-box
+        # tilecmp 0.293->0.284, long-L 43->86 = Recraft's count; logos) want
+        # aggressive L-collapse; organic art (fox, mountain, crystals) is
+        # polygonised by the same eps (measured corpus regressions +0.012 to
+        # +0.044). A GLOBAL eps bump is a net corpus loss; the IMAGE Hough
+        # long-line coverage separates the two cleanly (pizza 0.69 vs fox 0.03)
+        # where the SVG's own geometry does NOT (fox curves are locally-straight
+        # cubics, self-signal 0.72). Embed it so straighten() adapts across the
+        # entry boundary (entry: pipeline.run -> straighten -> fit_svg_size).
+        g = cv2.cvtColor(raw, cv2.COLOR_RGB2GRAY)
+        edges_c = cv2.Canny(g, 50, 150)
+        ne = max(1, int(edges_c.sum() // 255))
+        hl = cv2.HoughLinesP(edges_c, 1, np.pi / 180, threshold=60,
+                             minLineLength=min(g.shape) // 8, maxLineGap=6)
+        sld = 0.0
+        if hl is not None:
+            sld = float(sum(float(np.hypot(x2 - x1, y2 - y1))
+                            for x1, y1, x2, y2 in hl[:, 0]) / ne)
+        svg = svg.replace('>', f'><!--sld={sld:.3f}-->', 1)
         return svg

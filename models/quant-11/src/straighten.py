@@ -13,7 +13,28 @@ import math
 import re
 
 
-def straighten(svg, eps=1.0, min_len=16.0):
+def straighten(svg, eps=1.0, min_len=16.0, bow_frac=0.80, bow_floor=0.9):
+    # ADAPTIVE eps (USER 2026-07-13, metric-verified). The pipeline embeds a
+    # straight-line-dominance signal <!--sld=..--> (image Hough long-line
+    # coverage). Geometric art (pizza-box 0.69, logos 0.57) gets aggressive
+    # L-collapse; organic art (fox/mountain/crystals ~0.03) keeps the caller's
+    # conservative eps so its arcs are not polygonised. A global eps bump is a
+    # net corpus loss (fox/mountain/crystals regress +0.012-0.044); this gate
+    # gives the pizza-box win (tilecmp 0.293->0.284, long-L 43->86 = Recraft)
+    # with zero regression elsewhere.
+    m = re.search(r'<!--sld=([\d.]+)-->', svg)
+    if m and float(m.group(1)) >= 0.45:
+        eps, min_len = 2.5, 8.0
+    svg = re.sub(r'<!--sld=[\d.]+-->', '', svg)   # strip the signal comment
+
+    # bow_frac / bow_floor gate the "is this a straight edge that wiggled, or a
+    # real arc?" test. A genuinely straight raster edge deviates from its chord
+    # on BOTH sides (staircase noise, mean signed dev ~0); a gentle arc bows to
+    # ONE side (signed devs same sign). A run collapses to L only if it is NOT a
+    # systematic bow: keep the run as cubics when >= bow_frac of its points fall
+    # on one side of the chord AND the max deviation exceeds bow_floor px. This
+    # lets the aggressive eps above collapse fragmented straight edges into one
+    # long L without polygonising any real curve that slips through the sld gate.
     def do_d(d):
         toks = re.findall(r'([MLCZ])|(-?\d+(?:\.\d+)?)', d)
         seq = [('c', c) if c else ('n', float(n)) for c, n in toks]
@@ -40,7 +61,7 @@ def straighten(svg, eps=1.0, min_len=16.0):
                 segs.append(('Z',)); j += 1
             else:
                 j += 1
-        return _emit(_straight_runs(segs, eps, min_len))
+        return _emit(_straight_runs(segs, eps, min_len, bow_frac, bow_floor))
 
     svg = re.sub(r'\bd="([^"]*)"', lambda m: f'd="{do_d(m.group(1))}"', svg)
     # Junk-path drop, made precise (UNDER-RESOLVE fix, 2026-07-11). The old
@@ -70,7 +91,42 @@ def _seg_end(s):
     return s[2] if s[0] in ('M', 'L') else s[4]
 
 
-def _straight_runs(segs, eps, min_len):
+def _run_points(segs, lo, hi):
+    """All vertices (endpoints + cubic control points) of segs[lo..hi]."""
+    pts = []
+    for k in range(lo, hi + 1):
+        s = segs[k]
+        if s[0] == 'L':
+            pts.append(s[2])
+        else:                       # 'C': control1, control2, end
+            pts.extend((s[2], s[3], s[4]))
+    return pts
+
+
+def _is_bow(start, end, pts, bow_frac, bow_floor):
+    """True if the run is a systematic one-sided bow (a real arc) rather than
+    two-sided raster wiggle around a straight edge. Signed perpendicular
+    distance of each interior point to the start->end chord: an arc has
+    >= bow_frac of points on ONE side with max |dev| >= bow_floor; noise
+    around a straight edge crosses the chord (mixed sign, small)."""
+    ax, ay = start; bx, by = end
+    dx, dy = bx - ax, by - ay
+    ln = math.hypot(dx, dy)
+    if ln < 1e-6:
+        return False
+    signed = [((px - ax) * dy - (py - ay) * dx) / ln for px, py in pts]
+    mx = max((abs(s) for s in signed), default=0.0)
+    if mx < bow_floor:
+        return False                # deviations are sub-floor: it's straight
+    npos = sum(1 for s in signed if s > 0)
+    nneg = sum(1 for s in signed if s < 0)
+    tot = npos + nneg
+    if tot == 0:
+        return False
+    return max(npos, nneg) / tot >= bow_frac
+
+
+def _straight_runs(segs, eps, min_len, bow_frac=0.80, bow_floor=0.9):
     out = []
     i = 0
     n = len(segs)
@@ -93,8 +149,14 @@ def _straight_runs(segs, eps, min_len):
             else:
                 break
         end = _seg_end(segs[jmax]) if jmax >= 0 else None
-        if jmax >= 0 and math.hypot(end[0] - start[0],
-                                    end[1] - start[1]) >= min_len:
+        # collapse the run to one L only if it spans min_len AND is not a
+        # systematic bow (a real arc). The bow gate is what lets eps rise for
+        # noise tolerance without polygonising curves.
+        if (jmax >= 0
+                and math.hypot(end[0] - start[0], end[1] - start[1]) >= min_len
+                and not _is_bow(start, end,
+                                _run_points(segs, i, jmax),
+                                bow_frac, bow_floor)):
             out.append(('L', start, end)); i = jmax + 1
         else:
             out.append(segs[i]); i += 1
