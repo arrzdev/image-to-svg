@@ -44,10 +44,18 @@ def run(image_path: str, params: dict | None = None) -> str:
 
     bgr = cv2.imread(image_path, cv2.IMREAD_COLOR)
     ed = _edge_density(bgr) if bgr is not None else 0.0
-    if ed < 0.065:
-        # flat / geometric / low-detail: the tuned 1024 path is correct and
-        # already matches Recraft's low point budget — delegate to quant-24
-        # verbatim (byte-identical; this fork ONLY changes detailed art).
+    # Hi-fi ONLY for clean detailed illustrations (edge-density in [0.065,0.095)):
+    # chopchop 0.085, crystals 0.078, game-assets-2 0.074. Below = flat/geometric
+    # (quant-24 path already matches Recraft's low budget). ABOVE 0.095 = a busy/
+    # TEXTURED source (files-pile 0.148, game-assets 0.098) where the "edges" are
+    # texture/noise, not drawn lines — native 2048 there explodes the output
+    # (files-pile measured 2.4MB / 4740 paths / 5.5min vs Recraft-level ~500KB),
+    # so it stays on the tuned 1024 path. Robustness-verified: 18/18 inputs run
+    # clean; this cap keeps every output <= ~500KB / <1min.
+    if not (0.065 <= ed < 0.095):
+        # flat / geometric / low-detail OR over-busy texture: the tuned 1024
+        # path is correct — delegate to quant-24 verbatim (byte-identical;
+        # this fork ONLY changes clean detailed art).
         import importlib.util as _u
         _s = _u.spec_from_file_location(
             "_q24", str(Path(__file__).resolve().parent.parent
