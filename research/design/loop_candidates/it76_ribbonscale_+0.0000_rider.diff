@@ -1,0 +1,88 @@
+diff --git a/models/quant-11/src/contours_exp.py b/models/quant-11/src/contours_exp.py
+index 2e89447..2d02e53 100644
+--- a/models/quant-11/src/contours_exp.py
++++ b/models/quant-11/src/contours_exp.py
+@@ -998,6 +998,7 @@ def extract_contour_strokes(labels: np.ndarray, centers: np.ndarray,
+     # exactly the stems with NO fringe deficit and huge overhang — three
+     # independent guards with margins hold them out.
+     it75_eff = width_scale        # effective emission scale (unfired: as-is)
++    rib_fix = True                # run-76: single-scale ribbon emission
+     if src_img is not None and pend:
+         _g = (src_img.astype(np.float32) @ np.array([0.299, 0.587, 0.114],
+                                                     np.float32)
+@@ -1051,6 +1052,18 @@ def extract_contour_strokes(labels: np.ndarray, centers: np.ndarray,
+         if (nm_area >= 0.033 and ovh_area <= 0.19 and tot_area >= 2000
+                 and gw > 0):
+             it75_eff = float(np.clip(gw_src / gw, width_scale, 1.0))
++        # run-76 ribbon-scale gate: the double-application fix (single-scale
++        # ribbon emission, see the profile comment below) applies only where
++        # this same source evidence does NOT show the planned pen already
++        # spilling past the source ink — ovh_area <= 0.19, the pen gate's own
++        # population threshold. Where the pen spills (pizza-box 0.274 /
++        # rabbit 0.415 / files-pile 0.481 / game-assets 0.281), the
++        # historical eff^2 emission was accidentally COMPENSATING an
++        # over-wide pen: un-compensating measured pizza-box +0.021 tilecmp
++        # COLOR (+0.0044 overall), rabbit +0.0020 COLOR — keep the legacy
++        # emission there, bit-exact. Fired pen implies ovh <= 0.19, so
++        # calibrated stems always get the fix.
++        rib_fix = ovh_area <= 0.19
+         info["it75_stats"] = {"gw_src": round(gw_src, 3),
+                               "nm_area": round(nm_area, 4),
+                               "ovh_area": round(ovh_area, 4),
+@@ -1061,6 +1074,14 @@ def extract_contour_strokes(labels: np.ndarray, centers: np.ndarray,
+             import json as _json, sys as _sys
+             print("IT75_CALIB " + _json.dumps(info["it75_stats"]),
+                   file=_sys.stderr)
++    # run-76: rib_a converts measured-ink widths (sm_w) into FINAL emitted px
++    # on assignment into the ribbon profile; rib_e is the residual factor at
++    # the _ribbon call. Fixed regime (it75_eff, 1.0): baseline = w_body, one
++    # pen application, ribbons match the constant-width <path stroke> chains.
++    # Spill regime (1.0, it75_eff): bit-exact legacy eff^2 emission (rib_fix
++    # rationale above).
++    rib_a, rib_e = (it75_eff, 1.0) if rib_fix else (1.0, it75_eff)
++    info["ribbon_fix"] = bool(rib_fix)
+     lo, hi = np.percentile(np.repeat(w, l.astype(int)), (10, 90))
+     info["global_width"] = float(gw)
+     info["median_width"] = float(np.average(w, weights=l))
+@@ -1578,6 +1599,14 @@ def extract_contour_strokes(labels: np.ndarray, centers: np.ndarray,
+         # <path stroke>; the rest emit as ONE symmetric ribbon — a single
+         # centerline with a smooth width function, so there are no wedge
+         # seams and no independently-wobbling sides.
++        # The w_body baseline already carries the pen scale (it75_eff), so
++        # measured ink widths (sm_w) enter the profile via rib_a and the
++        # _ribbon call applies only the residual rib_e (see their definition
++        # above). (run-76 fix: `prof * it75_eff / 2` at the call re-applied
++        # the pen to the already-scaled baseline — every ribbon body emitted
++        # at it75_eff^2 = 0.72x gw unfired / cal^2 fired, extra-thin vs the
++        # constant-width <path stroke> chains. Now single-scale wherever the
++        # rib_fix evidence gate holds.)
+         sm_w = _smooth1d(segw, 9)
+         prof = np.full(len(seg), w_body, float)
+         varying = False
+@@ -1591,7 +1620,7 @@ def extract_contour_strokes(labels: np.ndarray, centers: np.ndarray,
+             jd = pb.get("junc_d")
+             if not locked and jd is not None and len(jd) == len(swell):
+                 swell &= np.asarray(jd, float) > 2.5 * w_body
+-                prof[swell] = sm_w[swell]
++                prof[swell] = sm_w[swell] * rib_a
+                 varying = True
+             if taper_ends:
+                 for at_tail in (False, True):
+@@ -1606,7 +1635,7 @@ def extract_contour_strokes(labels: np.ndarray, centers: np.ndarray,
+                     j = len(seg) - K + (int(full[-1]) if len(full) else 0)
+                     j = min(max(j, 2), len(seg) - 3)
+                     sl = slice(j, None) if at_tail else slice(None, len(seg) - j)
+-                    vw = sm_w[sl]
++                    vw = sm_w[sl] * rib_a
+                     prof[sl] = np.minimum(prof[sl], np.maximum(vw, 0.7))
+                     varying = True
+                     if at_tail:
+@@ -1618,7 +1647,7 @@ def extract_contour_strokes(labels: np.ndarray, centers: np.ndarray,
+             # same aggressive centerline smoothing as strokes get (_ribbon
+             # itself only smooths win-5; skeleton staircase would leak back)
+             seg = _smooth_open(seg, stroke_smooth)
+-            dr = _ribbon(seg, prof * it75_eff / 2.0, stroke_tol,
++            dr = _ribbon(seg, prof * rib_e / 2.0, stroke_tol,
+                          head_tip_r=pb.get("head_tip"),
+                          tail_tip_r=pb.get("tail_tip"))
+             if dr:

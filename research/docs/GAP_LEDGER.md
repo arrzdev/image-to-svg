@@ -295,6 +295,14 @@
   is fixed. (d) shield lost yellow highlight circle + panel sawtooth
   (batch eye grid row 4): lost-detail + boundary families, untargeted.
 
+- **[it76-leads, 2026-07-13]** (a) SPILL-SIDE pen calibration: rabbit/pizza/
+  files-pile/game-assets pens spill past source ink (ovh .27-.48) — it75's
+  family needs a <0.85 scale-DOWN arm there; once done, rib_fix dissolves
+  and ribbons unify to single-scale. (b) ribbon head/tail tip extensions use
+  raw sm_w/2 (never pen-scaled) — sub-pixel unit inconsistency, harmless
+  today. (c) "thin pens were masking fitter defects" now measurable: pizza
+  top-edge L-hook + converging separator pairs are THE pizza blocker.
+
 ## CLOSED
 
 - ~~Monster teeth scalloped/half-height~~ — runs 21+22 compound (tall AND sharp).

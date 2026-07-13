@@ -42,6 +42,15 @@ already shipped and their labels were stale).
   divergence of the four metric-floor data points. Ships only on a USER
   regime decision (eye co-gate / batch bar) or after the junction-emission
   lead fixes its knot tiles. Cut from HEAD 90a71fb.
+- it76_ribbonscale_+0.0000_rider.diff (2026-07-13): ribbon double-scale BUG
+  fix (ribbons emitted at it75_eff^2 = 0.72x gw unfired; sole live _ribbon
+  call site; bug arrived in bulk-import 3d5ae16). Evidence-gated by it75's
+  own ovh<=0.19 threshold (the eff^2 was COMPENSATING an over-wide pen on
+  spill stems: un-gated costs pizza +0.0207 COLOR). Gated: +0.0000 corpus,
+  flow -0.0001, COLOR share 17.2->16.9, chopchop/logo-lineart eye-better,
+  spill stems byte-identical. PURE-CORRECTNESS RIDER (adds no gain — rides
+  any keep for free). Cut from HEAD 30fd4d9 (post-batch). Un-gated variant
+  preserved in research/it76 artifacts.
 
 ## Consumed/void (kept for history only — do NOT re-apply)
 - it3_localsplit, it6_rampband, it7_transmud: SHIPPED pre-quant-13 cut.
