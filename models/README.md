@@ -143,6 +143,13 @@ version vs the previous **and vs Recraft**.
   vectorark-1 paper-fusion challenger parked at 0.367). Loop machinery:
   research/design/autoresearch_loop.py; run ledger:
   research/design/autoresearch_loop_ledger.jsonl.
+- **quant-23** (cut 2026-07-13; frozen `quant-23/src`; `staged` → here): quant-22
+  + flow-aware ink split (USER idea, USER-decided ship). `_flow_split_dark_ink`
+  separates merged ink where branch flow diverges (crossings=different objects),
+  on organic ink networks only. **vs quant-22:** chopchop paths 520→546, cubics
+  4235→4388 toward Recraft; flow improves; coarse-tile win (n=20 chopchop −0.0061);
+  geometric over-fragmenters BYTE-IDENTICAL. Strict n=40 gate −0.0003 (seam noise)
+  — shipped for the structural/flow win; seam-clean recovery open. Metric-verified.
 - **quant-22** (cut 2026-07-13; frozen `quant-22/src`; `staged` → here): quant-21
   + fill_tol 2.5→3.5 — looser fill fit cuts cubics ~25% toward Recraft (app-asset
   1585→1180, pizza-box 568→432, shield 1331→1145; Recraft 629/377/751) at zero
