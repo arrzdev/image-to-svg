@@ -143,6 +143,14 @@ version vs the previous **and vs Recraft**.
   vectorark-1 paper-fusion challenger parked at 0.367). Loop machinery:
   research/design/autoresearch_loop.py; run ledger:
   research/design/autoresearch_loop_ledger.jsonl.
+- **quant-20** (cut 2026-07-13; frozen `quant-20/src`; `staged` → here): quant-19
+  + adaptive straightening (USER "curly straight lines"). Pipeline embeds an image
+  Hough straight-line-dominance signal; straighten collapses aggressively (eps 2.5,
+  bow-gated) only for geometric art (pizza/logos), conservative for organic.
+  **vs quant-19:** corpus 0.2387→0.2379; pizza-box −0.0087 (long-L 43→50 toward
+  Recraft 86); 9 stems byte-identical, zero regression. Metric-verified
+  (tilecmp + research/tools/struct_compare.py), no visual judgment. Remaining pizza
+  gap = over-fragmentation (198 paths vs 73).
 - **quant-19** (cut 2026-07-13; frozen `quant-19/src`; `staged` → here): quant-18
   + fill-coverage seal widen 1.0→2.0 (USER feedback: white sliver between colour
   and outline in glasses/tail). Hidden-side-only seal → closes the gap with no
