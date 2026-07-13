@@ -143,6 +143,13 @@ version vs the previous **and vs Recraft**.
   vectorark-1 paper-fusion challenger parked at 0.367). Loop machinery:
   research/design/autoresearch_loop.py; run ledger:
   research/design/autoresearch_loop_ledger.jsonl.
+- **quant-24** (cut 2026-07-14; frozen `quant-24/src`; `staged` → here): quant-23
+  + sld-gated adjacency-fill merge. Fuses touching near-same-colour fills into one
+  path (no new seam); adaptive on the Hough sld signal so it fires only on geometric
+  over-fragmenters. **vs quant-23:** corpus 0.2337→0.2315 (+0.0022, all channels,
+  clears ship bar); app-asset −0.0199 (paths 109→92 toward Recraft 64), shield
+  128→121; 9 stems byte-identical. First clean gate-passing structural win of the
+  path/cubic campaign. Metric-verified (tilecmp + path counts).
 - **quant-23** (cut 2026-07-13; frozen `quant-23/src`; `staged` → here): quant-22
   + flow-aware ink split (USER idea, USER-decided ship). `_flow_split_dark_ink`
   separates merged ink where branch flow diverges (crossings=different objects),
