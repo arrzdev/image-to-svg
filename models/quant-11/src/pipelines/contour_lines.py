@@ -761,6 +761,11 @@ class ContourLinesPipeline(Pipeline):
               help="Potrace parsimony fit for the shading-region boundaries — flat "
                    "idealized shapes like Recraft's, wobble-free by construction. "
                    "0 falls back to smooth+Schneider fills."),
+        Param("merge_adj_de", "Adjacent-fill merge ΔE", "float", 0.0, min=0.0, max=20.0, step=0.5,
+              help="Fuse two TOUCHING fill regions whose emitted colours are within "
+                   "this CIEDE2000 ΔE into one path (internal boundary vanishes, no "
+                   "new seam) — the adjacency-gated counterpart to the global palette "
+                   "merge, targeting Recraft's lower path/cubic budget. 0 = off."),
         Param("dark_lum", "Line luminance cutoff", "float", 96.0, min=10.0, max=160.0, step=1.0,
               help="Labels darker than this are stroke candidates; lower it when a "
                    "dark-but-not-line palette entry (maroon rim, navy ring) gets "
@@ -930,27 +935,14 @@ class ContourLinesPipeline(Pipeline):
             labels, centers = _carve_dark_ribbons(labels, centers, raw,
                                                   protect=_protect)
 
-        # Wander erasure only for non-flat scenes: flat art's boundaries are
-        # drawn ink (no quantizer ramp for an iso-line to wander through) —
-        # same scene gate as the sharpen skip above (run 38 precedent).
-        svg, _info = contour_svg(labels, centers, fill_tol=p["fill_tol"],
-                                 fill_smooth=p["fill_smooth"],
-                                 fill_parsimony=p["fill_parsimony"],
-                                 dark_lum=p["dark_lum"],
-                                 width_scale=p["width_scale"],
-                                 src_img=img, color_img=raw,
-                                 fill_wander=_stats["kind"] != "flat")
-
-        # Straight-line-dominance signal for ADAPTIVE straightening (USER
-        # 2026-07-13, metric-verified). Globally-long straight edges (pizza-box
-        # tilecmp 0.293->0.284, long-L 43->86 = Recraft's count; logos) want
-        # aggressive L-collapse; organic art (fox, mountain, crystals) is
-        # polygonised by the same eps (measured corpus regressions +0.012 to
-        # +0.044). A GLOBAL eps bump is a net corpus loss; the IMAGE Hough
-        # long-line coverage separates the two cleanly (pizza 0.69 vs fox 0.03)
-        # where the SVG's own geometry does NOT (fox curves are locally-straight
-        # cubics, self-signal 0.72). Embed it so straighten() adapts across the
-        # entry boundary (entry: pipeline.run -> straighten -> fit_svg_size).
+        # Straight-line-dominance signal (image Hough long-line coverage),
+        # computed BEFORE emission because it now gates TWO adaptive stages:
+        # (1) straightening across the entry boundary (embedded as <!--sld-->),
+        # and (2) the adjacency-fill merge below. It separates geometric
+        # over-fragmented art (pizza 0.69, shield 0.27, app-asset 0.16) from
+        # organic detail (fox/crystals/chopchop/mountain/rabbit ~0.03-0.05) —
+        # cleanly, where the SVG's own geometry cannot (fox curves are
+        # locally-straight cubics, self-signal 0.72).
         g = cv2.cvtColor(raw, cv2.COLOR_RGB2GRAY)
         edges_c = cv2.Canny(g, 50, 150)
         ne = max(1, int(edges_c.sum() // 255))
@@ -960,5 +952,29 @@ class ContourLinesPipeline(Pipeline):
         if hl is not None:
             sld = float(sum(float(np.hypot(x2 - x1, y2 - y1))
                             for x1, y1, x2, y2 in hl[:, 0]) / ne)
+
+        # ADAPTIVE adjacency-fill merge (USER structural gap, 2026-07-14,
+        # metric-verified). Fusing touching near-same-colour fills toward
+        # Recraft's lower path/cubic budget helps the over-fragmenters
+        # (app-asset -0.0145 / paths 109->101, shield -0.0033 at dE 5) but
+        # DESTROYS real adjacent-colour detail on organic art (crystals +0.007,
+        # fox +0.004) — a global dE is a net loss. The sld signal splits them
+        # exactly (over-fragmenters >=0.10, detail <=0.05), so merge only fires
+        # on geometric art; organic stems stay byte-identical.
+        merge_adj = p["merge_adj_de"]
+        if sld >= 0.10 and merge_adj <= 0.0:
+            merge_adj = 5.0
+
+        # Wander erasure only for non-flat scenes: flat art's boundaries are
+        # drawn ink (no quantizer ramp for an iso-line to wander through) —
+        # same scene gate as the sharpen skip above (run 38 precedent).
+        svg, _info = contour_svg(labels, centers, fill_tol=p["fill_tol"],
+                                 fill_smooth=p["fill_smooth"],
+                                 fill_parsimony=p["fill_parsimony"],
+                                 merge_adj_de=merge_adj,
+                                 dark_lum=p["dark_lum"],
+                                 width_scale=p["width_scale"],
+                                 src_img=img, color_img=raw,
+                                 fill_wander=_stats["kind"] != "flat")
         svg = svg.replace('>', f'><!--sld={sld:.3f}-->', 1)
         return svg

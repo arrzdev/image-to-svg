@@ -2885,9 +2885,150 @@ def _flow_split_dark_ink(labels: np.ndarray, centers: np.ndarray,
     return out, np.asarray(new_centers, dtype=centers.dtype), children_of
 
 
+# ---- Adjacency-gated fill merge (it82, structural path/cubic gap) ----------
+# The over-fragmented images carry many ADJACENT near-same-colour fill regions
+# that Recraft flattens into one (app-asset 108 paths vs Recraft 64; measured
+# 217 adjacent region pairs with colour ΔE<10, median 4.3 — structured-split /
+# tone-band shrapnel, NOT palette-level). A GLOBAL palette merge is the wrong
+# tool: raising merge_de does not reduce app-asset's bands (they are distinct
+# k-means centres) and catastrophically fuses fox's distinct-but-close colours
+# that merely appear NEAR each other elsewhere (measured +0.0412). The lever is
+# an ADJACENCY-gated merge — fuse two regions ONLY where they share a real
+# crack boundary in the emission label map AND their emitted colours are close.
+_ST4_MERGE = np.array([[0, 1, 0], [1, 1, 1], [0, 1, 0]], bool)
+
+
+def _merge_adjacent_fills(labels: np.ndarray, fill_centers: np.ndarray,
+                          de_thresh: float) -> np.ndarray:
+    """Fuse TOUCHING fill regions whose EMITTED colours are within `de_thresh`
+    (CIEDE2000) by relabelling each into its largest same-group neighbour, so
+    build_edges emits ONE path and the internal boundary disappears — geometry
+    removed cleanly, no new seam.
+
+    Operates on the FINAL emission label map (post stroke-absorb / flow-split /
+    capsules — exactly what build_edges sees) with `fill_centers` = the
+    source-anchored colours each label actually paints. Because fill_centers is
+    left FROZEN, no label's colour anywhere else in the frame is disturbed: only
+    the merged sliver's SHOWN colour changes, and a per-component bound keeps
+    that move < de_thresh (so the tilecmp COLOR cost is capped by construction).
+
+    ADJACENCY (a shared 4-connected crack, matching build_edges' boundary
+    notion) is mandatory — that is what makes it safe on detail art where the
+    global merge failed: two distinct-but-close colours that never touch are
+    never candidates. Chains collapse transitively (union-find) but the bound
+    releases any member whose colour would drift too far from the survivor, so a
+    long ramp can only merge its near-identical bands, never its far ends."""
+    if de_thresh <= 0:
+        return labels
+    from skimage.color import rgb2lab, deltaE_ciede2000
+
+    H, W = labels.shape
+    n_lab = len(fill_centers)
+
+    # 1. per-label 4-connected components -> global component ids 1..ncomp
+    #    (one shape/path per component under emit_regions_layered).
+    comp = np.zeros((H, W), np.int32)
+    comp_label = [0]                        # comp_label[cid] = label of cid
+    nxt = 1
+    for li in range(n_lab):
+        m = labels == li
+        if not m.any():
+            continue
+        cc, ncc = ndimage.label(m, structure=_ST4_MERGE)
+        if ncc == 0:
+            continue
+        comp[m] = cc[m] + (nxt - 1)
+        comp_label.extend([li] * ncc)
+        nxt += ncc
+    ncomp = nxt - 1
+    if ncomp < 2:
+        return labels
+    comp_label = np.asarray(comp_label, np.int64)
+    areas = np.bincount(comp.ravel(), minlength=ncomp + 1).astype(np.int64)
+
+    # 2. Lab of every label's EMITTED (source-anchored) colour
+    lab = rgb2lab(np.asarray(fill_centers, np.float64).reshape(-1, 1, 3)
+                  / 255.0).reshape(-1, 3)
+
+    # 3. adjacent (4-connected) component pairs sharing a real crack
+    base = np.int64(ncomp + 1)
+
+    def _pairkeys(ca, cb):
+        d = (ca != cb) & (ca > 0) & (cb > 0)
+        if not d.any():
+            return np.empty(0, np.int64)
+        lo = np.minimum(ca[d], cb[d]).astype(np.int64)
+        hi = np.maximum(ca[d], cb[d]).astype(np.int64)
+        return lo * base + hi
+
+    keys = np.concatenate([
+        _pairkeys(comp[:, :-1], comp[:, 1:]),
+        _pairkeys(comp[:-1, :], comp[1:, :]),
+    ])
+    if keys.size == 0:
+        return labels
+    ukeys = np.unique(keys)
+    lo = ukeys // base
+    hi = ukeys % base
+    la = comp_label[lo]
+    lb = comp_label[hi]
+    keep = la != lb                         # same-label comps aren't adjacent
+    lo, hi, la, lb = lo[keep], hi[keep], la[keep], lb[keep]
+    if lo.size == 0:
+        return labels
+    de = deltaE_ciede2000(lab[la], lab[lb])
+    within = de < de_thresh
+    lo, hi, de = lo[within], hi[within], de[within]
+    if lo.size == 0:
+        return labels
+
+    # 4. union-find (cheapest ΔE first; union-by-area for a balanced tree)
+    order = np.argsort(de, kind="stable")
+    parent = np.arange(ncomp + 1)
+
+    def find(x):
+        r = x
+        while parent[r] != r:
+            r = parent[r]
+        while parent[x] != r:
+            parent[x], x = r, parent[x]
+        return r
+
+    for idx in order:
+        ra, rb = find(int(lo[idx])), find(int(hi[idx]))
+        if ra == rb:
+            continue
+        if areas[ra] < areas[rb]:
+            ra, rb = rb, ra
+        parent[rb] = ra
+
+    # 5. surviving label per group = largest-area member's label; relabel each
+    #    component into it, but ONLY if the shown-colour move stays < de_thresh
+    #    (caps every pixel's COLOR shift by construction).
+    roots = np.array([find(cid) for cid in range(ncomp + 1)], np.int64)
+    best_area: dict = {}
+    best_label: dict = {}
+    for cid in range(1, ncomp + 1):
+        r = int(roots[cid])
+        if areas[cid] > best_area.get(r, -1):
+            best_area[r] = int(areas[cid])
+            best_label[r] = int(comp_label[cid])
+    surv = np.array([best_label.get(int(roots[cid]), int(comp_label[cid]))
+                     for cid in range(ncomp + 1)], np.int64)
+    shift = deltaE_ciede2000(lab[comp_label], lab[surv])
+    new_of_cid = comp_label.copy()
+    do = (surv != comp_label) & (shift < de_thresh)
+    do[0] = False
+    new_of_cid[do] = surv[do]
+    if not do.any():
+        return labels
+    return new_of_cid[comp].astype(labels.dtype)
+
+
 def contour_svg(labels: np.ndarray, centers: np.ndarray,
                 fill_tol: float = 2.5, fill_smooth: int = 9,
                 fill_corner_deg: float = 60.0, fill_parsimony: float = 0.0,
+                merge_adj_de: float = 0.0,
                 color_img: Optional[np.ndarray] = None,
                 fill_wander: bool = True,
                 **kw) -> Tuple[str, dict]:
@@ -2948,6 +3089,13 @@ def contour_svg(labels: np.ndarray, centers: np.ndarray,
     if src_img is not None:
         new_labels, capsules = _light_line_capsules(new_labels, centers,
                                                     src_img)
+    # Adjacency-gated fill merge (it82): fuse touching near-same-colour fill
+    # regions so build_edges emits ONE path and the internal boundary vanishes
+    # (toward Recraft's path/cubic budget). Uses fill_centers (the EMITTED
+    # colours) and the final new_labels build_edges is about to consume.
+    if merge_adj_de > 0:
+        new_labels = _merge_adjacent_fills(new_labels, fill_centers,
+                                           merge_adj_de)
     edges, _ = boundary.build_edges(new_labels)
     loops = boundary.region_loops(edges, len(centers))
     if fill_parsimony > 0:
