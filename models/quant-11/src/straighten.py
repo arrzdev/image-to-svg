@@ -13,7 +13,8 @@ import math
 import re
 
 
-def straighten(svg, eps=1.0, min_len=16.0, bow_frac=0.80, bow_floor=0.9):
+def straighten(svg, eps=1.0, min_len=16.0, bow_frac=0.80, bow_floor=0.9,
+               speck_frac=0.006):
     # ADAPTIVE eps (USER 2026-07-13, metric-verified). The pipeline embeds a
     # straight-line-dominance signal <!--sld=..--> (image Hough long-line
     # coverage). Geometric art (pizza-box 0.69, logos 0.57) gets aggressive
@@ -84,7 +85,48 @@ def straighten(svg, eps=1.0, min_len=16.0, bow_frac=0.80, bow_floor=0.9):
                  '', svg)
     svg = re.sub(r'<path\b(?=[^>]*fill="none")'
                  r'(?=[^>]*stroke-linecap="butt")[^>]*/>\s*', '', svg)
+    svg = _drop_specks(svg, speck_frac)
     return svg
+
+
+def _drop_specks(svg, frac):
+    """Drop quantisation-shrapnel paths — tiny fills Recraft never emits (USER
+    2026-07-13 STRUCTURAL gap, metric-verified). Measured: our over-fragmented
+    outputs carry 80-155 sub-100px-bbox paths where Recraft carries ~0
+    (app-asset 261 paths vs 69, pizza-box 198 vs 73); 74-77% of our paths are
+    specks. In the painter's-order layered emit a dropped small path just
+    reveals the larger shape beneath it, so removing them is ~absorption.
+    Corpus sweep: dropping paths whose bbox max-dimension < frac*canvas_width
+    (frac 0.006 ~= 12px@2048) improves tilecmp +0.0046 corpus (app-asset
+    -0.0149, pizza-box -0.0146) with ~zero regression (worst stem +0.0003) and
+    all channels down; larger frac keeps helping the over-fragmenters but starts
+    eroding real detail on chopchop/mountain/crystals, so 0.006 is the safe
+    optimum. Thin LONG lines survive (max-dim large); only both-dims-small
+    specks drop. bbox is the coordinate extent of the d-string (control points
+    slightly overestimate -> conservative). Never drops the background (huge)."""
+    if frac <= 0:
+        return svg
+    m = re.search(r'viewBox="[\d.\-eE]+ [\d.\-eE]+ ([\d.\-eE]+)', svg)
+    if not m:
+        return svg
+    thr = frac * float(m.group(1))
+    hdr_end = svg.index('>', svg.index('<svg')) + 1
+    head, body = svg[:hdr_end], svg[hdr_end:]
+
+    def keep(tag):
+        md = re.search(r'\bd="([^"]*)"', tag)
+        if not md:
+            return True
+        nums = re.findall(r'-?\d+(?:\.\d+)?', md.group(1))
+        if len(nums) < 4:
+            return True
+        xs = [float(n) for n in nums[0::2]]
+        ys = [float(n) for n in nums[1::2]]
+        return max(max(xs) - min(xs), max(ys) - min(ys)) >= thr
+
+    body = re.sub(r'<path\b[^>]*/>\s*',
+                  lambda mm: mm.group(0) if keep(mm.group(0)) else '', body)
+    return head + body
 
 
 def _seg_end(s):
