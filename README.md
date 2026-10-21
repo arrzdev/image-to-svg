@@ -287,7 +287,13 @@ Discards are logged in detail so they can be picked up later.
 | journal up to run 63 | `research/docs/RESEARCH_LOG.md` |
 | mission | `research/docs/PROJECT_SPEC.md` |
 
-The loop is paused via `.autoresearch-off`.
+The loop is paused via `.autoresearch-off`. The autoresearch plugin expects its
+files at the repo root; to resume it, recreate the links:
+
+```bash
+for f in md jsonl sh focus; do ln -s research/autoresearch.$f autoresearch.$f; done
+ln -s research experiments
+```
 
 ## Repo map
 
