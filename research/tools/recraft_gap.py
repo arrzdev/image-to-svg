@@ -15,11 +15,11 @@ Usage:
     research/tools/recraft_gap.py [target ...]   # default: all with recraft SVGs
 """
 import sys, pathlib
-# ALWAYS measure the LIVE engine: models/staged is the repo's live-tree symlink.
+# ALWAYS measure the LIVE engine (models/quant-hifi).
 # (Harness-maintenance fix 2026-07-10, noted in worklog: this previously pinned
 # models/v5/src, so full-table runs measured STALE v5 code once the live tree
 # moved on — numbers after ~run 33 with svg_ours=None are suspect.)
-sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2] / 'models/staged/src'))
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2] / 'models/quant-hifi/src'))
 import numpy as np
 from skimage.metrics import structural_similarity as ssim
 from skimage.color import rgb2lab, deltaE_ciede2000

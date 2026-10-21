@@ -10,7 +10,7 @@ ROIs are normalized (x0,y0,x1,y1) in prep-image space.
 """
 import sys, pathlib
 ROOT = pathlib.Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT / 'models/staged/src'))
+sys.path.insert(0, str(ROOT / 'models/quant-hifi/src'))
 import numpy as np
 import cv2
 from testbed import Testbed

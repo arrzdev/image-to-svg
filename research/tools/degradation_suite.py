@@ -15,7 +15,7 @@ Artifacts (degraded inputs + engine outputs) land in outputs/degsuite/.
 """
 import io, pathlib, subprocess, sys
 ROOT = pathlib.Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT / 'models/staged/src'))
+sys.path.insert(0, str(ROOT / 'models/quant-hifi/src'))
 import numpy as np
 from PIL import Image
 from skimage.metrics import structural_similarity as ssim
@@ -34,7 +34,7 @@ def degrade(clean_rgb: np.ndarray) -> Image.Image:
     return Image.open(buf).resize((RES, RES), Image.BICUBIC).convert('RGB')
 
 def run_engine(img_path: pathlib.Path, out_svg: pathlib.Path) -> bool:
-    r = subprocess.run([sys.executable, str(ROOT / 'run_model.py'), '-m', 'staged',
+    r = subprocess.run([sys.executable, str(ROOT / 'run_model.py'), '-m', 'quant-hifi',
                         '-i', str(img_path), '-o', str(out_svg)],
                        capture_output=True, text=True, timeout=600)
     return r.returncode == 0 and out_svg.exists()

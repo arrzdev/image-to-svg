@@ -11,7 +11,7 @@ and at which stage, names the culprit.
 """
 import sys, pathlib
 ROOT = pathlib.Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT / 'models/staged/src'))
+sys.path.insert(0, str(ROOT / 'models/quant-hifi/src'))
 import numpy as np
 import cv2
 from skimage.color import rgb2lab, deltaE_ciede2000

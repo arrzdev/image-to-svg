@@ -12,16 +12,16 @@
 #   FOCUS defaults to `autoresearch.focus` contents, else 'elephant'.
 set -euo pipefail
 
-cd "$(dirname "$0")/.."   # repo root; LIVE engine = models/staged/src (v5-v7 frozen)
+cd "$(dirname "$0")/.."   # repo root; LIVE engine = models/quant-hifi/src
 
 # Fast fail: syntax-check the pipeline entry + harness before the slow render.
 DYLD_FALLBACK_LIBRARY_PATH=/opt/homebrew/lib .venv/bin/python -m py_compile \
-  models/staged/src/ar_eval.py models/staged/src/contours_exp.py models/staged/src/strokes.py
+  models/quant-hifi/src/ar_eval.py models/quant-hifi/src/contours_exp.py models/quant-hifi/src/strokes.py
 
 # Per-experiment wall-clock cap (kill + non-zero exit = crash). `timeout` from
 # coreutils (gtimeout on macOS/brew); fall back to plain run if absent.
 TIMEOUT_BIN="$(command -v timeout || command -v gtimeout || true)"
-RUN=(env DYLD_FALLBACK_LIBRARY_PATH=/opt/homebrew/lib .venv/bin/python models/staged/src/ar_eval.py "$@")
+RUN=(env DYLD_FALLBACK_LIBRARY_PATH=/opt/homebrew/lib .venv/bin/python models/quant-hifi/src/ar_eval.py "$@")
 if [ -n "$TIMEOUT_BIN" ]; then
   "$TIMEOUT_BIN" 300 "${RUN[@]}"
 else

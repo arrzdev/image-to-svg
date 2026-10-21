@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Run any engine version on an image.
 
-    python run_model.py --model v5 --image data/inputs/elephant.jpg
-    python run_model.py -m v3 -i data/inputs/chopchop.png -o out.svg
+    python run_model.py --model quant-hifi --image data/inputs/elephant.jpg
+    python run_model.py -m staged -i data/inputs/chopchop.png -o out.svg
     python run_model.py --list
 
 Every version lives in models/<v>/ with the same entry contract
@@ -23,6 +23,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 MODELS = ROOT / "models"
 PYTHON = ROOT / ".venv" / "bin" / "python"
+ALIASES = {"staged": "quant-hifi"}   # the current best engine
 
 
 def versions() -> list[str]:
@@ -40,9 +41,10 @@ def main() -> int:
 
     if args.list or not (args.model and args.image):
         print("runnable versions:", ", ".join(versions()))
+        print("aliases:", ", ".join(f"{a} -> {v}" for a, v in ALIASES.items()))
         return 0 if args.list else 2
 
-    entry = MODELS / args.model / "entry.py"
+    entry = MODELS / ALIASES.get(args.model, args.model) / "entry.py"
     if not entry.exists():
         sys.exit(f"unknown model {args.model!r} — runnable: {', '.join(versions())}")
     image = Path(args.image)
