@@ -8,7 +8,7 @@
 > autoresearch.md "Culprit protocol"). Item closed = grid shows ours ≈/≥ recraft
 > at that spot, entry moves to CLOSED with the run number.
 >
-> Numeric direction gauge: `research/tools/recraft_gap.py [target] --spots`
+> Numeric direction gauge: `eval/recraft_gap.py [target] --spots`
 > (rSSIM / rΔE / worst tiles → mandatory eye-spots). Numbers never close an item
 > — the grid does.
 
@@ -18,7 +18,7 @@
 > verdicts happened at too-low zoom; and 40 runs of local gates patched symptoms
 > of 8 recurring ROOT causes (E1-E8). Authority docs now:
 > `research/docs/VISION.md` (the blueprint + absolute bar) and
-> `research/audit24/FINDINGS.md` (root causes E1-E8, process failures P1-P4,
+> `research/experiments/audit24/FINDINGS.md` (root causes E1-E8, process failures P1-P4,
 > campaign skeleton). New items below get filed against E-numbers; closing any
 > item requires the zoomed grid to show ≈Recraft, and flat-art targets get the
 > DEEPEST zoom.
@@ -40,7 +40,7 @@
    silhouette has a flat-cut kink; mouth/head hairline seam (0h family).
    2-color 5-path flat input = zero quantize confound → pure geometry-stage
    damage (smoothing + fit can't see line intent). Root cause E4/E5.
-   Evidence: research/audit24/grids/monster_{mouth,hand}_zoom.png,
+   Evidence: research/experiments/audit24/grids/monster_{mouth,hand}_zoom.png,
    monster_mouth_regression.png (it15 vs HEAD vs recraft).
 
 0h. **ANTI-ALIAS SEAMS / thin white pixel borders between colors (USER
@@ -136,7 +136,7 @@
    (staged probe run 58):** chopchop's maroon strut pinstripe keeps its own
    dark-maroon label (centroid 51,33,16) at 100% share through the ENTIRE
    chain (quantize→consolidate→own_transitions→despeckle→smooth→dissolve;
-   research/audit24/stripe_probe.py). Culprit narrowed to STROKE
+   research/experiments/audit24/stripe_probe.py). Culprit narrowed to STROKE
    ROUTING/EXTRACTION: centroid lum≈36 < 60 → ink-class (two-tier gate) →
    stroke-ified, then absorbed by the parallel heavy black edge in the
    stroke network (skeleton/junction pooling or ribbon overlap — the run-34

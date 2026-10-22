@@ -9,30 +9,32 @@ outputs/
 data/outputs/*
 !data/outputs/.gitkeep
 
-# autoresearch loop — runtime sentinels & snapshots (state itself is tracked:
-# autoresearch.md, autoresearch.jsonl, autoresearch.focus, experiments/worklog.md)
+# autoresearch loop — runtime sentinels & snapshots (state itself is tracked in
+# research/loop/: autoresearch.md, autoresearch.jsonl, autoresearch.focus, worklog.md)
 .autoresearch-off
 .autoresearch-inspect
-research/autoresearch-dashboard.md
-research/autoresearch-report.md
-research/*.bak
-research/autoresearch.jsonl.precompact.bak
+research/loop/autoresearch-dashboard.md
+research/loop/autoresearch-report.md
+research/loop/*.bak
 # worktree-parallel iterations: transient in-flight state + the worktrees dir
 # (durable record lives in RESEARCH_LOG / jsonl / worklog / git history)
-research/autoresearch.iteration.json
-research/autoresearch.iteration.json.precompact.bak
+research/loop/autoresearch.iteration.json
 .autoresearch-worktrees/
 
 
 # per-iteration scratch artifacts (candidate svgs, baselines, grids)
-research/it*/
-research/it15_baseline_*.svg
-.claude/worktrees/
+research/loop/iterations/
+
+# local Claude Code config (machine-specific); the loop's hook + settings
+# template are tracked in research/loop/claude/
+.claude/
 
 # tilecmp diagnostic artifacts (regeneratable in seconds)
-research/design/tilecmp_out/
-research/design/.tilecmp_cache/
-research/design/.loop_state.json
-research/design/.loop_patch.diff
-research/omnisvg_test/weights/
-research/omnisvg_test/OmniSVG/
+eval/tilecmp_out/
+eval/.tilecmp_cache/
+research/loop/.loop_state.json
+research/loop/.loop_patch.diff
+
+# OmniSVG experiment: upstream clone + model weights (see run_infer.py)
+research/experiments/omnisvg/weights/
+research/experiments/omnisvg/OmniSVG/

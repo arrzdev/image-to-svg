@@ -1,32 +1,20 @@
 # data/
 
-The image→SVG working set. Everything is paired by **basename**.
+The benchmark set. Inputs and Recraft references are paired by **basename**.
 
-- **inputs/** — source raster images (`<name>.jpg|png`). Fed to our engine
-  and to Recraft.
-- **targets/** — Recraft's "holy grail" SVG for each input (`<name>.svg`).
-  Files that start with `PLACEHOLDER` are **not real** — they mark inputs we
-  still need a Recraft output for (see the fetch list below). `elephant.svg`
-  is the one real target we have.
-- **outputs/** — our engine's generated SVGs, named
-  `{name}-{algoVersion}-{timestamp}.svg` (gitignored; regenerate any time).
-- **_archive/** — stray SVGs found during migration, kept for safety.
-  `shield.maybe-recraft.svg` and `elephant.old.svg` MIGHT be older Recraft
-  outputs — worth checking before discarding.
+| folder | contents |
+|---|---|
+| `inputs/` | 18 test rasters: logos, flat illustrations, game assets (`<name>.jpg\|png`) |
+| `targets/` | 11 Recraft vectorizer outputs (`<name>.svg`), the quality reference every metric compares against |
+| `inputs_idealized/` | SD-turbo img2img pre-idealized inputs from the hybrid experiment (`research/experiments/hybrid/`) |
+| `_archive/` | stray SVGs from an early migration, kept for provenance |
+| `outputs/` | where `run_model.py` and the browser tester write results (gitignored) |
 
-## Recraft targets still needed (replace the placeholders)
+The 11 images that have a Recraft target form the scoring corpus for
+`eval/tilecmp_gate.py` and `eval/struct_compare.py`: app-asset, chopchop,
+crystals, elephant, fox, logo-geometric, monster-flat-line, mountain,
+pizza-box, rabbit, shield. The remaining 7 inputs (coins, files-pile,
+game-assets, game-assets-2, logo-badge, logo-lineart, logo-wordmark) are used
+for eye checks and generalization only.
 
-Run each input through Recraft with the **same tool/mode** (tell us which),
-and drop the SVG at `data/targets/<name>.svg`:
-
-| target file | input | why we want it |
-|---|---|---|
-| rabbit.svg | data/inputs/rabbit.jpg | outlined character — line-work generalization + junctions |
-| crystals.svg | data/inputs/crystals.jpg | gradient — how Recraft bands smooth shading (biggest gap) |
-| chopchop.svg | data/inputs/chopchop.png | dense line crossings (the perpendicular-gap defect) |
-| logo-geometric.svg | data/inputs/logo-geometric.png | circles/edges — does Recraft snap to primitives |
-| flat-noline.svg | *(source a new image)* | flat illustration with NO dark outlines |
-| app-character.svg | *(source a new image)* | your real, noisy app character asset |
-
-The two `*.SOURCE-ME.txt` files in inputs/ describe the new images to source.
-Highest value if only a few: **rabbit + crystals**.
+Image credits are in the root README.

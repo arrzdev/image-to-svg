@@ -2,7 +2,7 @@
 
 > **Canonical source of truth.** This file is the verbatim project spec. Every
 > other doc and config (`autoresearch.md`, `docs/RESUME.md`, `docs/BACKLOG.md`,
-> `models/README.md`, …) **references** this file — none of them restate it, so
+> `engines/README.md`, …) **references** this file — none of them restate it, so
 > nothing drifts out of sync. If the mission changes, edit it here only.
 
 ## 1. The problem
@@ -76,7 +76,7 @@ single-knob experiments re-run in seconds, not minutes.
 
 - **Git repo**, one commit per accepted improvement.
 - **`models/vN/`** snapshots representative outputs + a manifest per *version*;
-  bump N on structural changes, not every tweak. `models/README.md` narrates
+  bump N on structural changes, not every tweak. `engines/README.md` narrates
   the history so the trajectory (each version vs the previous, and vs Recraft)
   is visible.
 - The acceptance test for shipping is **"beats the previous version by eye,

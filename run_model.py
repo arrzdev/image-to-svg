@@ -5,7 +5,7 @@
     python run_model.py -m staged -i data/inputs/chopchop.png -o out.svg
     python run_model.py --list
 
-Every version lives in models/<v>/ with the same entry contract
+Every version lives in engines/<family>/<v>/ with the same entry contract
 (entry.py: run(image_path, params=None) -> svg string), so versions route
 non-destructively however different their internals are. Each run happens in
 its own subprocess — version sources share module names, so two versions can
@@ -21,13 +21,19 @@ import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
-MODELS = ROOT / "models"
+ENGINES = ROOT / "engines"
 PYTHON = ROOT / ".venv" / "bin" / "python"
 ALIASES = {"staged": "quant-hifi"}   # the current best engine
 
 
 def versions() -> list[str]:
-    return sorted(p.parent.name for p in MODELS.glob("*/entry.py"))
+    return sorted(p.parent.name for p in ENGINES.glob("*/*/entry.py"))
+
+
+def entry_for(name: str) -> Path:
+    """engines/<family>/<name>/entry.py (names are unique across families)."""
+    hits = list(ENGINES.glob(f"*/{Path(name).name}/entry.py"))
+    return hits[0] if hits else ENGINES / "_missing" / name / "entry.py"
 
 
 def main() -> int:
@@ -44,7 +50,7 @@ def main() -> int:
         print("aliases:", ", ".join(f"{a} -> {v}" for a, v in ALIASES.items()))
         return 0 if args.list else 2
 
-    entry = MODELS / ALIASES.get(args.model, args.model) / "entry.py"
+    entry = entry_for(ALIASES.get(args.model, args.model))
     if not entry.exists():
         sys.exit(f"unknown model {args.model!r} — runnable: {', '.join(versions())}")
     image = Path(args.image)

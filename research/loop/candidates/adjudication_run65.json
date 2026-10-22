@@ -1,0 +1,47 @@
+{
+  "steps": [
+    {
+      "step": "HEAD",
+      "corpus": {
+        "census": 0.31021048632858794,
+        "flow": 0.2681318812951234,
+        "color": 0.17074734970093614,
+        "overall": 0.24969657244154914,
+        "mode_frac": {
+          "COLOR": 0.17106095352733175,
+          "FITTER": 0.26317965827642265,
+          "MIXED": 0.19917622865827347,
+          "OVER-FRAGMENT": 0.26427278543171817,
+          "UNDER-RESOLVE": 0.10231037410625338
+        }
+      },
+      "kept": true
+    },
+    {
+      "step": "it3_localsplit_+0.0032_allchannels.diff",
+      "kept": false,
+      "reason": "apply-failed",
+      "err": "Applied patch to 'engines/quant/quant-11/src/pipelines/contour_lines.py' cleanly.\nApplied patch to 'engines/quant/quant-11/src/pipelines/quantize_contours.py' with conflicts.\nU engines/quant/quant-11/src/pipelines/quantize_contours.py"
+    },
+    {
+      "step": "it9_wandererase_+0.0029.diff",
+      "kept": false,
+      "reason": "apply-failed",
+      "err": "Applied patch to 'engines/quant/quant-11/src/contours_exp.py' cleanly.\nApplied patch to 'engines/quant/quant-11/src/pipelines/contour_lines.py' with conflicts.\nU engines/quant/quant-11/src/pipelines/contour_lines.py"
+    },
+    {
+      "step": "it7_transmud_+0.0026.diff",
+      "kept": false,
+      "reason": "apply-failed",
+      "err": "error: engines/quant/quant-11/src/pipelines/contour_lines.py: does not exist in index\nerror: engines/quant/quant-11/src/pipelines/quantize_contours.py: does not exist in index"
+    },
+    {
+      "step": "it6_rampband_+0.0014.diff",
+      "kept": false,
+      "reason": "apply-failed",
+      "err": "error: engines/quant/quant-11/src/pipelines/contour_lines.py: does not exist in index"
+    }
+  ],
+  "kept": [],
+  "total_gain": 0.0
+}

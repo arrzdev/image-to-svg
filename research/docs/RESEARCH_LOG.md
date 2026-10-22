@@ -1,7 +1,7 @@
 # Research log
 
 Append-only, newest first. **One log — no separate observations file.**
-**Iterations are worktree-parallel** (research/autoresearch.md
+**Iterations are worktree-parallel** (research/loop/autoresearch.md
 "Worktree-parallel iterations"): log an entry for **every candidate worktree** —
 whether it ships alone, ships in a combination, or is discarded — not just the
 shipped result. Each entry:
@@ -18,11 +18,11 @@ shipped result. Each entry:
 
 When picking the next iteration's candidates, skim recent discard entries here
 for unfollowed threads worth promoting into research/docs/BACKLOG.md items.
-Mission: `research/docs/PROJECT_SPEC.md`; `research/docs/STATE.md` =
+Mission: `research/docs/PROJECT_SPEC.md`; `research/docs/archive/STATE.md` =
 consolidated state; `research/docs/BACKLOG.md` = idea queue. Machine-readable
-results → `research/autoresearch.jsonl`; running narrative →
-`research/worklog.md`; in-flight worktree state (incl. the mandatory
-`next_action` field) → `research/autoresearch.iteration.json`.
+results → `research/loop/autoresearch.jsonl`; running narrative →
+`research/loop/worklog.md`; in-flight worktree state (incl. the mandatory
+`next_action` field) → `research/loop/autoresearch.iteration.json`.
 
 ---
 

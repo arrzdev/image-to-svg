@@ -70,7 +70,7 @@ and drops every raster accident.
 **AMENDED 2026-07-10 — improvement is scored by ALGORITHM, not the eye.**
 Orchestrator visual judgment proved unreliable (approved a distorted elephant).
 To decide whether a change improved, run
-`research/design/score_vs_recraft.py` (MS-SSIM↑ / GMSD↑ / CIEDE2000 dE↓ vs the
+`eval/score_vs_recraft.py` (MS-SSIM↑ / GMSD↑ / CIEDE2000 dE↓ vs the
 Recraft targets) and keep the change only if the score improves. Visuals are
 for EXPLORATION — understand where we are, find defects, form hypotheses; the
 eye does NOT render the improvement verdict. The rules below still govern how
@@ -88,7 +88,7 @@ you EXPLORE and describe defects.
 
 ## Where the engine stands vs this vision (audit 2026-07-09)
 
-See `research/audit24/FINDINGS.md`. Short version: quantize-partition +
+See `research/experiments/audit24/FINDINGS.md`. Short version: quantize-partition +
 boundary-fit copies raster accidents into geometry (edge shrapnel, shadow
 blobs, facet melts), has no line-intent classification (everything tends to
 cubic), no local color-merge model (global palette + size-based despeckle),

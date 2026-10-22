@@ -54,7 +54,7 @@ python3 run_model.py -m quant-12 -i data/inputs/fox.jpg -o /tmp/fox.svg
 (engine sources share module names). It sets
 `DYLD_FALLBACK_LIBRARY_PATH=/opt/homebrew/lib` so cairo is found.
 
-The browser tester (`server.py` + `frontend/`) has two tabs:
+The browser tester (`app/`) has two tabs:
 
 - **Version tester:** pick an input and an engine, see Original | Output |
   Recraft target.
@@ -64,8 +64,8 @@ The browser tester (`server.py` + `frontend/`) has two tabs:
 Every engine follows the same contract, so they can be routed side by side:
 
 ```
-models/<name>/entry.py   # run(image_path: str, params: dict | None = None) -> str (SVG)
-models/<name>/src/       # that engine's frozen code
+engines/<family>/<name>/entry.py   # run(image_path: str, params: dict | None = None) -> str (SVG)
+engines/<family>/<name>/src/       # that engine's frozen code
 ```
 
 ## How quality was measured
@@ -79,7 +79,7 @@ one of the main lessons:
 | Jul 7–9 | eye verdicts on zoomed comparison grids ("zoom or it didn't happen") | unreliable: approved a visibly distorted output, and once shipped a "fix" whose output was bit-identical |
 | Jul 10+ | **tilecmp** — a locked, tile-based structural distance to the Recraft SVG | kept |
 
-**tilecmp** (`research/design/tilecmp.py`) splits each image into ~40×40 tiles
+**tilecmp** (`eval/tilecmp.py`) splits each image into ~40×40 tiles
 and compares our SVG to Recraft's per tile on three separate channels:
 
 - **census:** paths, cubics, lines and subpaths spent.
@@ -88,13 +88,14 @@ and compares our SVG to Recraft's per tile on three separate channels:
 
 The gate (`tilecmp_gate.py`) only accepts a change that improves the corpus
 mean by ≥ 0.0015 without any single channel regressing by more than 0.006. A
-structural census against Recraft (`research/tools/struct_compare.py`) is used
+structural census against Recraft (`eval/struct_compare.py`) is used
 alongside it. Because the channels are separate, the gate cannot be gamed the
 way a single SSIM number can.
 
 ## Approaches tried
 
-Roughly chronological. Each family lives in `models/` and is still runnable.
+Roughly chronological. Each family lives in `engines/<family>/` and is still
+runnable ([`engines/README.md`](engines/README.md) has the per-version log).
 
 ### 1. Tournament + differentiable refinement (v1, pre-git)
 
@@ -129,14 +130,14 @@ idealized:
   line-intent model.
 
 Each has a `MANIFEST.md` with eye verdicts and negative results. An audit at
-this point (`research/audit24/FINDINGS.md`) found the engine had plateaued:
+this point (`research/experiments/audit24/FINDINGS.md`) found the engine had plateaued:
 roughly at parity on flat art, 50–70% of the way on soft-shaded art. It also
 found process failures — items closed against a relative bar, verdicts at too
 little zoom, whack-a-mole fixes instead of structural ones.
 
 ### 4. Region-first: "idealize, then colour" — `region-1 … region-7`
 
-Blueprint in `research/design/BLUEPRINT.md`: mean-shift idealization,
+Blueprint in `research/docs/BLUEPRINT.md`: mean-shift idealization,
 Felzenszwalb local regions (no global palette), fill colour sampled from each
 region's eroded interior, then the quant-11 emitter. Separate ink layers came
 in region-2/3. Fills were clean, but the output was polygonal and
@@ -195,14 +196,14 @@ quant-24 unchanged. The upper cap exists because a very busy texture blew up
 to 4.7k paths. Result: corpus 0.2315 → 0.2246, with chopchop and crystals
 improving and the other 9 images unchanged.
 
-### 9. Learned and hybrid experiments (`research/hybrid/FINDINGS.md`)
+### 9. Learned and hybrid experiments (`research/experiments/hybrid/FINDINGS.md`)
 
 None beat the classical pipeline:
 
 - **Diffusion pre-idealization** (SD-turbo img2img, `data/inputs_idealized/`):
   worse at every strength. img2img replaces content, and the VAE round trip
   loses detail.
-- **OmniSVG 1.1 4B**, run locally (`research/omnisvg_test/`): 2.4–3.2× worse.
+- **OmniSVG 1.1 4B**, run locally (`research/experiments/omnisvg/`): 2.4–3.2× worse.
   It reinterpreted the logo with losses and fell into repetition loops on dense
   line art (~2k-token cap).
 
@@ -211,12 +212,12 @@ None beat the classical pipeline:
   | logo-geometric | 0.336 | 0.104 |
   | chopchop | 0.797 | 0.331 |
 
-- **Curve-pair mining + a small curve idealizer** (`research/curveprior/`):
+- **Curve-pair mining + a small curve idealizer** (`research/experiments/curveprior/`):
   1.3k matched curves showed no cubic-count gap on matched curves; the 142k-param
   model lost to doing nothing on held-out images.
 - **Placement probe:** an oracle could cut error 45%, but no image feature
   predicts it.
-- **StarVector 1B/8B** on Apple Silicon (code not in this repo): produces real
+- **StarVector 1B/8B** on Apple Silicon (`research/experiments/starvector/`): produces real
   `<circle>` primitives on simple geometric logos, loops on illustrations.
 
 Conclusion: the remaining gap is Recraft's generative *redraw* prior. It cannot
@@ -230,7 +231,7 @@ be learned from 11 pairs.
   +0.041). Content-adaptive gates work, global knobs don't.
 - No global tint re-grade needed: Recraft's palettes match the source.
 - Ideas that looked better but missed the gate's minimum gain are stashed as
-  "riders" in `research/design/loop_candidates/`.
+  "riders" in `research/loop/candidates/`.
 
 ## Lessons
 
@@ -268,7 +269,7 @@ fidelity calibration without a target, object shadows.
 ## The research loop
 
 Most engine work came from an autonomous experiment loop, documented in
-`research/autoresearch.md`:
+`research/loop/autoresearch.md`:
 
 1. Pick several independent candidates from `research/docs/BACKLOG.md` and
    `GAP_LEDGER.md`.
@@ -276,50 +277,38 @@ Most engine work came from an autonomous experiment loop, documented in
 3. Re-verify every claim independently, then score it through the locked
    tilecmp gate.
 4. Integrate the winners, broaden them to all images, commit, and snapshot a
-   new `models/<family>-N` on structural changes.
+   new `engines/<family>/<family>-N` on structural changes.
 
 Discards are logged in detail so they can be picked up later.
 
 | record | where |
 |---|---|
-| per-run metrics (76 runs: 44 keep, 28 discard) | `research/autoresearch.jsonl` |
-| narrative | `research/worklog.md` |
+| per-run metrics (76 runs: 44 keep, 28 discard) | `research/loop/autoresearch.jsonl` |
+| narrative | `research/loop/worklog.md` |
 | journal up to run 63 | `research/docs/RESEARCH_LOG.md` |
 | mission | `research/docs/PROJECT_SPEC.md` |
 
-The loop is paused via `.autoresearch-off`. The autoresearch plugin expects its
-files at the repo root; to resume it, recreate the links:
-
-```bash
-for f in md jsonl sh focus; do ln -s research/autoresearch.$f autoresearch.$f; done
-ln -s research experiments
-```
+The loop is paused via `.autoresearch-off`; [`research/README.md`](research/README.md)
+has the three commands to resume it.
 
 ## Repo map
 
 ```
-run_model.py  run.sh  server.py   CLI + browser tester
-frontend/                         tester UI (version tester + Edge Lab)
-models/                           every engine, runnable side by side:
-  quant-3 … quant-24, quant-hifi    quantize-first pipeline (staged -> quant-hifi)
-  edge-1 … edge-11                  boundary-first
-  region-1 … region-7               idealize-then-colour
-  vectorark-1                       paper port
-  README.md                         narrative of each version vs the previous one
-svgcore/                          Rust (pyo3) geometry: Schneider + Potrace-parsimony fitters
-data/inputs/                      18 test rasters
-data/targets/                     11 Recraft reference SVGs
-data/inputs_idealized/            img2img experiment inputs
+run_model.py  run.sh       CLI + browser tester launcher
+app/                       browser tester: FastAPI server + UI (version tester, Edge Lab)
+engines/                   every engine, runnable side by side
+  quant/                     quantize-first: quant-3 … quant-24, quant-hifi (best; alias staged)
+  edge/                      boundary-first: edge-1 … edge-11
+  region/                    idealize-then-colour: region-1 … region-7
+  vectorark/                 paper port: vectorark-1
+eval/                      tilecmp metric + gate, findings, struct_compare, scorers vs Recraft
+svgcore/                   Rust (pyo3) geometry: Schneider + Potrace-parsimony fitters
+data/                      18 test rasters, 11 Recraft reference SVGs
 research/
-  docs/                           spec, vision, gap ledger, backlog, research log, paper notes
-  design/                         tilecmp metric + gate, findings, loop driver, scorers
-  tools/                          structural comparison vs Recraft, degradation suite
-  audit24/ hybrid/ curveprior/ omnisvg_test/ edge11_bench/   individual studies
+  docs/                      spec, vision, blueprint, gap ledger, backlog, research log
+  loop/                      the autonomous loop: manual, run history, worklog, driver, stashed candidates
+  experiments/               audit24, hybrid, omnisvg, curveprior, starvector, edge11-bench, ...
 ```
-
-Some internal docs (`research/docs/STATE.md`, `RESUME.md`, `data/README.md`)
-describe earlier layouts (`models/vN`, `backend/`) and are kept as historical
-records.
 
 ## Test data
 
@@ -332,3 +321,8 @@ illustrations and game assets, used for research only:
 - `data/targets/` holds Recraft vectorizer outputs used as quality references.
 
 If you own any of these images and want them removed, please open an issue.
+
+## License
+
+Code is MIT-licensed (see [LICENSE](LICENSE)). The test images and Recraft
+reference SVGs in `data/` are not covered by it; see [Test data](#test-data).

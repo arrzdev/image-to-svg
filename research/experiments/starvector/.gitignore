@@ -1,0 +1,11 @@
+# Local env and vendored upstream clone -- both reproducible from README-MPS.md
+venv/
+star-vector/
+
+# Run artefacts
+*.log
+out/
+out8b/
+out8b_fair/
+*.svg.raw
+compare*.png

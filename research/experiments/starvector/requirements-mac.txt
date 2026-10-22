@@ -1,0 +1,39 @@
+# StarVector inference deps for Apple Silicon (Python 3.12, arm64).
+#
+# Derived from upstream pyproject.toml, reduced to what the im2svg *inference*
+# path actually imports. Verified by reading module-level imports in:
+#   starvector/model/{starvector_arch,models/*,llm/starcoder,image_encoder/*,adapters/*}.py
+#   starvector/{util,data/util}.py
+#
+# Deliberately omitted from upstream's list:
+#   flash_attn      - CUDA-only; guarded by is_flash_attn_2_available(), never taken here
+#   open-clip-torch - only used by build_convnext_encoder(); this model is image_encoder_type=clip
+#   taming-transformers, lpips, torch-fidelity, clip-openai, sentence-transformers,
+#   scikit-learn, seaborn, scikit-image, scipy, datasets, gradio, deepspeed,
+#   reportlab, svglib, openai, noise, webcolors  - training / metrics / serving only
+
+# --- core ---
+torch==2.5.1
+torchvision==0.20.1
+transformers==4.49.0
+tokenizers==0.21.1
+accelerate
+safetensors
+huggingface_hub          # starvector/util.py imports login()
+numpy<2.0.0              # upstream pin; torch 2.5.1 wheels are numpy-1.x built
+
+# --- image encoder ---
+fairscale                # clip_model.py: checkpoint_wrapper (module-level import)
+omegaconf                # image_encoder.py (module-level import)
+Pillow
+
+# --- tokenizer ---
+sentencepiece
+protobuf
+
+# --- SVG post-processing (starvector/data/util.py) ---
+matplotlib               # module-level import only; plotting helpers never called
+beautifulsoup4
+lxml                     # clean_svg() calls BeautifulSoup(svg, 'xml')
+svgpathtools==1.6.1
+cairosvg                 # needs: brew install cairo

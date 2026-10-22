@@ -1,0 +1,140 @@
+"""Minimal version-testing frontend for the image→SVG engine.
+
+    ./run.sh            # http://127.0.0.1:8000
+
+Pick an image, pick a version, Run — the page shows ORIGINAL | OUTPUT | TARGET
+(Recraft reference, when one exists). Every run goes through the same stable
+entry contract (engines/<family>/<v>/entry.py) in an isolated subprocess, exactly like
+`python run_model.py`.
+
+The Edge Lab tab (/api/edgelab) runs engines/edge/edge-11/src/pipeline.py IN-PROCESS
+with full param passthrough — the lab and the edge-11 model are the same code.
+"""
+from __future__ import annotations
+
+import os
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+from fastapi import FastAPI, HTTPException
+from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel
+
+HERE = Path(__file__).resolve().parent
+ROOT = HERE.parent
+INPUTS = ROOT / "data" / "inputs"
+TARGETS = ROOT / "data" / "targets"
+ENGINES = ROOT / "engines"
+PYTHON = ROOT / ".venv" / "bin" / "python"
+
+app = FastAPI(title="image-to-svg version tester")
+
+
+@app.get("/api/images")
+def images():
+    return sorted(p.name for p in INPUTS.iterdir()
+                  if p.suffix.lower() in (".png", ".jpg", ".jpeg", ".webp"))
+
+
+@app.get("/api/versions")
+def versions():
+    return sorted(p.parent.name for p in ENGINES.glob("*/*/entry.py"))
+
+
+class RunReq(BaseModel):
+    image: str
+    version: str
+
+
+@app.post("/api/run")
+def run(req: RunReq):
+    image = INPUTS / Path(req.image).name          # no traversal
+    hits = list(ENGINES.glob(f"*/{Path(req.version).name}/entry.py"))
+    entry = hits[0] if hits else ENGINES / "_missing" / "entry.py"
+    if not image.exists():
+        raise HTTPException(404, f"unknown image {req.image!r}")
+    if not entry.exists():
+        raise HTTPException(404, f"unknown version {req.version!r}")
+
+    out = ROOT / "data" / "outputs" / \
+        f"{image.stem}-{req.version}-{time.strftime('%Y%m%d-%H%M%S')}.svg"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    env = dict(os.environ)
+    env.setdefault("DYLD_FALLBACK_LIBRARY_PATH", "/opt/homebrew/lib")
+    python = PYTHON if PYTHON.exists() else Path(sys.executable)
+
+    t0 = time.time()
+    r = subprocess.run([str(python), str(entry), str(image), str(out)],
+                       env=env, capture_output=True, text=True, timeout=600)
+    if r.returncode != 0:
+        raise HTTPException(500, f"{req.version} failed:\n{r.stderr[-2000:]}")
+
+    target = TARGETS / f"{image.stem}.svg"
+    has_target = target.exists() and target.read_text().lstrip().startswith("<")
+    return {
+        "svg": out.read_text(),
+        "seconds": round(time.time() - t0, 1),
+        "kb": out.stat().st_size // 1024,
+        "saved": str(out.relative_to(ROOT)),
+        "target": f"/targets/{target.name}" if has_target else None,
+        "target_kb": target.stat().st_size // 1024 if has_target else None,
+    }
+
+
+class EdgeLabReq(BaseModel):
+    """Full param passthrough to engines/edge/edge-11/src/pipeline.py — defaults
+    mirror the model's DEFAULTS."""
+    image: str
+    work_dim: int = 2048
+    svg_eps: float = 1.0
+    curve_fit: bool = True
+    smoothness: float = 3.0
+    pre: str = "bilateral"
+    pre_strength: int = 1
+    threshold: float = 5.0
+    close_k: int = 0
+    min_cell: int = 0
+    merge_de: float = 22.0
+    strokes: bool = True
+    line_max_w: float = 16.0
+    line_uniform: float = 12.0
+    line_smooth: float = 4.0
+    line_lmax: float = 100.0
+    line_cmax: float = 100.0
+
+
+@app.post("/api/edgelab")
+def edgelab(req: EdgeLabReq):
+    import base64
+
+    import cv2
+
+    image = INPUTS / Path(req.image).name
+    if not image.exists():
+        raise HTTPException(404, f"unknown image {req.image!r}")
+    src = str(ENGINES / "edge" / "edge-11" / "src")
+    if src not in sys.path:
+        sys.path.insert(0, src)
+    import pipeline as edgepipe
+
+    t0 = time.time()
+    params = req.model_dump() if hasattr(req, "model_dump") else req.dict()
+    params.pop("image")
+    res = edgepipe.process(str(image), params)
+
+    def png64(a):
+        ok, buf = cv2.imencode(".png", cv2.cvtColor(a, cv2.COLOR_RGB2BGR))
+        return "data:image/png;base64," + base64.b64encode(buf).decode()
+
+    stats = dict(res["stats"])
+    stats["seconds"] = round(time.time() - t0, 2)
+    return {"edges": png64(res["edges"]), "fills": png64(res["fills"]),
+            "composite": png64(res["composite"]), "svg": res["svg"],
+            "stats": stats}
+
+
+app.mount("/inputs", StaticFiles(directory=str(INPUTS)), name="inputs")
+app.mount("/targets", StaticFiles(directory=str(TARGETS)), name="targets")
+app.mount("/", StaticFiles(directory=str(HERE / "frontend"), html=True), name="ui")

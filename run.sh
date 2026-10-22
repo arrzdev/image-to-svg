@@ -4,4 +4,4 @@ set -euo pipefail
 cd "$(dirname "$0")"
 export DYLD_FALLBACK_LIBRARY_PATH="/opt/homebrew/lib:/usr/local/lib:${DYLD_FALLBACK_LIBRARY_PATH:-}"
 PORT="${PORT:-8000}"
-exec .venv/bin/python -m uvicorn server:app --host 127.0.0.1 --port "$PORT" "$@"
+exec .venv/bin/python -m uvicorn --app-dir app server:app --host 127.0.0.1 --port "$PORT" "$@"
